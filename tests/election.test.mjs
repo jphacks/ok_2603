@@ -45,6 +45,11 @@ const election = {
 test("対象地域は沖縄県のみ", () => {
   assert.deepEqual(model.prefectures, ["沖縄県"]);
 });
+test("沖縄県内の41市町村を重複なく選択できる", () => {
+  assert.equal(model.municipalities.length, 41);
+  assert.equal(new Set(model.municipalities).size, 41);
+  assert.ok(model.municipalities.includes("那覇市"));
+});
 test("氏名・政党・公約を検索し、全角と半角を正規化する", () => {
   for (const query of ["氏名", "所属", "abc", "ＡＢＣ", "検索対象 処理確認"])
     assert.deepEqual(model.searchCandidates([candidate], query), [candidate]);

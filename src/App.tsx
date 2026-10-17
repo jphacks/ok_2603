@@ -3,6 +3,7 @@ import { candidates, elections, glossary } from "./election/data";
 import {
   checkLabels,
   missing,
+  municipalities,
   normalize,
   prefectures,
   searchCandidates,
@@ -48,6 +49,7 @@ const steps = [
 function App() {
   const [page, setPage] = useState<Page>("home");
   const [region, setRegion] = useState("");
+  const [municipality, setMunicipality] = useState<string | null>(null);
   const [regionQuery, setRegionQuery] = useState("");
   const [query, setQuery] = useState("");
   const [electionId, setElectionId] = useState<string | null>(null);
@@ -74,8 +76,14 @@ function App() {
     .map((id) => candidates.find((item) => item.id === id))
     .filter((item): item is Candidate => !!item);
   const regionalElections = elections.filter((item) =>
-    item.prefectureIds.includes(region),
+    item.prefectureIds.includes(region) &&
+    (!municipality ||
+      !item.municipality ||
+      item.municipality === municipality),
   );
+  const latestElection = [...regionalElections].sort((a, b) =>
+    b.date.localeCompare(a.date),
+  )[0];
   const visibleElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
@@ -90,10 +98,8 @@ function App() {
     normalize(name).includes(normalize(regionQuery)),
   );
   const municipalMatches = regionQuery.trim()
-    ? elections.filter(
-        (item) =>
-          item.municipality &&
-          normalize(item.municipality).includes(normalize(regionQuery)),
+    ? municipalities.filter((name) =>
+        normalize(name).includes(normalize(regionQuery)),
       )
     : [];
   useEffect(() => {
@@ -130,6 +136,16 @@ function App() {
   }
   function chooseRegion(name: string) {
     setRegion(name);
+    setMunicipality(null);
+    setElectionId(null);
+    setQuery("");
+    setLevel("all");
+    setPeriod("current");
+    navigate("region");
+  }
+  function chooseMunicipality(name: string) {
+    setRegion("沖縄県");
+    setMunicipality(name);
     setElectionId(null);
     setQuery("");
     setLevel("all");
@@ -175,7 +191,7 @@ function App() {
   }
   const title =
     page === "region"
-      ? region
+      ? municipality || region
       : page === "candidates"
         ? "候補者と公約"
         : page === "detail"
@@ -247,7 +263,7 @@ function App() {
               {!["guide", "compare"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
-                  <span>/</span>
+                  {!(page === "region" && !municipality) && <span>/</span>}
                 </>
               )}
               <span>{title}</span>
@@ -268,7 +284,9 @@ function App() {
                   {page === "compare"
                     ? "同じ項目を横並びに。自分の視点で、読み比べる。"
                     : ["candidates", "detail"].includes(page)
-                      ? `${region} · ${activeElection?.name || "選挙情報は未収録"}`
+                      ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
+                      : page === "region" && municipality
+                        ? `${municipality}に関係する選挙と公式情報を確認できます。`
                       : "公式資料を確かめながら、必要な情報を。"}
                 </p>
               </div>
@@ -340,9 +358,7 @@ function App() {
                   if (matches.length === 1) {
                     chooseRegion(matches[0]);
                   } else if (municipalMatches.length === 1) {
-                    chooseRegion(municipalMatches[0].prefectureIds[0]);
-                    setElectionId(municipalMatches[0].id);
-                    navigate("candidates");
+                    chooseMunicipality(municipalMatches[0]);
                   }
                 }}
               >
@@ -364,7 +380,7 @@ function App() {
                 </div>
               </form>
               <p className="small">
-                対象は沖縄県内です。市町村別情報は公式資料を確認・登録した地域から表示します。
+                対象は沖縄県内です。市町村ページへ進めます。選挙情報は公式資料を確認・登録後に掲載します。
               </p>
               {regionQuery.trim() &&
                 matches.map((name) => (
@@ -376,17 +392,13 @@ function App() {
                     {name} →
                   </button>
                 ))}
-              {municipalMatches.map((item) => (
+              {municipalMatches.map((name) => (
                 <button
                   className="text-button"
-                  key={item.id}
-                  onClick={() => {
-                    chooseRegion(item.prefectureIds[0]);
-                    setElectionId(item.id);
-                    setPage("candidates");
-                  }}
+                  key={name}
+                  onClick={() => chooseMunicipality(name)}
                 >
-                  {item.municipality} · {item.name} →
+                  {name} →
                 </button>
               ))}
             </section>
@@ -419,9 +431,41 @@ function App() {
         )}
         {page === "region" && (
           <>
+            {municipality && (
+              <section className="panel" aria-labelledby="latest-election-title">
+                <h2 id="latest-election-title">直近の選挙</h2>
+                {latestElection ? (
+                  <article className="election-card">
+                    <span className="badge">
+                      {latestElection.level === "national"
+                        ? "国政選挙"
+                        : "地方選挙"}
+                    </span>
+                    <h3>{latestElection.name}</h3>
+                    <p>
+                      {latestElection.municipality || municipality} · 投票日{" "}
+                      {latestElection.date}
+                    </p>
+                    <Sources sources={latestElection.sources} />
+                    <p className="small">
+                      選挙情報を確認したうえで要約を掲載します。AIによる要約はまだ未実装です。
+                    </p>
+                  </article>
+                ) : (
+                  <Empty title="選挙情報は未収録です">
+                    {municipality}に関係する直近の選挙情報はまだ登録されていません。
+                    AI要約機能は未実装です。公式資料の登録後、出典を示して概要を掲載します。
+                  </Empty>
+                )}
+              </section>
+            )}
             <section className="panel">
               <div className="section-heading">
-                <h2>関連する選挙</h2>
+                <h2>
+                  {municipality
+                    ? `${municipality}に関連する選挙`
+                    : "関連する選挙"}
+                </h2>
                 <span className="badge">
                   {regionalElections.length
                     ? `${regionalElections.length}件収録`
@@ -481,7 +525,7 @@ function App() {
               </div>
               {!visibleElections.length && (
                 <Empty title="選挙情報は未収録です">
-                  {region}の{period === "past" ? "過去" : "現在"}
+                  {municipality || region}の{period === "past" ? "過去" : "現在"}
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
               )}
