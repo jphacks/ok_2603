@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run validate:data && tsc && vite build",
+    "test": "node --test tests/election.test.mjs",
+    "validate:data": "node scripts/validate-election-data.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,0 +1,303 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, writeFile, rm, access } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// ローカルEdge/Chromeを使うUI検証。テストデータはブラウザーのメモリーだけに追加する。
+const origin = process.env.TEST_ORIGIN || "http://127.0.0.1:5173";
+const browserPaths = [
+  process.env.TEST_BROWSER,
+  "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "C:/Program Files/Google/Chrome/Application/chrome.exe",
+].filter(Boolean);
+let browserPath;
+for (const path of browserPaths) {
+  try {
+    await access(path);
+    browserPath = path;
+    break;
+  } catch {}
+}
+if (!browserPath)
+  throw new Error(
+    "TEST_BROWSER にEdge/Chromeの実行ファイルを指定してください。",
+  );
+const profile = await mkdtemp(join(tmpdir(), "election-ui-"));
+const browser = spawn(
+  browserPath,
+  [
+    "--headless=new",
+    "--disable-gpu",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--remote-debugging-port=0",
+    `--user-data-dir=${profile}`,
+    "about:blank",
+  ],
+  { windowsHide: true, stdio: "ignore" },
+);
+let socket;
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const errors = [];
+try {
+  let port;
+  for (let i = 0; i < 100; i++) {
+    try {
+      port = Number(
+        (await readFile(join(profile, "DevToolsActivePort"), "utf8")).split(
+          "\n",
+        )[0],
+      );
+      break;
+    } catch {
+      await pause(100);
+    }
+  }
+  if (!port) throw new Error("Browser debugging endpoint unavailable");
+  const targets = await (
+    await fetch(`http://127.0.0.1:${port}/json/list`)
+  ).json();
+  socket = new WebSocket(
+    targets.find((target) => target.type === "page").webSocketDebuggerUrl,
+  );
+  await new Promise((resolve, reject) => {
+    socket.onopen = resolve;
+    socket.onerror = reject;
+  });
+  let sequence = 0;
+  const pending = new Map();
+  socket.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    if (message.id) {
+      const promise = pending.get(message.id);
+      pending.delete(message.id);
+      message.error
+        ? promise.reject(message.error)
+        : promise.resolve(message.result);
+    } else if (message.method === "Runtime.exceptionThrown")
+      errors.push(
+        message.params.exceptionDetails.text +
+          ": " +
+          (message.params.exceptionDetails.exception?.description || ""),
+      );
+  };
+  const send = (method, params = {}) =>
+    new Promise((resolve, reject) => {
+      const id = ++sequence;
+      pending.set(id, { resolve, reject });
+      socket.send(JSON.stringify({ id, method, params }));
+    });
+  const evaluate = async (expression) => {
+    const result = await send("Runtime.evaluate", {
+      expression,
+      awaitPromise: true,
+      returnByValue: true,
+    });
+    if (result.exceptionDetails)
+      throw new Error(
+        result.exceptionDetails.exception?.description ||
+          result.exceptionDetails.text,
+      );
+    return result.result.value;
+  };
+  const waitFor = async (expression) => {
+    for (let i = 0; i < 80; i++) {
+      if (await evaluate(expression)) return;
+      await pause(50);
+    }
+    throw new Error(`Timeout: ${expression}`);
+  };
+  const click = async (text) => {
+    await evaluate(
+      `(() => { const el = [...document.querySelectorAll('button')].find(el => el.textContent.trim() === ${JSON.stringify(text)}); if (!el) throw new Error('Button missing: ' + ${JSON.stringify(text)}); el.click() })()`,
+    );
+    await pause(70);
+  };
+  const input = async (id, value) => {
+    await evaluate(
+      `(() => { const el = document.getElementById(${JSON.stringify(id)}); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, ${JSON.stringify(value)}); el.dispatchEvent(new Event('input', {bubbles:true})); })()`,
+    );
+    await pause(70);
+  };
+  const text = () => evaluate("document.body.innerText");
+  const screenshot = async (name) => {
+    const { data } = await send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: false,
+    });
+    await writeFile(join(tmpdir(), name), Buffer.from(data, "base64"));
+    console.log(`Screenshot: ${join(tmpdir(), name)}`);
+  };
+  await send("Runtime.enable");
+  await send("Page.enable");
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 1100,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await send("Page.navigate", { url: origin });
+  await waitFor('document.querySelector("[role=dialog]") !== null');
+  await click("次へ →");
+  await click("次へ →");
+  await click("はじめる");
+  assert.equal(
+    await evaluate('localStorage.getItem("election-prototype:tutorial:v1")'),
+    "done",
+  );
+  await evaluate('document.documentElement.dataset.testReload = "pending"');
+  await send("Page.reload");
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
+  await waitFor('document.querySelector(".region-grid") !== null');
+  assert.equal(
+    await evaluate('document.querySelector("[role=dialog]") === null'),
+    true,
+  );
+  assert.equal(
+    await evaluate('document.querySelectorAll(".region-group button").length'),
+    47,
+  );
+  await screenshot("election-desktop.png");
+  await input("region-query", "沖縄");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".region-group button").length'),
+    1,
+  );
+  await click("沖縄県↗");
+  await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
+  await click("過去の選挙");
+  await click("候補者一覧の収録状況を見る →");
+  assert.ok((await text()).includes("候補者情報は未収録です"));
+  await click("詳細・具体性チェックを見る →");
+  assert.ok((await text()).includes("実在する候補者ではありません"));
+  for (const tab of [
+    "経歴",
+    "議会での発言",
+    "議案への賛否",
+    "過去の公約・実施状況",
+    "公約",
+  ]) {
+    await click(tab);
+    assert.equal(
+      await evaluate(
+        'document.querySelector("[role=tabpanel] h2").textContent',
+      ),
+      tab,
+    );
+  }
+  await click("公約比較0");
+  await click("未収録の比較表示を見る");
+  for (let i = 0; i < 4; i++) await click("＋ 表示枠を追加");
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table thead th").length',
+    ),
+    7,
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector(".comparison-scroll").scrollWidth > document.querySelector(".comparison-scroll").clientWidth',
+    ),
+    true,
+  );
+  await screenshot("election-comparison.png");
+  await click("表示例を閉じる");
+  // 実データの代わりに隔離されたブラウザー内だけで登録後の経路を確認する。
+  await evaluate(`(async () => {
+    const appSource = await (await fetch('/src/App.tsx')).text();
+    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
+    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
+    const d = await import(dataPath); const m = await import('/src/election/model.ts');
+    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
+    const recorded = value => ({status:'recorded', value, sources:[source]});
+    d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
+    d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
+    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
+  })()`);
+  await click("ホーム");
+  await input("region-query", "沖縄");
+  await click("沖縄県↗");
+  assert.ok((await text()).includes("50%"));
+  await click("候補者を見る →");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    2,
+  );
+  await input("candidate-query", "所属");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    2,
+  );
+  await input("candidate-query", "abc");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    2,
+  );
+  await input("candidate-query", "one");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    1,
+  );
+  await click("＋ 比較に追加");
+  await input("candidate-query", "two");
+  await click("＋ 比較に追加");
+  await click("詳細を見る →");
+  await click("テスト用語");
+  assert.ok((await text()).includes("政治用語の解説ではありません"));
+  await click("閉じる");
+  await click("経歴");
+  assert.ok((await text()).includes("確認できず"));
+  await click("議会での発言");
+  assert.ok((await text()).includes("該当記録なし"));
+  await click("公約比較2");
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table thead th").length',
+    ),
+    3,
+  );
+  await click("✓ 比較から外す");
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table thead th").length',
+    ),
+    2,
+  );
+  // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
+  await evaluate('document.documentElement.dataset.testReload = "pending"');
+  await send("Page.reload");
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
+  await waitFor('document.querySelector(".region-grid") !== null');
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+  assert.equal(
+    await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
+    true,
+  );
+  await screenshot("election-mobile.png");
+  await input("region-query", "東京");
+  await click("東京都↗");
+  await click("候補者一覧の収録状況を見る →");
+  await click("詳細・具体性チェックを見る →");
+  assert.equal(
+    await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
+    true,
+  );
+  await screenshot("election-mobile-detail.png");
+  assert.deepEqual(errors, []);
+  console.log(
+    "UI PASS: tutorial persistence, 47 regions, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
+  );
+} finally {
+  socket?.close();
+  browser.kill();
+  await pause(600);
+  // 作成した一時ブラウザープロファイルのみ削除。
+  if (profile.startsWith(join(tmpdir(), "election-ui-")))
+    await rm(profile, { recursive: true, force: true }).catch(() => {});
+}
