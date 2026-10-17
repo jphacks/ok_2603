@@ -160,10 +160,20 @@ try {
     0,
   );
   await screenshot("election-desktop.png");
-  await input("region-query", "沖縄");
+  await input("region-query", "那覇");
   assert.equal(
     await evaluate('document.querySelectorAll("#region-search .text-button").length'),
     1,
+  );
+  await click("那覇市 →");
+  await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
+  assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
+  await click("ホーム");
+  await waitFor('document.querySelector("#region-search") !== null');
+  await input("region-query", "沖縄");
+  assert.equal(
+    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
+    2,
   );
   await click("沖縄県 →");
   await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
