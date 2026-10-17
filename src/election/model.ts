@@ -52,8 +52,7 @@ export type GlossaryTerm = {
   definition: string;
   sources: Source[];
 };
-export const groups = [{ name: "沖縄県", names: ["沖縄県"] }];
-export const prefectures = groups.flatMap((group) => group.names);
+export const prefectures = ["沖縄県"];
 export const missing = <T>(): Entry<T> => ({ status: "unrecorded" });
 export function emptyChecks(): Record<CheckLabel, Entry<string>> {
   return Object.fromEntries(

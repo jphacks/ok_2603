@@ -155,27 +155,6 @@ svg {
   padding: 0 36px;
   margin: 0 auto;
 }
-.prototype-note {
-  padding: 15px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #68788c;
-}
-.prototype-note > span:last-child {
-  font-weight: 400;
-  margin-left: auto;
-  font-size: 10px;
-}
-.status-dot {
-  width: 6px;
-  height: 6px;
-  background: #79958d;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
 .hero {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -441,53 +420,6 @@ svg {
 }
 .section > .small {
   margin: 0 0 22px;
-}
-.region-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 17px;
-}
-.region-group {
-  background: #fff;
-  border: 1px solid #e1e7ee;
-  border-radius: 8px;
-  padding: 18px 20px;
-}
-.region-group h3 {
-  font-size: 13px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eef1f5;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.region-dot {
-  width: 5px;
-  height: 14px;
-  background: #9db4c8;
-  border-radius: 2px;
-}
-.region-group > div {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px 15px;
-}
-.region-group button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  text-align: left;
-  font-size: 12px;
-  gap: 5px;
-}
-.region-group button:hover {
-  color: #26709d;
-  text-decoration: underline;
-}
-.region-group button > span {
-  color: #a7b4c3;
-  font-size: 11px;
 }
 .principles {
   border-top: 1px solid #dce4ee;
@@ -1049,14 +981,8 @@ tbody tr:last-child > * {
   .hero-art {
     transform: scale(0.8);
   }
-  .region-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .hero-description {
     font-size: 13px;
-  }
-  .prototype-note > span:last-child {
-    display: none;
   }
   .principles {
     gap: 20px;
@@ -1136,10 +1062,6 @@ tbody tr:last-child > * {
   .main {
     padding: 0 20px 66px;
   }
-  .prototype-note {
-    font-size: 9px;
-    padding: 12px 0;
-  }
   .hero {
     display: block;
     padding: 27px 0 30px;
@@ -1204,26 +1126,6 @@ tbody tr:last-child > * {
   }
   .section-heading .muted {
     font-size: 9px;
-  }
-  .region-grid {
-    gap: 12px;
-    grid-template-columns: 1fr;
-  }
-  .region-group {
-    padding: 15px 18px;
-  }
-  .region-group > div {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 3px 16px;
-  }
-  .region-group button {
-    font-size: 11px;
-    min-height: 35px;
-  }
-  .region-group h3 {
-    font-size: 12px;
-    margin-bottom: 7px;
-    padding-bottom: 9px;
   }
   .principles {
     grid-template-columns: 1fr;
@@ -1493,11 +1395,6 @@ tbody tr:last-child > * {
     padding: 4px 8px;
   }
 
-  .prototype-note {
-    padding: 10px 0;
-    font-size: 11px;
-  }
-
   .breadcrumb {
     gap: 7px;
     font-size: 12px;
@@ -1573,27 +1470,6 @@ tbody tr:last-child > * {
 
   .section {
     padding: 28px 0;
-  }
-
-  .region-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .region-group {
-    padding: 14px;
-    border-radius: 10px;
-  }
-
-  .region-group > div {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2px 10px;
-  }
-
-  .region-group button {
-    min-height: 44px;
-    padding: 7px 3px;
-    font-size: 14px;
   }
 
   .button {

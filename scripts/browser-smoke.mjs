@@ -148,23 +148,24 @@ try {
   );
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 1');
-  await waitFor('document.querySelector(".region-grid") !== null');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
+  assert.equal(await evaluate('document.querySelector(".prototype-note")'), null);
+  assert.equal(await evaluate('document.querySelector("#prefecture-list")'), null);
   assert.equal(
     await evaluate('document.querySelector("[role=dialog]") === null'),
     true,
   );
   assert.equal(
-    await evaluate('document.querySelectorAll(".region-group button").length'),
-    1,
+    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
+    0,
   );
   await screenshot("election-desktop.png");
   await input("region-query", "沖縄");
   assert.equal(
-    await evaluate('document.querySelectorAll(".region-group button").length'),
+    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
     1,
   );
-  await click("沖縄県↗");
+  await click("沖縄県 →");
   await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
   await click("過去の選挙");
   await click("候補者一覧の収録状況を見る →");
@@ -217,7 +218,7 @@ try {
   })()`);
   await click("ホーム");
   await input("region-query", "沖縄");
-  await click("沖縄県↗");
+  await click("沖縄県 →");
   assert.ok((await text()).includes("50%"));
   await click("候補者を見る →");
   assert.equal(
@@ -267,8 +268,7 @@ try {
   // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 1');
-  await waitFor('document.querySelector(".region-grid") !== null');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 844,
@@ -281,7 +281,7 @@ try {
   );
   await screenshot("election-mobile.png");
   await input("region-query", "沖縄");
-  await click("沖縄県↗");
+  await click("沖縄県 →");
   await click("候補者一覧の収録状況を見る →");
   await click("詳細・具体性チェックを見る →");
   assert.equal(
