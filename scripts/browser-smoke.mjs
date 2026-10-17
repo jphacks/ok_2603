@@ -156,26 +156,50 @@ try {
     true,
   );
   assert.equal(
-    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
     0,
   );
   await screenshot("election-desktop.png");
+  await input("region-query", "存在しない市町村");
+  assert.equal(
+    await evaluate('document.querySelector("#region-query").getAttribute("aria-invalid")'),
+    "true",
+  );
+  assert.ok((await text()).includes("存在しない市町村名です"));
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    true,
+  );
   await input("region-query", "那覇");
   assert.equal(
-    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
     1,
   );
-  await click("那覇市 →");
+  assert.ok((await text()).includes("市町村名の候補を選択するか、正式名称を入力してください。"));
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    true,
+  );
+  await input("region-query", "那覇市");
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    false,
+  );
+  assert.equal(
+    await evaluate('document.querySelector("#region-query-error")'),
+    null,
+  );
+  await click("検索");
   await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
   assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
   await click("ホーム");
   await waitFor('document.querySelector("#region-search") !== null');
   await input("region-query", "沖縄");
   assert.equal(
-    await evaluate('document.querySelectorAll("#region-search .text-button").length'),
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
     2,
   );
-  await click("沖縄県 →");
+  await click("沖縄県 都道府県");
   await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
   await click("過去の選挙");
   await click("候補者一覧の収録状況を見る →");
@@ -228,7 +252,7 @@ try {
   })()`);
   await click("ホーム");
   await input("region-query", "沖縄");
-  await click("沖縄県 →");
+  await click("沖縄県 都道府県");
   assert.ok((await text()).includes("50%"));
   await click("候補者を見る →");
   assert.equal(
@@ -291,7 +315,7 @@ try {
   );
   await screenshot("election-mobile.png");
   await input("region-query", "沖縄");
-  await click("沖縄県 →");
+  await click("沖縄県 都道府県");
   await click("候補者一覧の収録状況を見る →");
   await click("詳細・具体性チェックを見る →");
   assert.equal(

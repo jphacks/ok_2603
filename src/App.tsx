@@ -102,6 +102,20 @@ function App() {
         normalize(name).includes(normalize(regionQuery)),
       )
     : [];
+  const exactPrefecture = prefectures.find(
+    (name) => normalize(name) === normalize(regionQuery),
+  );
+  const exactMunicipality = municipalities.find(
+    (name) => normalize(name) === normalize(regionQuery),
+  );
+  const canSearchRegion = !!exactPrefecture || !!exactMunicipality;
+  const hasRegionSuggestions =
+    !!regionQuery.trim() && !!(matches.length || municipalMatches.length);
+  const invalidMunicipality =
+    !!regionQuery.trim() &&
+    !matches.length &&
+    !municipalMatches.length &&
+    !exactPrefecture;
   useEffect(() => {
     heading.current?.focus();
   }, [page, region, candidateId]);
@@ -355,52 +369,89 @@ function App() {
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (matches.length === 1) {
-                    chooseRegion(matches[0]);
-                  } else if (municipalMatches.length === 1) {
-                    chooseMunicipality(municipalMatches[0]);
-                  }
+                  if (exactPrefecture) chooseRegion(exactPrefecture);
+                  else if (exactMunicipality)
+                    chooseMunicipality(exactMunicipality);
                 }}
               >
                 <label className="sr-only" htmlFor="region-query">
                   沖縄県または市町村名で検索
                 </label>
-                <div className="search-input">
-                  <Icon name="region" />
-                  <input
-                    id="region-query"
-                    type="search"
-                    placeholder="沖縄県または市町村名（例：那覇市）"
-                    value={regionQuery}
-                    onChange={(event) => setRegionQuery(event.target.value)}
-                  />
-                  <button className="button primary" type="submit">
-                    検索
-                  </button>
+                <div className="region-search-control">
+                  <div className="search-input">
+                    <Icon name="region" />
+                    <input
+                      id="region-query"
+                      type="search"
+                      role="combobox"
+                      aria-autocomplete="list"
+                      aria-controls="region-suggestions"
+                      aria-expanded={hasRegionSuggestions}
+                      aria-invalid={invalidMunicipality}
+                      aria-describedby={
+                        regionQuery.trim() && !canSearchRegion
+                          ? "region-query-error"
+                          : undefined
+                      }
+                      placeholder="沖縄県または市町村名（例：那覇市）"
+                      value={regionQuery}
+                      onChange={(event) => setRegionQuery(event.target.value)}
+                    />
+                    <button
+                      className="button primary"
+                      type="submit"
+                      disabled={!canSearchRegion}
+                    >
+                      検索
+                    </button>
+                  </div>
+                  {hasRegionSuggestions && (
+                    <div
+                      id="region-suggestions"
+                      className="region-suggestions"
+                      role="listbox"
+                      aria-label="検索候補"
+                    >
+                      {matches.map((name) => (
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected="false"
+                          key={name}
+                          onClick={() => chooseRegion(name)}
+                        >
+                          {name} <span>都道府県</span>
+                        </button>
+                      ))}
+                      {municipalMatches.map((name) => (
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected="false"
+                          key={name}
+                          onClick={() => chooseMunicipality(name)}
+                        >
+                          {name} <span>市町村</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </form>
+              {!!regionQuery.trim() && !canSearchRegion && (
+                <p
+                  id="region-query-error"
+                  className="search-error"
+                  role={invalidMunicipality ? "alert" : "status"}
+                >
+                  {invalidMunicipality
+                    ? "存在しない市町村名です。沖縄県内の候補から選択してください。"
+                    : "市町村名の候補を選択するか、正式名称を入力してください。"}
+                </p>
+              )}
               <p className="small">
                 対象は沖縄県内です。市町村ページへ進めます。選挙情報は公式資料を確認・登録後に掲載します。
               </p>
-              {regionQuery.trim() &&
-                matches.map((name) => (
-                  <button
-                    className="text-button"
-                    key={name}
-                    onClick={() => chooseRegion(name)}
-                  >
-                    {name} →
-                  </button>
-                ))}
-              {municipalMatches.map((name) => (
-                <button
-                  className="text-button"
-                  key={name}
-                  onClick={() => chooseMunicipality(name)}
-                >
-                  {name} →
-                </button>
-              ))}
             </section>
             <section className="principles">
               {[
