@@ -113,6 +113,22 @@ function App() {
     setPreview(false);
     window.scrollTo(0, 0);
   }
+  function openRegionSearch() {
+    const scrollToSearch = () => {
+      document.getElementById("region-search")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    };
+    if (page === "home") {
+      scrollToSearch();
+      return;
+    }
+    navigate("home");
+    window.setTimeout(scrollToSearch, 0);
+  }
   function chooseRegion(name: string) {
     setRegion(name);
     setElectionId(null);
@@ -205,7 +221,7 @@ function App() {
                 }
                 aria-current={page === target ? "page" : undefined}
                 onClick={() =>
-                  target === "region" ? navigate("home") : navigate(target)
+                  target === "region" ? openRegionSearch() : navigate(target)
                 }
               >
                 <Icon name={icon} />
@@ -291,6 +307,9 @@ function App() {
                   <br className="desktop-break" />
                   必要な情報を見つけて、自分の視点で比較できます。
                 </p>
+                <a className="button primary mobile-start" href="#region-search">
+                  地域から探す <span aria-hidden="true">↓</span>
+                </a>
                 <div className="hero-tags">
                   <span>全国47都道府県</span>
                   <span>国政・地方選挙</span>
