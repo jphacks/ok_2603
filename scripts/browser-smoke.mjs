@@ -206,26 +206,28 @@ try {
   );
   await click("沖縄県 都道府県");
   await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("過去の選挙");
-  await click("候補者一覧の収録状況を見る →");
-  assert.ok((await text()).includes("候補者情報は未収録です"));
-  await click("詳細・具体性チェックを見る →");
-  assert.ok((await text()).includes("実在する候補者ではありません"));
-  for (const tab of [
-    "経歴",
-    "議会での発言",
-    "議案への賛否",
-    "過去の公約・実施状況",
-    "公約",
-  ]) {
-    await click(tab);
-    assert.equal(
-      await evaluate(
-        'document.querySelector("[role=tabpanel] h2").textContent',
-      ),
-      tab,
-    );
-  }
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
+  // 実データの代わりに隔離されたブラウザー内だけで登録後の経路を確認する。
+  await evaluate(`(async () => {
+    const appSource = await (await fetch('/src/App.tsx')).text();
+    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
+    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
+    const d = await import(dataPath); const m = await import('/src/election/model.ts');
+    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
+    const recorded = value => ({status:'recorded', value, sources:[source]});
+    d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
+    d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
+    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
+  })()`);
+  await click("ホーム");
+  await input("region-query", "沖縄");
+  await click("沖縄県 都道府県");
+  assert.ok((await text()).includes("50%"));
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
+  await click("この選挙の候補者・公約を見る →");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
   await click("公約比較0");
   await click("未収録の比較表示を見る");
   for (let i = 0; i < 4; i++) await click("＋ 表示枠を追加");
@@ -243,23 +245,7 @@ try {
   );
   await screenshot("election-comparison.png");
   await click("表示例を閉じる");
-  // 実データの代わりに隔離されたブラウザー内だけで登録後の経路を確認する。
-  await evaluate(`(async () => {
-    const appSource = await (await fetch('/src/App.tsx')).text();
-    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
-    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
-    const d = await import(dataPath); const m = await import('/src/election/model.ts');
-    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
-    const recorded = value => ({status:'recorded', value, sources:[source]});
-    d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
-    d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
-    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
-  })()`);
-  await click("ホーム");
-  await input("region-query", "沖縄");
-  await click("沖縄県 都道府県");
-  assert.ok((await text()).includes("50%"));
-  await click("候補者を見る →");
+  await click("候補者一覧へ");
   assert.equal(
     await evaluate('document.querySelectorAll(".candidate-card").length'),
     2,
@@ -323,10 +309,10 @@ try {
     true,
   );
   await screenshot("election-mobile.png");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await input("region-query", "沖縄");
   await click("沖縄県 都道府県");
-  await click("候補者一覧の収録状況を見る →");
-  await click("詳細・具体性チェックを見る →");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
