@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { candidates, elections, glossary } from "./election/data";
 import {
   checkLabels,
-  groups,
   missing,
   normalize,
   prefectures,
@@ -36,8 +35,8 @@ const steps = [
   ],
   [
     "選挙と候補者を確認",
-    "地域ページから現在・過去の選挙と候補者を確認できます。未登録の情報は「未収録」と表示します。",
-    "prefecture-list",
+    "沖縄県を選ぶと、登録済みの選挙と候補者を確認できます。未登録の情報は「未収録」と表示します。",
+    "region-search",
   ],
   [
     "自分で読んで、比べる",
@@ -235,13 +234,6 @@ function App() {
         </div>
       </header>
       <main id="main" className="main">
-        <div className="prototype-note">
-          <span className="status-dot" />
-          試作品・データ登録前
-          <span>
-            掲載がないことは、選挙や記録が存在しないことを意味しません。
-          </span>
-        </div>
         {storageWarning && (
           <p role="status" className="notice">
             ブラウザーへの保存ができませんでした。次回も操作ガイドが表示される場合があります。
@@ -345,7 +337,13 @@ function App() {
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (matches.length === 1) chooseRegion(matches[0]);
+                  if (matches.length === 1) {
+                    chooseRegion(matches[0]);
+                  } else if (municipalMatches.length === 1) {
+                    chooseRegion(municipalMatches[0].prefectureIds[0]);
+                    setElectionId(municipalMatches[0].id);
+                    navigate("candidates");
+                  }
                 }}
               >
                 <label className="sr-only" htmlFor="region-query">
@@ -368,6 +366,16 @@ function App() {
               <p className="small">
                 対象は沖縄県内です。市町村別情報は公式資料を確認・登録した地域から表示します。
               </p>
+              {regionQuery.trim() &&
+                matches.map((name) => (
+                  <button
+                    className="text-button"
+                    key={name}
+                    onClick={() => chooseRegion(name)}
+                  >
+                    {name} →
+                  </button>
+                ))}
               {municipalMatches.map((item) => (
                 <button
                   className="text-button"
@@ -381,56 +389,6 @@ function App() {
                   {item.municipality} · {item.name} →
                 </button>
               ))}
-            </section>
-            <section
-              id="prefecture-list"
-              className={`section ${tour === 1 ? "tour-highlight" : ""}`}
-            >
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">OKINAWA PREFECTURE</p>
-                  <h2>対象地域</h2>
-                </div>
-                <span className="muted">沖縄県のみ</span>
-              </div>
-              <p className="small" role="status">
-                {regionQuery
-                  ? `${matches.length}件の対象地域が見つかりました。`
-                  : "沖縄県内の選挙情報を、公式資料の確認後に登録します。"}
-              </p>
-              {!matches.length && !municipalMatches.length && (
-                <Empty title="一致する登録地域がありません">
-                  「沖縄県」を選択してください。市町村別の選挙情報は現在未収録です。
-                </Empty>
-              )}
-              <div className="region-grid">
-                {groups.map((group) => {
-                  const names = group.names.filter((name) =>
-                    matches.includes(name),
-                  );
-                  return (
-                    !!names.length && (
-                      <article className="region-group" key={group.name}>
-                        <h3>
-                          <span className="region-dot" />
-                          {group.name}
-                        </h3>
-                        <div>
-                          {names.map((name) => (
-                            <button
-                              key={name}
-                              onClick={() => chooseRegion(name)}
-                            >
-                              {name}
-                              <span aria-hidden="true">↗</span>
-                            </button>
-                          ))}
-                        </div>
-                      </article>
-                    )
-                  );
-                })}
-              </div>
             </section>
             <section className="principles">
               {[
