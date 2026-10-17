@@ -34,7 +34,7 @@ const candidate = {
 const election = {
   id: "test-election",
   name: "テスト専用選挙",
-  prefectureIds: ["東京都"],
+  prefectureIds: ["沖縄県"],
   level: "local",
   period: "past",
   date: "2020-01-01",
@@ -42,13 +42,8 @@ const election = {
   turnout: model.missing(),
 };
 
-test("47都道府県に欠落・重複がない", () => {
-  assert.equal(model.prefectures.length, 47);
-  assert.equal(new Set(model.prefectures).size, 47);
-  assert.ok(
-    model.prefectures.includes("北海道") &&
-      model.prefectures.includes("沖縄県"),
-  );
+test("対象地域は沖縄県のみ", () => {
+  assert.deepEqual(model.prefectures, ["沖縄県"]);
 });
 test("氏名・政党・公約を検索し、全角と半角を正規化する", () => {
   for (const query of ["氏名", "所属", "abc", "ＡＢＣ", "検索対象 処理確認"])
@@ -75,6 +70,16 @@ test("公開データの整合性と、空状態を有効な未収録として�
   assert.deepEqual(validateData({ elections: [], candidates: [], glossary: [] }, model), []);
   assert.ok(!data.candidates.some(item => item.id === 'test-only'));
   assert.deepEqual(validateData(data, model), []);
+  const outOfScope = {
+    elections: [{ ...election, prefectureIds: ["沖縄県", "東京都"] }],
+    candidates: [],
+    glossary: [],
+  };
+  assert.ok(
+    validateData(outOfScope, model).some((error) =>
+      error.includes("対象都道府県が不正"),
+    ),
+  );
 });
 test("出典不足・不明な選挙・不正な投票率を検出する", () => {
   const valid = {

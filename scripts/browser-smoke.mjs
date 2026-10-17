@@ -148,7 +148,7 @@ try {
   );
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 1');
   await waitFor('document.querySelector(".region-grid") !== null');
   assert.equal(
     await evaluate('document.querySelector("[role=dialog]") === null'),
@@ -156,7 +156,7 @@ try {
   );
   assert.equal(
     await evaluate('document.querySelectorAll(".region-group button").length'),
-    47,
+    1,
   );
   await screenshot("election-desktop.png");
   await input("region-query", "沖縄");
@@ -267,7 +267,7 @@ try {
   // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 1');
   await waitFor('document.querySelector(".region-grid") !== null');
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
@@ -280,8 +280,8 @@ try {
     true,
   );
   await screenshot("election-mobile.png");
-  await input("region-query", "東京");
-  await click("東京都↗");
+  await input("region-query", "沖縄");
+  await click("沖縄県↗");
   await click("候補者一覧の収録状況を見る →");
   await click("詳細・具体性チェックを見る →");
   assert.equal(
@@ -291,7 +291,7 @@ try {
   await screenshot("election-mobile-detail.png");
   assert.deepEqual(errors, []);
   console.log(
-    "UI PASS: tutorial persistence, 47 regions, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
+    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
   );
 } finally {
   socket?.close();

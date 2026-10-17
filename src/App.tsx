@@ -30,8 +30,8 @@ const tabs = [
 ];
 const steps = [
   [
-    "まずは、地域を選びましょう",
-    "地域検索に都道府県名を入力するか、47都道府県一覧から地域を選べます。",
+    "まずは、沖縄県内の地域を選びましょう",
+    "このアプリは沖縄県内を対象にしています。市町村別の情報は確認・登録後に掲載します。",
     "region-search",
   ],
   [
@@ -311,7 +311,7 @@ function App() {
                   地域から探す <span aria-hidden="true">↓</span>
                 </a>
                 <div className="hero-tags">
-                  <span>全国47都道府県</span>
+                  <span>沖縄県内が対象</span>
                   <span>国政・地方選挙</span>
                   <span>公式資料を確認</span>
                 </div>
@@ -340,7 +340,7 @@ function App() {
             >
               <div>
                 <p className="eyebrow">FIND YOUR REGION</p>
-                <h2>あなたの地域を探す</h2>
+                <h2>沖縄県内の地域を探す</h2>
               </div>
               <form
                 onSubmit={(event) => {
@@ -349,14 +349,14 @@ function App() {
                 }}
               >
                 <label className="sr-only" htmlFor="region-query">
-                  地域名で検索
+                  沖縄県または市町村名で検索
                 </label>
                 <div className="search-input">
                   <Icon name="region" />
                   <input
                     id="region-query"
                     type="search"
-                    placeholder="都道府県名を入力（例：東京都）"
+                    placeholder="沖縄県または市町村名（例：那覇市）"
                     value={regionQuery}
                     onChange={(event) => setRegionQuery(event.target.value)}
                   />
@@ -366,7 +366,7 @@ function App() {
                 </div>
               </form>
               <p className="small">
-                市区町村の検索は、確認済みの選挙データが登録された地域から利用できます。
+                対象は沖縄県内です。市町村別情報は公式資料を確認・登録した地域から表示します。
               </p>
               {municipalMatches.map((item) => (
                 <button
@@ -388,19 +388,19 @@ function App() {
             >
               <div className="section-heading">
                 <div>
-                  <p className="eyebrow">ALL PREFECTURES</p>
-                  <h2>都道府県から選ぶ</h2>
+                  <p className="eyebrow">OKINAWA PREFECTURE</p>
+                  <h2>対象地域</h2>
                 </div>
-                <span className="muted">47都道府県に対応</span>
+                <span className="muted">沖縄県のみ</span>
               </div>
               <p className="small" role="status">
                 {regionQuery
-                  ? `${matches.length}件の都道府県が見つかりました。`
-                  : "確認済みの地域から、順次情報を登録します。"}
+                  ? `${matches.length}件の対象地域が見つかりました。`
+                  : "沖縄県内の選挙情報を、公式資料の確認後に登録します。"}
               </p>
               {!matches.length && !municipalMatches.length && (
                 <Empty title="一致する登録地域がありません">
-                  都道府県名で検索してください。市区町村データは現在未収録です。
+                  「沖縄県」を選択してください。市町村別の選挙情報は現在未収録です。
                 </Empty>
               )}
               <div className="region-grid">
