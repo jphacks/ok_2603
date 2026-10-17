@@ -151,8 +151,13 @@ try {
   await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
   assert.equal(await evaluate('document.querySelector(".prototype-note")'), null);
   assert.equal(await evaluate('document.querySelector("#prefecture-list")'), null);
+  assert.equal(await evaluate('document.querySelector(".mobile-start")'), null);
   assert.equal(
     await evaluate('document.querySelector("[role=dialog]") === null'),
+    true,
+  );
+  assert.equal(
+    await evaluate('document.querySelector(".navigation .nav-region") !== null'),
     true,
   );
   assert.equal(
@@ -309,6 +314,10 @@ try {
     deviceScaleFactor: 1,
     mobile: true,
   });
+  assert.equal(
+    await evaluate('getComputedStyle(document.querySelector(".navigation .nav-region")).display'),
+    "none",
+  );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,

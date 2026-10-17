@@ -413,9 +413,6 @@ svg {
   white-space: normal;
   text-decoration: none;
 }
-.mobile-start {
-  display: none;
-}
 .button.primary {
   background: #18345c;
   color: #fff;
@@ -1075,6 +1072,9 @@ tbody tr:last-child > * {
     gap: 0;
     justify-content: space-around;
   }
+  .navigation .nav-region {
+    display: none;
+  }
   .navigation button {
     flex: 1;
     flex-direction: column;
@@ -1400,16 +1400,6 @@ tbody tr:last-child > * {
     height: 16px;
     min-width: 16px;
     font-size: 11px;
-  }
-
-  .mobile-start {
-    display: inline-flex;
-    min-height: 48px;
-    width: 100%;
-    margin: 2px 0 20px;
-    border-radius: 8px;
-    font-size: 17px;
-    text-decoration: none;
   }
 
   .hero {
