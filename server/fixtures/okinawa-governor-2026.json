@@ -1,0 +1,26 @@
+{
+  "election": {
+    "id": "okinawa-governor-2026",
+    "name": "令和8年沖縄県知事選挙",
+    "kind": "governor",
+    "status": "投票終了",
+    "municipality": "沖縄県",
+    "announcedOn": "2026-08-27",
+    "votingOn": "2026-09-13",
+    "url": "https://www.pref.okinawa.lg.jp/_res/projects/default_project/_page_/001/040/303/r8chiji_kohoshaichiran.pdf",
+    "pageUrl": "https://www.pref.okinawa.lg.jp/kensei/senkyo/1005009/1023802/1040303/index.html",
+    "completeCandidates": true
+  },
+  "candidates": [
+    { "name": "古謝　げんた", "party": "無所属", "officialSite": null },
+    { "name": "カネシマ　シュン", "party": "無所属", "officialSite": null },
+    { "name": "すえよし　まさひろ", "party": "無所属", "officialSite": null },
+    { "name": "玉城　デニー", "party": "無所属", "officialSite": null },
+    { "name": "ヒガ　タカシ", "party": "無所属", "officialSite": null },
+    { "name": "屋良　朝助", "party": "琉球独立党", "officialSite": null }
+  ],
+  "pledges": [],
+  "sourceTitle": "沖縄県知事選挙候補者情報（沖縄県選挙管理委員会・PDF）",
+  "sourceExcerpt": "令和8年9月13日執行 沖縄県知事選挙候補者情報。届出番号1から6まで。",
+  "sourceContentHash": "official-pdf-grounding-fixture-r8chiji-kohoshaichiran"
+}
