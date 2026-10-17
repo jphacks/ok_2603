@@ -241,13 +241,16 @@ function App() {
               <button
                 id={target === "compare" ? "comparison-link" : undefined}
                 key={target}
-                className={
+                className={[
+                  target === "region" ? "nav-region" : "",
                   page === target ||
                   (target === "region" &&
                     ["candidates", "detail"].includes(page))
                     ? "nav-active"
-                    : ""
-                }
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 aria-current={page === target ? "page" : undefined}
                 onClick={() =>
                   target === "region" ? openRegionSearch() : navigate(target)
@@ -331,9 +334,6 @@ function App() {
                   <br className="desktop-break" />
                   必要な情報を見つけて、自分の視点で比較できます。
                 </p>
-                <a className="button primary mobile-start" href="#region-search">
-                  地域から探す <span aria-hidden="true">↓</span>
-                </a>
                 <div className="hero-tags">
                   <span>沖縄県内が対象</span>
                   <span>国政・地方選挙</span>
