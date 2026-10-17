@@ -148,44 +148,86 @@ try {
   );
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
-  await waitFor('document.querySelector(".region-grid") !== null');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
+  assert.equal(await evaluate('document.querySelector(".prototype-note")'), null);
+  assert.equal(await evaluate('document.querySelector("#prefecture-list")'), null);
+  assert.equal(await evaluate('document.querySelector(".mobile-start")'), null);
   assert.equal(
     await evaluate('document.querySelector("[role=dialog]") === null'),
     true,
   );
   assert.equal(
-    await evaluate('document.querySelectorAll(".region-group button").length'),
-    47,
+    await evaluate('document.querySelector(".navigation .nav-region") !== null'),
+    true,
+  );
+  assert.equal(
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
+    0,
   );
   await screenshot("election-desktop.png");
-  await input("region-query", "沖縄");
+  await input("region-query", "存在しない市町村");
   assert.equal(
-    await evaluate('document.querySelectorAll(".region-group button").length'),
+    await evaluate('document.querySelector("#region-query").getAttribute("aria-invalid")'),
+    "true",
+  );
+  assert.ok((await text()).includes("存在しない市町村名です"));
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    true,
+  );
+  await input("region-query", "那覇");
+  assert.equal(
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
     1,
   );
-  await click("沖縄県↗");
+  assert.ok((await text()).includes("市町村名の候補を選択するか、正式名称を入力してください。"));
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    true,
+  );
+  await input("region-query", "那覇市");
+  assert.equal(
+    await evaluate('document.querySelector("#region-search button[type=submit]").disabled'),
+    false,
+  );
+  assert.equal(
+    await evaluate('document.querySelector("#region-query-error")'),
+    null,
+  );
+  await click("検索");
+  await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
+  assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
+  await click("ホーム");
+  await waitFor('document.querySelector("#region-search") !== null');
+  await input("region-query", "沖縄");
+  assert.equal(
+    await evaluate('document.querySelectorAll("#region-suggestions button").length'),
+    2,
+  );
+  await click("沖縄県 都道府県");
   await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("過去の選挙");
-  await click("候補者一覧の収録状況を見る →");
-  assert.ok((await text()).includes("候補者情報は未収録です"));
-  await click("詳細・具体性チェックを見る →");
-  assert.ok((await text()).includes("実在する候補者ではありません"));
-  for (const tab of [
-    "経歴",
-    "議会での発言",
-    "議案への賛否",
-    "過去の公約・実施状況",
-    "公約",
-  ]) {
-    await click(tab);
-    assert.equal(
-      await evaluate(
-        'document.querySelector("[role=tabpanel] h2").textContent',
-      ),
-      tab,
-    );
-  }
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
+  // 実データの代わりに隔離されたブラウザー内だけで登録後の経路を確認する。
+  await evaluate(`(async () => {
+    const appSource = await (await fetch('/src/App.tsx')).text();
+    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
+    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
+    const d = await import(dataPath); const m = await import('/src/election/model.ts');
+    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
+    const recorded = value => ({status:'recorded', value, sources:[source]});
+    d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
+    d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
+    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
+  })()`);
+  await click("ホーム");
+  await input("region-query", "沖縄");
+  await click("沖縄県 都道府県");
+  assert.ok((await text()).includes("50%"));
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
+  await click("この選挙の候補者・公約を見る →");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
   await click("公約比較0");
   await click("未収録の比較表示を見る");
   for (let i = 0; i < 4; i++) await click("＋ 表示枠を追加");
@@ -203,23 +245,7 @@ try {
   );
   await screenshot("election-comparison.png");
   await click("表示例を閉じる");
-  // 実データの代わりに隔離されたブラウザー内だけで登録後の経路を確認する。
-  await evaluate(`(async () => {
-    const appSource = await (await fetch('/src/App.tsx')).text();
-    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
-    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
-    const d = await import(dataPath); const m = await import('/src/election/model.ts');
-    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
-    const recorded = value => ({status:'recorded', value, sources:[source]});
-    d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
-    d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
-    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
-  })()`);
-  await click("ホーム");
-  await input("region-query", "沖縄");
-  await click("沖縄県↗");
-  assert.ok((await text()).includes("50%"));
-  await click("候補者を見る →");
+  await click("候補者一覧へ");
   assert.equal(
     await evaluate('document.querySelectorAll(".candidate-card").length'),
     2,
@@ -267,8 +293,7 @@ try {
   // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
-  await waitFor('!document.documentElement.dataset.testReload && document.querySelectorAll(".region-group button").length === 47');
-  await waitFor('document.querySelector(".region-grid") !== null');
+  await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 844,
@@ -276,14 +301,18 @@ try {
     mobile: true,
   });
   assert.equal(
+    await evaluate('getComputedStyle(document.querySelector(".navigation .nav-region")).display'),
+    "none",
+  );
+  assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
   );
   await screenshot("election-mobile.png");
-  await input("region-query", "東京");
-  await click("東京都↗");
-  await click("候補者一覧の収録状況を見る →");
-  await click("詳細・具体性チェックを見る →");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
+  await input("region-query", "沖縄");
+  await click("沖縄県 都道府県");
+  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
@@ -291,7 +320,7 @@ try {
   await screenshot("election-mobile-detail.png");
   assert.deepEqual(errors, []);
   console.log(
-    "UI PASS: tutorial persistence, 47 regions, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
+    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
   );
 } finally {
   socket?.close();
