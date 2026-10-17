@@ -51,11 +51,11 @@
 
 #### フレームワーク・ライブラリ・モジュール
 
-- React / TypeScript / Vite（採用予定）
+- React / TypeScript / Vite
 
 #### デバイス
 
-- PC・スマートフォンのブラウザー（予定）
+- PC・スマートフォンのブラウザー
 
 ### 独自技術
 
@@ -70,3 +70,54 @@
 - [初版テスト項目](docs/test-cases.md)
 - [デモ・発表計画](docs/demo-plan.md)
 - [JPHACKS 2026審査基準との対応](docs/jphacks-rubric.md)
+
+## 開発環境のセットアップ
+
+### 必要なもの
+
+- Node.js 20.19 以上、または Node.js 22.12 以上
+- npm
+- Git
+
+### 初回セットアップ
+
+リポジトリをまだ取得していない場合:
+
+```bash
+git clone https://github.com/jphacks/ok_2603.git
+cd ok_2603
+```
+
+開発環境のPull Requestが `main` に取り込まれた後、リポジトリを取得済みのメンバーはプロジェクトのフォルダーで最新の変更を取り込みます。
+
+```bash
+git pull origin main
+```
+
+依存パッケージをロックファイルどおりにインストールし、開発サーバーを起動します。
+
+```bash
+npm ci
+npm run dev
+```
+
+ターミナルに表示されたURL（通常は `http://localhost:5173/`）をブラウザーで開いてください。開発サーバーを止めるには、起動中のターミナルで `Ctrl+C` を押します。
+
+Pull Requestが `main` に取り込まれる前に試す場合は、次のように環境構築ブランチを取得してください。
+
+```bash
+git fetch origin
+git switch --track origin/setup/react-vite
+npm ci
+npm run dev
+```
+
+Node.jsは事前に各自のPCへインストールしてください。`git pull` はコードを取得する操作で、Node.jsやnpmパッケージのインストール、アプリの起動は行いません。
+
+### ビルドとコード確認
+
+```bash
+npm run build
+```
+
+機能を変更する場合は `main` に直接コミットせず、作業ブランチを作成してPull Requestで共有してください。
