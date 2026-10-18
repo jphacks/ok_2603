@@ -14,7 +14,7 @@ import { OFFICIAL_EXPLORATION_ROOTS, countOfficialCandidateRows, parseOfficialCa
   electionIdFromSource, yearFromLabel } from './official-parser.mjs';
 import { candidateWebsitesFromPdf, candidateSiteIdentity, normalizeXUrl, relevantSameSitePages, verifiedXLinksOnPage } from './x-discovery.mjs';
 import { verifiedPortraitBox } from './portrait-layout.mjs';
-import { createPollingHandler } from './polling-api.mjs';
+import { createPollingHandler, createSupabaseStore } from './polling-api.mjs';
 import { requireAdmin } from './admin-auth.mjs';
 import { fetchIssueOfficialRoots, electionLinksForRoot, extractMunicipalElection } from './issue-election-discovery.mjs';
 
@@ -639,8 +639,10 @@ function photoDisplay(row) {
   return {photo_available:available,photo_preview:available&&!approved};
 }
 const municipalityNames = JSON.parse(await readFile(new URL('../shared/municipalities.json', import.meta.url), 'utf8'));
+const supabaseStore = createSupabaseStore();
 const handlePolling = createPollingHandler({
   requireAdmin, send,
+  store: supabaseStore,
   getMunicipalities: () => municipalityNames,
   getElections: () => rows("SELECT id,name,municipality,voting_on,official_url FROM elections WHERE voting_on IS NOT NULL AND EXISTS (SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')"),
 });
@@ -651,16 +653,10 @@ const server=createServer(async (req,res)=>{
     if (await handlePolling(req,res,url)) return;
     if (req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true});
     if (req.method==='GET' && url.pathname==='/api/elections') {
-      const conditions=['EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status=\'verified\')']; const args=[];
-      for(const field of ['kind','status']) if(url.searchParams.has(field)){conditions.push(`${field}=?`);args.push(url.searchParams.get(field));}
-      if(url.searchParams.has('municipality')) {
-        const name=url.searchParams.get('municipality');
-        conditions.push(name==='沖縄県'?'municipality=?':"(municipality=? OR municipality='沖縄県')");
-        args.push(name);
-      }
-      const data=rows(`SELECT * FROM elections WHERE ${conditions.join(' AND ')} ORDER BY voting_on DESC`,args)
-        .map(election=>({...election,sources:rows(`SELECT url,title AS publisher,substr(COALESCE(verified_at,retrieved_at),1,10) AS checkedAt
-          FROM sources WHERE url=? AND verification_status='verified' ORDER BY retrieved_at DESC LIMIT 1`,[election.official_url])}));
+      const data=await supabaseStore.listElectionCatalog({
+        municipality: url.searchParams.get('municipality') || undefined,
+        kind: url.searchParams.get('kind') || undefined,
+      });
       const latestJob=rows('SELECT id,status FROM collection_jobs ORDER BY started_at DESC LIMIT 1')[0];
       const hasCollectionErrors=latestJob&&rows('SELECT 1 FROM collection_errors WHERE job_id=? LIMIT 1',[latestJob.id]).length>0;
       const collectionStatus=!latestJob?'idle':latestJob.status==='completed'&&hasCollectionErrors?'partial':latestJob.status;

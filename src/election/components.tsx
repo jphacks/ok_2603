@@ -24,7 +24,10 @@ export function Sources({ sources }: { sources: Source[] }) {
             公式資料 ↗
           </a>
           <span>
-            {source.publisher} · 最終確認 {source.checkedAt}
+            {source.publisher}
+            {source.checkedAt
+              ? ` · 最終確認 ${source.checkedAt}`
+              : " · 確認日未記録"}
           </span>
         </span>
       ))}
@@ -123,12 +126,14 @@ export function RecordText({ entry }: { entry: Entry<string | string[]> }) {
 export function Empty({
   title,
   children,
+  className,
 }: {
   title: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="empty">
+    <div className={`empty${className ? ` ${className}` : ""}`}>
       <span className="empty-symbol" aria-hidden="true">
         ▤
       </span>

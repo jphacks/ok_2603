@@ -160,10 +160,12 @@
   z-index: 20;
   top: auto;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
+  width: min(100%, 430px);
+  transform: translateX(-50%);
   height: calc(82px + env(safe-area-inset-bottom));
-  padding: 0 max(16px, calc((100vw - 1120px) / 2)) env(safe-area-inset-bottom);
+  padding: 0 16px env(safe-area-inset-bottom);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
@@ -175,6 +177,28 @@
 .home-shell .navigation svg { display: block; width: 27px; height: 27px; }
 .home-shell .navigation .nav-active { color: #103555; border-top-color: #103555; font-weight: 700; }
 .home-shell .navigation .nav-active svg { fill: #103555; stroke: #103555; }
+@container (max-width: 600px) {
+  .home-visual { min-height: 230px; padding: 28px 25px; background-position: 56% center; }
+  .home-shell .home-catchphrase { font-size: clamp(29px, 8.7cqw, 52px); line-height: 1.42; margin-bottom: 10px; letter-spacing: 0.035em; }
+  .home-content { margin-top: -57px; padding: 0 14px; }
+  .home-shell .governor-entry { min-height: 132px; padding: 16px 17px; border-radius: 16px; margin-bottom: 16px; }
+  .home-shell .governor-entry-label { font-size: clamp(26px, 6.9cqw, 39px); letter-spacing: 0.025em; }
+  .home-shell .governor-entry-arrow { width: 40px; height: 40px; right: 17px; bottom: 13px; font-size: 27px; }
+  .governor-flower { width: 130px; height: 190px; right: -12px; bottom: -34px; }
+  .home-island { width: 108px; height: 125px; top: 4px; right: 68px; }
+  .home-shell .home-search { padding: 19px 13px 14px; border-radius: 16px; }
+  .home-shell .home-search h2 { font-size: clamp(18px, 4.8cqw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
+  .home-search-heading p { font-size: 11px; margin-bottom: 15px; line-height: 1.6; }
+  .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
+  .home-shell .search-input input { font-size: 14px; line-height: 1.5; }
+  .home-shell .home-search-icon { width: 22px; height: 22px; }
+  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 12px; }
+  .home-city-shortcuts { gap: 6px; margin-top: 11px; }
+  .home-city-shortcuts button { font-size: 11px; min-height: 44px; padding: 6px 7px; }
+  .home-shell .home-search > .small { font-size: 10px; margin-top: 11px; line-height: 1.7; }
+  .home-flower-outline { width: 130px; height: 120px; }
+  .home-image-note { font-size: 9px; margin-top: 8px; }
+}
 @media (max-width: 600px) {
   .home-shell { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
   .home-shell .header-inner { height: 74px; padding: 0 19px; gap: 8px; }

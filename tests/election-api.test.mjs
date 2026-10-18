@@ -110,11 +110,11 @@ async function freePort() {
   return port;
 }
 async function startApi(port, db, fixture) {
-  const env={...process.env,API_PORT:String(port),API_HOST:'127.0.0.1',DATABASE_PATH:db,ADMIN_API_TOKEN:'test-token-not-for-production',GEMINI_API_KEY:'',NODE_ENV:fixture?'test':'development'};
+  const env={...process.env,API_PORT:String(port),API_HOST:'127.0.0.1',DATABASE_PATH:db,ADMIN_API_TOKEN:'test-token-not-for-production',GEMINI_API_KEY:'',NODE_ENV:fixture?'test':'development',SUPABASE_URL:'https://supabase.test',SUPABASE_ANON_KEY:'test-anon-key',SUPABASE_SERVICE_ROLE_KEY:'test-service-key'};
   if(fixture) env.COLLECTION_FIXTURE='okinawa-governor-2026'; else delete env.COLLECTION_FIXTURE;
-  // The failure-recovery test must not crawl a real website or depend on its latency.
-  const failureImport = 'data:text/javascript,' + encodeURIComponent("globalThis.fetch = async () => { throw new Error('test-only injected network failure'); };");
-  const child=spawn(process.execPath,[...(!fixture ? ['--import',failureImport] : []),'server/index.mjs'],{cwd:process.cwd(),env,stdio:['ignore','ignore','pipe']});
+  const failure=fixture?'false':'true';
+  const mockImport = 'data:text/javascript,' + encodeURIComponent(`const elections=new Map();const originalFetch=globalThis.fetch;globalThis.fetch=async(input,options={})=>{const url=new URL(input instanceof URL?input.href:typeof input==='string'?input:input.url);if(url.hostname==='supabase.test'){if(url.pathname==='/rest/v1/elections'&&options.method==='POST'){for(const item of JSON.parse(options.body||'[]'))elections.set(item.id,item);return new Response('[]',{status:201});}if(url.pathname==='/rest/v1/elections'&&(!options.method||options.method==='GET'))return new Response(JSON.stringify([...elections.values()]));if(url.pathname==='/rest/v1/municipalities')return new Response('[]');return new Response('{}',{status:404});}if(${failure})throw new Error('test-only injected network failure');return originalFetch(input,options);};`);
+  const child=spawn(process.execPath,['--import',mockImport,'server/index.mjs'],{cwd:process.cwd(),env,stdio:['ignore','ignore','pipe']});
   let errors=''; child.stderr.on('data',chunk=>errors+=chunk);
   const base=`http://127.0.0.1:${port}`;
   for(let i=0;i<60;i++) {
@@ -154,6 +154,8 @@ test('official Okinawa fixture is idempotent, verified-only, authenticated, and 
       const {jobId}=await accepted.json();
       assert.equal((await waitJob(api.base,jobId)).status,'completed');
     }
+    const synced=await fetch(`${api.base}/api/internal/polling/sync-catalog`,{method:'POST',headers});
+    assert.equal(synced.status,200);
     const elections=await (await fetch(`${api.base}/api/elections?kind=governor`)).json();
     assert.equal(elections.data.length,1);
     const nahaElections=await (await fetch(`${api.base}/api/elections?municipality=${encodeURIComponent('那覇市')}`)).json();
@@ -161,7 +163,7 @@ test('official Okinawa fixture is idempotent, verified-only, authenticated, and 
     assert.equal(nahaElections.collectionStatus,'completed');
     const nahaElection=nahaElections.data.find(election=>election.municipality==='那覇市');
     assert.equal(nahaElection.sources[0].url,'https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html');
-    assert.match(nahaElection.sources[0].checkedAt,/^\d{4}-\d{2}-\d{2}$/);
+    assert.equal(nahaElection.sources[0].publisher,'Supabase登録');
     const electionId=elections.data[0].id;
     const listing=await (await fetch(`${api.base}/api/elections/${electionId}/candidates`)).json();
     assert.equal(listing.complete,true);

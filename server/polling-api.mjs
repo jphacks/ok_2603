@@ -1,4 +1,5 @@
 import { validatePlace, validateDistrict, validateConfiguration, uuid, catalogId } from './polling-validation.mjs';
+import { electionKindFromLabel } from './official-parser.mjs';
 
 // Fixed-resource REST adapter: credentials never leave this server module.
 export function createSupabaseStore(env = process.env, fetcher = fetch) {
@@ -34,6 +35,39 @@ export function createSupabaseStore(env = process.env, fetcher = fetch) {
         result.push(...page);
         if (page.length < 500) return result;
       }
+    },
+    async listElectionCatalog({ municipality, kind } = {}) {
+      const elections = await this.list('elections', {
+        query: {
+          select: 'id,name,municipality,voting_on,official_url',
+          order: 'voting_on.desc,id.asc',
+        },
+      });
+      const today = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Tokyo',
+      }).format(new Date());
+      return elections
+        .map(election => ({
+          ...election,
+          municipality: election.municipality || null,
+          kind: electionKindFromLabel(election.name),
+          status: !election.voting_on
+            ? '情報未確認'
+            : election.voting_on < today
+              ? '投票終了'
+              : '予定',
+          sources: [{
+            url: election.official_url,
+            publisher: 'Supabase登録',
+            checkedAt: '',
+          }],
+        }))
+        .filter(election =>
+          (!municipality || election.municipality === municipality ||
+            (municipality !== '沖縄県' &&
+              (election.municipality === null || election.municipality === '沖縄県'))) &&
+          (!kind || election.kind === kind),
+        );
     },
   };
 }

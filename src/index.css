@@ -14,6 +14,17 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: #e9edf2;
+}
+.app-shell {
+  position: relative;
+  width: min(100%, 430px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow-x: clip;
+  background: #fff;
+  box-shadow: 0 0 24px #18345c14;
+  container-type: inline-size;
 }
 button,
 input,
@@ -782,6 +793,9 @@ tbody tr:last-child > * {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
+}
+.election-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 .candidate-card,
 .election-card {
@@ -1994,58 +2008,99 @@ tbody tr:last-child > * {
   }
 }
 
-@media (max-width: 700px) {
-  .main {
-    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+.app-shell:not(.home-shell) .main {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
+.app-shell:not(.home-shell) .navigation {
+  position: fixed;
+  z-index: 20;
+  top: auto;
+  right: auto;
+  bottom: 0;
+  left: 50%;
+  width: min(100%, 430px);
+  transform: translateX(-50%);
+  height: calc(82px + env(safe-area-inset-bottom));
+  padding: 0 16px env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0;
+  background: #fffefb;
+  border-top: 1px solid #dedfdc;
+}
+
+.app-shell:not(.home-shell) .main {
+  padding-right: 16px;
+  padding-left: 16px;
+}
+
+.app-shell:not(.home-shell) .navigation button {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border: 0;
+  border-top: 3px solid transparent;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.app-shell:not(.home-shell) .navigation button.nav-active {
+  color: #18345c;
+  border-top-color: #18345c;
+  background: #f6f8fb;
+}
+
+.app-shell:not(.home-shell) .navigation svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+}
+
+.app-shell:not(.home-shell) .navigation .count {
+  position: absolute;
+  top: 5px;
+  left: calc(50% + 11px);
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  font-size: 11px;
+}
+
+@container (max-width: 600px) {
+  .region-page-heading {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
   }
 
-  .navigation {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 20;
-    height: calc(72px + env(safe-area-inset-bottom));
-    padding: 4px 6px env(safe-area-inset-bottom);
-    justify-content: space-around;
-    gap: 0;
-    background: #fff;
-    border-top: 1px solid #e2e7ee;
-  }
-
-  .navigation button {
-    position: relative;
+  .region-page-heading > div {
     flex: 1;
     min-width: 0;
-    min-height: 56px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    padding: 4px 2px;
-    font-size: 13px;
-    line-height: 1.2;
   }
 
-  .navigation button.nav-active {
-    border-top: 3px solid #18345c;
-    border-bottom: 0;
-    background: #f6f8fb;
+  .region-page-heading h1 {
+    overflow-wrap: normal;
+    word-break: keep-all;
+    white-space: nowrap;
+    font-size: clamp(19px, 5.4cqw, 23px);
   }
 
-  .navigation svg {
-    display: block;
-    width: 21px;
-    height: 21px;
+  .region-page-heading > .button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 7px 9px;
+    font-size: 12px;
+    white-space: nowrap;
   }
 
-  .navigation .count {
-    position: absolute;
-    top: 3px;
-    left: calc(50% + 11px);
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    font-size: 11px;
+  .election-empty-state h3 {
+    white-space: nowrap;
+    font-size: clamp(12px, 3.35cqw, 14px);
   }
 }
 
