@@ -9,6 +9,16 @@ const ministrySource = (url: string) => ({
   publisher: "総務省",
   checkedAt: glossaryCheckedAt,
 });
+const constitutionSource = {
+  url: "https://laws.e-gov.go.jp/law/321CONSTITUTION",
+  publisher: "e-Gov法令検索（日本国憲法）",
+  checkedAt: glossaryCheckedAt,
+};
+const electionLawSource = {
+  url: "https://laws.e-gov.go.jp/law/325AC1000000100",
+  publisher: "e-Gov法令検索（公職選挙法）",
+  checkedAt: glossaryCheckedAt,
+};
 
 export const glossary: GlossaryTerm[] = [
   {
@@ -305,6 +315,142 @@ export const glossary: GlossaryTerm[] = [
     sources: [
       ministrySource(
         "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo03.html",
+      ),
+    ],
+  },
+  {
+    term: "公示と告示",
+    definition:
+      "どちらも選挙について公式に知らせることです。国政選挙では「公示」、地方選挙では「告示」という呼び方が使われます。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "与党と野党",
+    definition:
+      "与党は内閣を組織し政権を担う政党、野党はその内閣に参加していない政党を指します。政策ごとに賛否が異なることもあります。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "政党",
+    definition:
+      "共通する政策や政治上の考えをもとに活動する人々の団体です。選挙や国会などを通じて政治に関わります。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo01.html",
+      ),
+    ],
+  },
+  {
+    term: "連立政権",
+    definition:
+      "複数の政党が協力して内閣を組織し、政権を担う形です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "内閣",
+    definition:
+      "内閣総理大臣と国務大臣で構成され、行政を担当する機関です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "国会",
+    definition:
+      "国の唯一の立法機関で、衆議院と参議院で構成されます。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "法律案",
+    definition:
+      "法律を新たに作ったり改めたりするため、国会に提出され審議される案です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "予算",
+    definition:
+      "国や自治体が、一定期間に得る収入と使う支出の見込みをまとめた計画です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "投票率",
+    definition:
+      "有権者のうち投票した人の割合です。対象となる選挙や集計の範囲とあわせて確認します。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/news/sonota/nendaibetu/",
+      ),
+    ],
+  },
+  {
+    term: "開票",
+    definition:
+      "投票が終わった後に投票用紙を数え、候補者や政党などへの票数を集計する手続です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "当選",
+    definition:
+      "選挙の方式や法律で定められた要件に基づき、選ばれた候補者などが当選人となることです。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "無効票",
+    definition:
+      "記載方法などが法律上の要件を満たさず、有効な票として扱われない投票です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "白票",
+    definition:
+      "候補者名などを書かずに投じられた票です。有効票には含まれず、無効票として集計されます。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "政見放送",
+    definition:
+      "選挙期間中に、候補者などが政見を伝えるために行う放送です。選挙の種類に応じて制度が定められています。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo05.html",
+      ),
+    ],
+  },
+  {
+    term: "供託金",
+    definition:
+      "立候補の届出時に法務局へ預ける金銭です。選挙の種類ごとに額が定められ、得票など一定の条件により返還または没収されます。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "国民審査",
+    definition:
+      "最高裁判所の裁判官について、辞めさせるべきかどうかを有権者が投票で示す制度です。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo04.html",
+      ),
+    ],
+  },
+  {
+    term: "一票の格差",
+    definition:
+      "選挙区ごとの有権者数と議員定数の違いにより、一人の議員を選ぶために必要な有権者数に差が生じることです。",
+    sources: [constitutionSource, electionLawSource],
+  },
+  {
+    term: "政治資金",
+    definition:
+      "政党や政治団体などが政治活動に使う資金です。収支の報告や公開について法律上のルールがあります。",
+    sources: [
+      ministrySource("https://www.soumu.go.jp/senkyo/seiji_s/seijishikin/"),
+    ],
+  },
+  {
+    term: "有権者",
+    definition:
+      "選挙で投票する資格を持つ人です。選挙ごとに年齢や住所などの要件があります。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo02.html",
       ),
     ],
   },

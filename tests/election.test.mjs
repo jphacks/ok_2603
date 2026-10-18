@@ -5,6 +5,9 @@ import { validateData } from "../scripts/validate-election-data.mjs";
 
 const model = await loadTypescript("../src/election/model.ts");
 const data = await loadTypescript("../src/election/data.ts");
+const earlyVotingPlaces = await loadTypescript(
+  "../src/election/earlyVotingPlaces.ts",
+);
 // 以下は処理検証専用。公開data.tsには登録せず、実在人物・政策を表さない。
 const source = {
   url: "https://example.invalid/test-only",
@@ -50,6 +53,43 @@ test("沖縄県内の41市町村を重複なく選択できる", () => {
   assert.equal(new Set(model.municipalities).size, 41);
   assert.ok(model.municipalities.includes("那覇市"));
 });
+test("過去の期日前投票所資料を全市町村分だけ掲載し、地図検索URLを安全に組み立てる", () => {
+  const places = earlyVotingPlaces.earlyVotingPlacesByMunicipality;
+  assert.deepEqual(
+    Object.keys(places).sort(),
+    [...model.municipalities].sort(),
+  );
+  for (const venues of Object.values(places)) {
+    assert.ok(venues.length > 0);
+    assert.equal(new Set(venues).size, venues.length);
+  }
+  assert.equal(
+    earlyVotingPlaces.earlyVotingPlacesSource.electionDate,
+    "2026-09-13",
+  );
+  const url = new URL(earlyVotingPlaces.mapSearchUrl("那覇市", "首里支所"));
+  assert.equal(url.origin, "https://www.google.com");
+  assert.equal(url.pathname, "/maps/search/");
+  assert.equal(url.searchParams.get("query"), "沖縄県 那覇市 首里支所");
+});
+test("宜野湾市の当日投票所は提供された4施設と所在地を表示する", () => {
+  assert.deepEqual(
+    earlyVotingPlaces.electionDayVotingPlacesByMunicipality["宜野湾市"],
+    [
+      { name: "野嵩一区自治会事務所", address: "野嵩2－21－1" },
+      { name: "普天間小学校", address: "普天間1-10-1" },
+      { name: "普天間第二小学校クラブハウス", address: "新城2-8-19" },
+      { name: "普天間中学校体育館", address: "新城2-41-1" },
+    ],
+  );
+  const url = new URL(
+    earlyVotingPlaces.mapSearchUrl("宜野湾市", "普天間小学校 普天間1-10-1"),
+  );
+  assert.equal(
+    url.searchParams.get("query"),
+    "沖縄県 宜野湾市 普天間小学校 普天間1-10-1",
+  );
+});
 test("氏名・政党・公約を検索し、全角と半角を正規化する", () => {
   for (const query of ["氏名", "所属", "abc", "ＡＢＣ", "検索対象 処理確認"])
     assert.deepEqual(model.searchCandidates([candidate], query), [candidate]);
@@ -75,13 +115,38 @@ test("公開データの整合性と、空状態を有効な未収録として�
   assert.deepEqual(validateData({ elections: [], candidates: [], glossary: [] }, model), []);
   assert.ok(!data.candidates.some(item => item.id === 'test-only'));
   assert.deepEqual(validateData(data, model), []);
-  assert.ok(data.glossary.length >= 25);
+  assert.ok(data.glossary.length >= 45);
+  assert.ok(
+    data.glossary.some((item) => item.term === "公示と告示") &&
+      data.glossary.some((item) => item.term === "与党と野党"),
+  );
+  assert.ok(
+    !["公示", "告示", "与党", "野党"].some((term) =>
+      data.glossary.some((item) => item.term === term),
+    ),
+  );
   assert.ok(
     data.glossary.every((item) =>
       item.sources.some((itemSource) =>
+        [
+          "soumu.go.jp",
+          "laws.e-gov.go.jp",
+        ].includes(new URL(itemSource.url).hostname) ||
         new URL(itemSource.url).hostname.endsWith(".soumu.go.jp"),
       ),
     ),
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "公示と告示").definition,
+    /国政選挙.*告示/,
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "公示と告示").definition,
+    /地方選挙/,
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "与党と野党").definition,
+    /内閣に参加していない/,
   );
   assert.ok(
     model

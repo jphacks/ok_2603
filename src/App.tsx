@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { PollingSearch } from "./polling/PollingSearch";
+import { PollingAdmin } from "./polling/PollingAdmin";
 import { candidates, elections, glossary } from "./election/data";
 import {
   checkLabels,
@@ -12,6 +14,12 @@ import {
   type Candidate,
 } from "./election/model";
 import {
+  electionDayVotingPlacesByMunicipality,
+  earlyVotingPlacesByMunicipality,
+  earlyVotingPlacesSource,
+  mapSearchUrl,
+} from "./election/earlyVotingPlaces";
+import {
   Empty,
   Icon,
   Photo,
@@ -19,7 +27,7 @@ import {
   Sources,
 } from "./election/components";
 
-type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide";
+type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "polling" | "polling-admin";
 const tutorialKey = "election-prototype:tutorial:v1";
 const tabs = [
   "公約",
@@ -57,6 +65,9 @@ function App() {
   const [electionId, setElectionId] = useState<string | null>(null);
   const [level, setLevel] = useState("all");
   const [period, setPeriod] = useState("current");
+  const [votingPlaceType, setVotingPlaceType] = useState<
+    "early" | "election-day"
+  >("early");
   const [selected, setSelected] = useState<string[]>([]);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
@@ -245,6 +256,8 @@ function App() {
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
             ? "公約を比較する"
+            : page === "polling" ? "投票所を探す"
+            : page === "polling-admin" ? "投票所管理"
             : page === "guide"
               ? "政治・選挙の用語"
               : "用語";
@@ -269,6 +282,7 @@ function App() {
               [
                 ["home", "home", "ホーム"],
                 ["region", "region", "地域を探す"],
+                ["polling", "region", "投票所を探す"],
                 ["compare", "compare", "公約比較"],
                 ["guide", "book", "用語"],
               ] as const
@@ -317,7 +331,7 @@ function App() {
             <div className="breadcrumb">
               <button onClick={() => navigate("home")}>ホーム</button>
               <span>/</span>
-              {!["guide", "compare"].includes(page) && (
+              {!["guide", "compare", "polling", "polling-admin"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
                   {!(page === "region" && !municipality) && <span>/</span>}
@@ -363,6 +377,8 @@ function App() {
             </div>
           </>
         )}
+        {page === "polling" && <PollingSearch openAdmin={() => navigate("polling-admin")} />}
+        {page === "polling-admin" && <PollingAdmin />}
         {page === "home" && (
           <>
             <section className="hero">
@@ -526,6 +542,112 @@ function App() {
         )}
         {page === "region" && (
           <>
+            {municipality && (
+              <section className="panel" aria-labelledby="map-search-title">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">VOTING PLACES</p>
+                    <h2 id="map-search-title">投票場所</h2>
+                  </div>
+                </div>
+                <div className="segmented" role="group" aria-label="投票場所の種類">
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "early"}
+                    onClick={() => setVotingPlaceType("early")}
+                  >
+                    期日前投票
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "election-day"}
+                    onClick={() => setVotingPlaceType("election-day")}
+                  >
+                    当日投票
+                  </button>
+                </div>
+                {votingPlaceType === "early" ? (
+                  <>
+                    <p className="small">
+                      {earlyVotingPlacesSource.title}（{earlyVotingPlacesSource.publisher}、
+                      {earlyVotingPlacesSource.asOf}時点）に掲載された場所です。
+                      {earlyVotingPlacesSource.electionDate}執行の選挙は終了しており、
+                      現在の投票所や施設の営業状況を示すものではありません。
+                    </p>
+                    <p className="small">
+                      市町村内の掲載場所を表示しています。距離順ではなく、地図リンクを開くと施設名でGoogle
+                      Mapsを検索します。
+                    </p>
+                    {earlyVotingPlacesByMunicipality[municipality]?.length ? (
+                      <ul className="place-list">
+                        {earlyVotingPlacesByMunicipality[municipality].map(
+                          (place) => (
+                            <li key={place}>
+                              <span>{place}</span>
+                              <a
+                                className="button secondary"
+                                href={mapSearchUrl(municipality, place)}
+                                aria-label={`${municipality}の${place}をGoogle Mapsで検索（新しいタブで開く）`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                地図で検索
+                              </a>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    ) : (
+                      <Empty title="掲載場所はありません">
+                        この市町村の期日前投票所は添付資料に記載されていません。
+                      </Empty>
+                    )}
+                    <p className="small place-source">
+                      出典: {earlyVotingPlacesSource.fileName} · 地図検索を選ぶと
+                      Google Mapsに検索語が送信されます。
+                    </p>
+                  </>
+                ) : (
+                  electionDayVotingPlacesByMunicipality[municipality]?.length ? (
+                    <>
+                      <p className="small">
+                        以下は提供された情報です。対象となる選挙・年度と最新性は未確認のため、投票前に市町村選挙管理委員会の公式情報をご確認ください。
+                      </p>
+                      <ul className="place-list">
+                        {electionDayVotingPlacesByMunicipality[
+                          municipality
+                        ].map((place) => (
+                          <li key={place.name}>
+                            <span>
+                              <strong>{place.name}</strong>
+                              <span className="place-address">
+                                所在地：{place.address}
+                              </span>
+                            </span>
+                            <a
+                              className="button secondary"
+                              href={mapSearchUrl(
+                                municipality,
+                                `${place.name} ${place.address}`,
+                              )}
+                              aria-label={`${municipality}の${place.name}（${place.address}）をGoogle Mapsで検索（新しいタブで開く）`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              地図で検索
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <Empty title="当日投票所は未収録です">
+                      当日投票所は、公式情報を確認後に掲載します。
+                    </Empty>
+                  )
+                )}
+              </section>
+            )}
             <section className="panel">
               <div className="section-heading">
                 <h2>
@@ -1169,9 +1291,11 @@ function App() {
         <footer className="footer">
           <span>選挙情報（仮称）</span>
           <p>情報を知る。根拠を読む。自分で考える。</p>
-          <button className="text-button" onClick={() => navigate("guide")}>
-            用語解説 →
-          </button>
+          {page !== "guide" && (
+            <button className="text-button" onClick={() => navigate("guide")}>
+              用語解説 →
+            </button>
+          )}
         </footer>
       </main>
       {selected.length > 0 && page !== "compare" && (
