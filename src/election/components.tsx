@@ -21,7 +21,7 @@ export function Sources({ sources }: { sources: Source[] }) {
       {sources.map((source, index) => (
         <span className="source-item" key={`${source.url}-${index}`}>
           <a href={source.url} target="_blank" rel="noreferrer">
-            公式資料 ↗
+            出典 ↗
           </a>
           <span>
             {source.publisher}

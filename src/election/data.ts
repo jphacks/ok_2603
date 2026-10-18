@@ -6,6 +6,21 @@ const nahaMayorSource = {
   publisher: "那覇市選挙管理委員会",
   checkedAt: "2026-10-18",
 };
+const nahaMayor2022Source = {
+  url: "https://www.city.naha.okinawa.jp/admin/senkan/1004625/1004626.html",
+  publisher: "那覇市選挙管理委員会",
+  checkedAt: "2026-10-18",
+};
+const nahaMayor2022PledgeSource = {
+  url: "https://ryukyushimpo.jp/news/entry-1600577.html",
+  publisher: "琉球新報（2022年那覇市長選の重点公約・陣営アピール）",
+  checkedAt: "2026-10-18",
+};
+const nahaMayor2022ChinenPolicySource = {
+  url: "https://ryukyushimpo.jp/news/entry-1597831.html",
+  publisher: "琉球新報（2022年那覇市長選・知念氏の政策発表）",
+  checkedAt: "2026-10-18",
+};
 export const elections: Election[] = [
   {
     id: "naha-mayor-2026",
@@ -19,6 +34,24 @@ export const elections: Election[] = [
     sources: [
       {
         url: "https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html",
+        publisher: "那覇市選挙管理委員会",
+        checkedAt: "2026-10-18",
+      },
+    ],
+    turnout: { status: "unrecorded" },
+  },
+  {
+    id: "naha-mayor-2022",
+    name: "第23回那覇市長選挙",
+    kind: "municipal-mayor",
+    prefectureIds: ["沖縄県"],
+    municipality: "那覇市",
+    level: "local",
+    period: "past",
+    date: "2022-10-23",
+    sources: [
+      {
+        url: "https://www.city.naha.okinawa.jp/admin/senkan/1004625/1004626.html",
         publisher: "那覇市選挙管理委員会",
         checkedAt: "2026-10-18",
       },
@@ -67,6 +100,88 @@ export const candidates: Candidate[] = nahaMayorCandidates.map(
     history: unrecorded(),
     sources: [nahaMayorSource],
   }),
+);
+const nahaMayor2022Candidates = [
+  { id: "naha-mayor-2022-chinen-satoru", name: "知念 覚", profile: ["59歳", "無職"] },
+  { id: "naha-mayor-2022-onaga-yuji", name: "翁長 雄治", profile: ["35歳", "無職"] },
+] satisfies (Pick<Candidate, "id" | "name"> & { profile: string[] })[];
+const recordedPledge = (
+  id: string,
+  text: string,
+  summary: string,
+  source: typeof nahaMayor2022PledgeSource,
+) => ({
+  id,
+  text: { status: "recorded" as const, value: text, sources: [source] },
+  summary,
+  checks: {
+    "何をするか": unrecorded(),
+    "誰を対象にするか": unrecorded(),
+    "いつまでに行うか": unrecorded(),
+    "財源・実施方法": unrecorded(),
+    "成果の確認方法": unrecorded(),
+  },
+});
+const nahaMayor2022Pledges: Record<string, Candidate["pledges"]> = {
+  "naha-mayor-2022-chinen-satoru": [
+    recordedPledge(
+      "naha-mayor-2022-chinen-care",
+      "地域包括ケアシステムの構築",
+      "医療・介護・福祉などの支援を地域でつなぎ、必要な人に届く仕組みをつくる。",
+      nahaMayor2022ChinenPolicySource,
+    ),
+    recordedPledge(
+      "naha-mayor-2022-chinen-emergency",
+      "コロナ禍・物価高騰への緊急対策",
+      "新型コロナや物価上昇で困る市民・事業者を支える対策を進める。",
+      nahaMayor2022ChinenPolicySource,
+    ),
+    recordedPledge(
+      "naha-mayor-2022-chinen-children",
+      "出産・保育・進学など各段階での子ども支援と子どもの権利条例制定",
+      "出産から進学まで子どもの成長を支え、子どもの権利を守る条例をつくる。",
+      nahaMayor2022ChinenPolicySource,
+    ),
+  ],
+  "naha-mayor-2022-onaga-yuji": [
+    recordedPledge(
+      "naha-mayor-2022-onaga-child-center",
+      "児童相談所の設立",
+      "子どもや家庭の困りごとを受け止め、必要な支援につなぐ児童相談所を設ける。",
+      nahaMayor2022PledgeSource,
+    ),
+    recordedPledge(
+      "naha-mayor-2022-onaga-childcare",
+      "多面的な子育てサポート体制の構築",
+      "子育ての悩みを家庭だけに抱え込ませず、複数の支援で支える体制を整える。",
+      nahaMayor2022PledgeSource,
+    ),
+    recordedPledge(
+      "naha-mayor-2022-onaga-economy",
+      "コロナ禍で疲弊した経済の立て直しと産業振興",
+      "地域の産業を後押しして、コロナ禍で落ち込んだ経済の回復を目指す。",
+      nahaMayor2022PledgeSource,
+    ),
+  ],
+};
+candidates.push(
+  ...nahaMayor2022Candidates.map(({ id, name, profile }) => ({
+    id,
+    electionId: "naha-mayor-2022",
+    name,
+    party: { status: "recorded" as const, value: "無所属", sources: [nahaMayor2022Source] },
+    photo: unrecorded(),
+    pledges: nahaMayor2022Pledges[id],
+    profile: {
+      status: "recorded" as const,
+      value: profile,
+      sources: [nahaMayor2022Source],
+    },
+    speeches: unrecorded(),
+    votes: unrecorded(),
+    history: unrecorded(),
+    sources: [nahaMayor2022Source],
+  })),
 );
 const glossaryCheckedAt = "2026-10-18";
 const ministrySource = (url: string) => ({

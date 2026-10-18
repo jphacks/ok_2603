@@ -65,6 +65,48 @@ test("那覇市長選の公式候補者一覧を比較対象として掲載し�
     ),
   );
 });
+test("第23回那覇市長選は公式記録の候補者を表示し、報道で確認した公約を簡潔に要約する", () => {
+  const election = data.elections.find((item) => item.id === "naha-mayor-2022");
+  const candidates = data.candidates.filter(
+    (item) => item.electionId === "naha-mayor-2022",
+  );
+  assert.equal(election?.date, "2022-10-23");
+  assert.deepEqual(
+    candidates.map((item) => item.name),
+    ["知念 覚", "翁長 雄治"],
+  );
+  assert.deepEqual(
+    candidates.map((item) => item.pledges.length),
+    [3, 3],
+  );
+  assert.ok(candidates.every((item) => item.pledges.every(
+    (pledge) =>
+      pledge.text.status === "recorded" &&
+      pledge.summary.length > 0 &&
+      pledge.text.sources.some((source) => source.publisher.includes("琉球新報")) &&
+      Object.values(pledge.checks).every((check) => check.status === "unrecorded"),
+  )));
+  assert.ok(
+    candidates[0].pledges.some((pledge) =>
+      pledge.summary.includes("地域でつなぎ"),
+    ),
+  );
+  assert.ok(
+    candidates[1].pledges.some((pledge) =>
+      pledge.summary.includes("児童相談所"),
+    ),
+  );
+});
+test("APIの那覇市長選は固定候補者データと一致する選挙IDに対応付ける", () => {
+  assert.equal(
+    model.matchingElectionId(data.elections, {
+      name: "第23回那覇市長選挙",
+      date: "2022-10-23",
+      municipality: "那覇市",
+    }),
+    "naha-mayor-2022",
+  );
+});
 test("知事選挙は種別で判別し、既存の名称のみのデータにも対応する", () => {
   assert.equal(model.isGovernorElection({...election, kind:"governor"}), true);
   assert.equal(model.isGovernorElection({...election, name:"テスト専用知事選挙"}), true);
@@ -82,6 +124,7 @@ test("過去選挙は重複を除き、投票日の新しい順に最大6件を�
   elections.push({
     ...elections[7],
     id: "duplicate-past-election",
+    municipality: "沖縄県",
   });
   const result = model.recentUniqueElections(elections);
   assert.equal(result.length, 6);

@@ -22,6 +22,7 @@ export type CheckLabel = (typeof checkLabels)[number];
 export type Pledge = {
   id: string;
   text: Entry<string>;
+  summary?: string;
   checks: Record<CheckLabel, Entry<string>>;
 };
 export type Candidate = {
@@ -58,12 +59,23 @@ export function recentUniqueElections(elections: Election[], limit = 6) {
   return [...elections]
     .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id))
     .filter((election) => {
-      const key = `${election.name}\u0000${election.municipality ?? ""}\u0000${election.date}`;
+      const key = `${election.name}\u0000${election.date}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
     .slice(0, limit);
+}
+export function matchingElectionId(
+  knownElections: Election[],
+  election: Pick<Election, "name" | "date" | "municipality">,
+) {
+  return knownElections.find(
+    (known) =>
+      known.name === election.name &&
+      known.date === election.date &&
+      known.municipality === election.municipality,
+  )?.id;
 }
 // 沖縄県議会「県議会の組織」各選挙区の区域（2026-10-18確認）。
 export const districtSource: Source = {

@@ -172,6 +172,11 @@ test('official Okinawa fixture is idempotent, verified-only, authenticated, and 
     assert.ok(listing.data.some(candidate=>candidate.name.includes('カネシマ')&&candidate.party==='無所属'));
     assert.ok(listing.data.every(candidate=>candidate.age===null));
     assert.ok(listing.data.every(candidate=>candidate.x_url===null&&candidate.x_source_url===null));
+    assert.ok(listing.data.every(candidate=>Array.isArray(candidate.sources)&&Array.isArray(candidate.pledges)));
+    assert.ok(listing.data.every(candidate=>candidate.pledges.every(pledge=>
+      typeof pledge.summary==='string'&&typeof pledge.originalText==='string'&&
+      pledge.source.url.startsWith('https://')&&typeof pledge.source.publisher==='string',
+    )));
     const candidate=listing.data[0];
     const sourceResponse=await fetch(`${api.base}/api/candidates/${candidate.id}/sources`);
     assert.equal(sourceResponse.status,200);

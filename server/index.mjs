@@ -665,7 +665,37 @@ const server=createServer(async (req,res)=>{
     let m=url.pathname.match(/^\/api\/elections\/([^/]+)$/);
     if(req.method==='GET'&&m){const e=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];return send(res,e?200:404,e?{data:e}:{error:'not_found'});}
     m=url.pathname.match(/^\/api\/elections\/([^/]+)\/candidates$/);
-    if(req.method==='GET'&&m){const election=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];if(!election)return send(res,404,{error:'not_found'});const data=rows(`SELECT DISTINCT c.id,c.name,c.kana,c.age,c.affiliation,c.x_url,c.x_source_url,c.photo_path,c.photo_page,c.photo_match_status,c.photo_reuse_status,c.profile_missing_json,c.profile_extraction_status,p.name party,ca.status candidacy_status,ca.id candidacy_id,ca.ballot_number FROM candidates c JOIN candidacies ca ON ca.candidate_id=c.id LEFT JOIN parties p ON p.id=ca.party_id JOIN candidacy_sources cs ON cs.candidacy_id=ca.id JOIN sources src ON src.id=cs.source_id WHERE ca.election_id=? AND ca.status='official' AND src.verification_status='verified' ORDER BY ca.ballot_number IS NULL,ca.ballot_number,c.name`,[m[1]]);return send(res,200,{data:data.map(row=>{let missing=[];try{missing=row.profile_missing_json?JSON.parse(row.profile_missing_json):row.profile_extraction_status==='not_attempted'?['基本情報','経歴','政策','顔写真']:[]}catch{};const {photo_path,...publicRow}=row;return {...publicRow,...photoDisplay(row),missing_fields:missing}}),complete:election.complete_candidates===1});}
+    if(req.method==='GET'&&m){
+      const election=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];
+      if(!election)return send(res,404,{error:'not_found'});
+      const data=rows(`SELECT DISTINCT c.id,c.name,c.kana,c.age,c.affiliation,c.x_url,c.x_source_url,c.photo_path,c.photo_page,c.photo_match_status,c.photo_reuse_status,c.profile_missing_json,c.profile_extraction_status,p.name party,ca.status candidacy_status,ca.id candidacy_id,ca.ballot_number FROM candidates c JOIN candidacies ca ON ca.candidate_id=c.id LEFT JOIN parties p ON p.id=ca.party_id JOIN candidacy_sources cs ON cs.candidacy_id=ca.id JOIN sources src ON src.id=cs.source_id WHERE ca.election_id=? AND ca.status='official' AND src.verification_status='verified' ORDER BY ca.ballot_number IS NULL,ca.ballot_number,c.name`,[m[1]]);
+      const sources=rows(`SELECT DISTINCT cs.candidacy_id,s.url,s.title source_title,s.verified_at,s.retrieved_at FROM candidacy_sources cs JOIN sources s ON s.id=cs.source_id WHERE cs.candidacy_id IN (SELECT id FROM candidacies WHERE election_id=? AND status='official') AND s.verification_status='verified' ORDER BY s.url`,[m[1]]);
+      const pledges=rows(`SELECT p.id,p.candidacy_id,p.title,p.body summary,p.source_excerpt original_text,p.source_page,s.url,s.title source_title,s.verified_at,s.retrieved_at FROM pledges p JOIN sources s ON s.id=p.source_id WHERE p.candidacy_id IN (SELECT id FROM candidacies WHERE election_id=? AND status='official') AND s.verification_status='verified' ORDER BY p.candidacy_id,p.source_page,p.id`,[m[1]]);
+      const toSource=row=>({url:row.url,publisher:row.source_title||new URL(row.url).hostname,checkedAt:(row.verified_at||row.retrieved_at||'').slice(0,10)});
+      const sourceMap=new Map();
+      for(const row of sources) {
+        if(!sourceMap.has(row.candidacy_id)) sourceMap.set(row.candidacy_id,[]);
+        sourceMap.get(row.candidacy_id).push(toSource(row));
+      }
+      const pledgeMap=new Map();
+      for(const row of pledges) {
+        if(!pledgeMap.has(row.candidacy_id)) pledgeMap.set(row.candidacy_id,[]);
+        pledgeMap.get(row.candidacy_id).push({
+          id:row.id,title:row.title,summary:row.summary,originalText:row.original_text,
+          sourcePage:row.source_page,source:toSource(row),
+        });
+      }
+      return send(res,200,{data:data.map(row=>{
+        let missing=[];
+        try{missing=row.profile_missing_json?JSON.parse(row.profile_missing_json):row.profile_extraction_status==='not_attempted'?['基本情報','経歴','政策','顔写真']:[]}catch{}
+        const {photo_path,...publicRow}=row;
+        return {
+          ...publicRow,...photoDisplay(row),missing_fields:missing,
+          sources:sourceMap.get(row.candidacy_id)||[],
+          pledges:pledgeMap.get(row.candidacy_id)||[],
+        };
+      }),complete:election.complete_candidates===1});
+    }
     m=url.pathname.match(/^\/api\/candidates\/([^/]+)\/photo$/);
     if(req.method==='GET'&&m){
       const photo=rows("SELECT c.photo_path,c.photo_match_status,c.photo_reuse_status FROM candidates c JOIN candidacies ca ON ca.candidate_id=c.id WHERE c.id=? AND ca.status='official'",[m[1]])[0];
