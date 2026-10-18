@@ -115,7 +115,16 @@ test("公開データの整合性と、空状態を有効な未収録として�
   assert.deepEqual(validateData({ elections: [], candidates: [], glossary: [] }, model), []);
   assert.ok(!data.candidates.some(item => item.id === 'test-only'));
   assert.deepEqual(validateData(data, model), []);
-  assert.ok(data.glossary.length >= 45);
+  assert.ok(data.glossary.length >= 75);
+  assert.deepEqual(
+    Object.keys(data.glossaryReadings).sort(),
+    data.glossary.map((item) => item.term).sort(),
+  );
+  assert.ok(
+    Object.values(data.glossaryReadings).every((reading) =>
+      /^[ぁ-ゖー]+$/.test(reading),
+    ),
+  );
   assert.ok(
     data.glossary.some((item) => item.term === "公示と告示") &&
       data.glossary.some((item) => item.term === "与党と野党"),
@@ -152,6 +161,20 @@ test("公開データの整合性と、空状態を有効な未収録として�
     model
       .searchGlossary(data.glossary, "比例代表")
       .some((item) => item.term === "比例代表選挙"),
+  );
+  assert.ok(
+    model
+      .searchGlossary(
+        data.glossary,
+        "ないかくふしんにん",
+        data.glossaryReadings,
+      )
+      .some((item) => item.term === "内閣不信任決議"),
+  );
+  assert.ok(
+    model
+      .searchGlossary(data.glossary, "けんぽう", data.glossaryReadings)
+      .some((item) => item.term === "憲法改正"),
   );
   assert.deepEqual(model.searchGlossary(data.glossary, "該当しない語"), []);
   const outOfScope = {

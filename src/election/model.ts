@@ -120,10 +120,16 @@ export function searchCandidates(candidates: Candidate[], query: string) {
     return words.every((word) => text.includes(word));
   });
 }
-export function searchGlossary(terms: GlossaryTerm[], query: string) {
+export function searchGlossary(
+  terms: GlossaryTerm[],
+  query: string,
+  readings: Record<string, string> = {},
+) {
   const normalizedQuery = normalize(query);
   return terms.filter((item) =>
-    normalize(`${item.term} ${item.definition}`).includes(normalizedQuery),
+    normalize(`${item.term} ${readings[item.term] ?? ""} ${item.definition}`).includes(
+      normalizedQuery,
+    ),
   );
 }
 export function toggleSelection(ids: string[], id: string) {

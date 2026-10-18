@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { candidates, elections, glossary } from "./election/data";
+import {
+  candidates,
+  elections,
+  glossary,
+  glossaryReadings,
+} from "./election/data";
 import {
   checkLabels,
   missing,
@@ -85,7 +90,11 @@ function App() {
   const compared = selected
     .map((id) => candidates.find((item) => item.id === id))
     .filter((item): item is Candidate => !!item);
-  const visibleGlossary = searchGlossary(glossary, glossaryQuery);
+  const visibleGlossary = searchGlossary(
+    glossary,
+    glossaryQuery,
+    glossaryReadings,
+  );
   const regionalElections = elections.filter((item) =>
     item.prefectureIds.includes(region) &&
     (!municipality ||
@@ -1075,7 +1084,12 @@ function App() {
               <div className="glossary-list">
                 {visibleGlossary.map((item) => (
                   <article className="glossary-entry" key={item.term}>
-                    <h3>{item.term}</h3>
+                    <h3>
+                      <ruby>
+                        {item.term}
+                        <rt>{glossaryReadings[item.term]}</rt>
+                      </ruby>
+                    </h3>
                     <p>{item.definition}</p>
                     <Sources sources={item.sources} />
                   </article>

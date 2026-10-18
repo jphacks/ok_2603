@@ -951,6 +951,11 @@ tbody tr:last-child > * {
   margin: 0 0 8px;
   font-size: 18px;
 }
+.glossary-entry rt {
+  color: #66758a;
+  font-size: 0.62em;
+  font-weight: 400;
+}
 .glossary-entry > p {
   margin: 0;
   line-height: 1.8;

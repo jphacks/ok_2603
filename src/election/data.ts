@@ -20,6 +20,90 @@ const electionLawSource = {
   checkedAt: glossaryCheckedAt,
 };
 
+export const glossaryReadings: Record<string, string> = {
+  選挙: "せんきょ",
+  選挙権: "せんきょけん",
+  被選挙権: "ひせんきょけん",
+  国政選挙: "こくせいせんきょ",
+  衆議院: "しゅうぎいん",
+  参議院: "さんぎいん",
+  小選挙区選挙: "しょうせんきょくせんきょ",
+  比例代表選挙: "ひれいだいひょうせんきょ",
+  選挙区: "せんきょく",
+  投票日: "とうひょうび",
+  任期: "にんき",
+  通常選挙: "つうじょうせんきょ",
+  補欠選挙: "ほけつせんきょ",
+  再選挙: "さいせんきょ",
+  期日前投票: "きじつぜんとうひょう",
+  不在者投票: "ふざいしゃとうひょう",
+  選挙管理委員会: "せんきょかんりいいんかい",
+  定数: "ていすう",
+  選挙運動: "せんきょうんどう",
+  選挙運動期間: "せんきょうんどうきかん",
+  選挙公報: "せんきょこうほう",
+  投票所入場券: "とうひょうじょにゅうじょうけん",
+  投票用紙: "とうひょうようし",
+  代理投票: "だいりとうひょう",
+  点字投票: "てんじとうひょう",
+  在外投票: "ざいがいとうひょう",
+  選挙人名簿: "せんきょにんめいぼ",
+  衆議院議員総選挙: "しゅうぎいんぎいんそうせんきょ",
+  解散: "かいさん",
+  繰上補充: "くりあげほじゅう",
+  "公示と告示": "こうじとこくじ",
+  "与党と野党": "よとうとやとう",
+  政党: "せいとう",
+  連立政権: "れんりつせいけん",
+  内閣: "ないかく",
+  国会: "こっかい",
+  法律案: "ほうりつあん",
+  予算: "よさん",
+  投票率: "とうひょうりつ",
+  開票: "かいひょう",
+  当選: "とうせん",
+  無効票: "むこうひょう",
+  白票: "はくひょう",
+  政見放送: "せいけんほうそう",
+  供託金: "きょうたくきん",
+  国民審査: "こくみんしんさ",
+  "一票の格差": "いっぴょうのかくさ",
+  政治資金: "せいじしきん",
+  有権者: "ゆうけんしゃ",
+  国民主権: "こくみんしゅけん",
+  三権分立: "さんけんぶんりつ",
+  立法: "りっぽう",
+  行政: "ぎょうせい",
+  司法: "しほう",
+  内閣総理大臣: "ないかくそうりだいじん",
+  国務大臣: "こくむだいじん",
+  衆議院議長: "しゅうぎいんぎちょう",
+  参議院議長: "さんぎいんぎちょう",
+  国会議員: "こっかいぎいん",
+  議席: "ぎせき",
+  地方自治: "ちほうじち",
+  地方議会: "ちほうぎかい",
+  首長: "しゅちょう",
+  条例: "じょうれい",
+  普通選挙: "ふつうせんきょ",
+  平等選挙: "びょうどうせんきょ",
+  秘密投票: "ひみつとうひょう",
+  直接選挙: "ちょくせつせんきょ",
+  投票立会人: "とうひょうたちあいにん",
+  開票立会人: "かいひょうたちあいにん",
+  有効票: "ゆうこうひょう",
+  按分票: "あんぶんひょう",
+  法定得票数: "ほうていとくひょうすう",
+  比例名簿: "ひれいめいぼ",
+  重複立候補: "ちょうふくりっこうほ",
+  小選挙区比例代表並立制: "しょうせんきょくひれいだいひょうへいりつせい",
+  国政調査権: "こくせいちょうさけん",
+  内閣不信任決議: "ないかくふしんにんけつぎ",
+  国会召集: "こっかいしょうしゅう",
+  国民投票: "こくみんとうひょう",
+  憲法改正: "けんぽうかいせい",
+};
+
 export const glossary: GlossaryTerm[] = [
   {
     term: "選挙",
@@ -453,5 +537,236 @@ export const glossary: GlossaryTerm[] = [
         "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo02.html",
       ),
     ],
+  },
+  {
+    term: "国民主権",
+    definition:
+      "国の政治のあり方を最終的に決める力が国民にあるという考え方です。日本国憲法の基本原理の一つです。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "三権分立",
+    definition:
+      "国の権力を立法・行政・司法に分け、それぞれ別の機関が担うことで、権力が一か所に集中しないようにするしくみです。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "立法",
+    definition:
+      "社会のルールとなる法律をつくることです。日本では国会が国の唯一の立法機関です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "行政",
+    definition:
+      "法律や予算に基づいて、国の仕事を実施することです。国では内閣が行政権を担います。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "司法",
+    definition:
+      "法律に基づいて争いを解決し、裁判を行うことです。裁判所が司法権を担います。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "内閣総理大臣",
+    definition:
+      "国会議員の中から国会が指名し、内閣の長となる人です。国務大臣を任命します。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "国務大臣",
+    definition:
+      "内閣を構成し、行政を担当する大臣です。内閣総理大臣が任命します。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "衆議院議長",
+    definition:
+      "衆議院を代表し、議事を進行する役職です。衆議院議員の中から選ばれます。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "参議院議長",
+    definition:
+      "参議院を代表し、議事を進行する役職です。参議院議員の中から選ばれます。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "国会議員",
+    definition:
+      "選挙で選ばれ、衆議院または参議院を構成する議員です。法律や予算などを審議します。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "議席",
+    definition:
+      "議会で議員が占める席、または政党などが持つ議員の数を指す言葉です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "地方自治",
+    definition:
+      "地域の行政を、住民の意思に基づいて地方公共団体が行うしくみです。",
+    sources: [
+      {
+        url: "https://laws.e-gov.go.jp/law/322AC0000000067",
+        publisher: "e-Gov法令検索（地方自治法）",
+        checkedAt: glossaryCheckedAt,
+      },
+    ],
+  },
+  {
+    term: "地方議会",
+    definition:
+      "都道府県や市区町村に置かれ、条例や予算など地域の重要事項を審議・決定する議会です。",
+    sources: [
+      {
+        url: "https://laws.e-gov.go.jp/law/322AC0000000067",
+        publisher: "e-Gov法令検索（地方自治法）",
+        checkedAt: glossaryCheckedAt,
+      },
+    ],
+  },
+  {
+    term: "首長",
+    definition:
+      "都道府県知事や市区町村長など、地方公共団体を代表し、その行政を担う人です。",
+    sources: [
+      {
+        url: "https://laws.e-gov.go.jp/law/322AC0000000067",
+        publisher: "e-Gov法令検索（地方自治法）",
+        checkedAt: glossaryCheckedAt,
+      },
+    ],
+  },
+  {
+    term: "条例",
+    definition:
+      "地方公共団体が、法律の範囲内で議会の議決により定める地域のルールです。",
+    sources: [
+      {
+        url: "https://laws.e-gov.go.jp/law/322AC0000000067",
+        publisher: "e-Gov法令検索（地方自治法）",
+        checkedAt: glossaryCheckedAt,
+      },
+    ],
+  },
+  {
+    term: "普通選挙",
+    definition:
+      "財産や納税額などによって投票資格を制限せず、法律で定める年齢などの要件を満たす人に選挙権を認める考え方です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "平等選挙",
+    definition:
+      "有権者が平等に選挙へ参加できるという原則です。投票の価値の平等も重要な考え方です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "秘密投票",
+    definition:
+      "誰に投票したかを他人に知られず、投票先を明かすよう強制されない原則です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "直接選挙",
+    definition:
+      "有権者が、議員など選ぶ対象を直接投票で選ぶ方法です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "投票立会人",
+    definition:
+      "投票所で投票の手続に立ち会い、公正に行われているかを確認する人です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "開票立会人",
+    definition:
+      "開票所で開票の手続に立ち会い、公正に行われているかを確認する人です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "有効票",
+    definition:
+      "法律で定められた記載方法などの要件を満たし、候補者や政党などの得票として数えられる票です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "按分票",
+    definition:
+      "候補者名などの記載が複数の候補者に当てはまる場合に、法律で定められた方法で分けて計算される票です。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "法定得票数",
+    definition:
+      "選挙で当選するために法律が定める最低限の得票数です。選挙の種類によって要件が異なります。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "比例名簿",
+    definition:
+      "比例代表選挙で、政党などが候補者を届け出る名簿です。名簿の扱いは選挙の種類によって定められています。",
+    sources: [electionLawSource],
+  },
+  {
+    term: "重複立候補",
+    definition:
+      "同じ候補者が、衆議院議員選挙の小選挙区と比例代表の両方に立候補することです。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo04.html",
+      ),
+    ],
+  },
+  {
+    term: "小選挙区比例代表並立制",
+    definition:
+      "衆議院議員選挙で、小選挙区選挙と比例代表選挙を別々に行い、両方の結果から議員を選ぶ制度です。",
+    sources: [
+      ministrySource(
+        "https://www.soumu.go.jp/senkyo/senkyo_s/naruhodo/naruhodo04.html",
+      ),
+    ],
+  },
+  {
+    term: "国政調査権",
+    definition:
+      "国会が、国の政治や行政について調査し、証人の出頭や記録の提出を求めることができる権限です。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "内閣不信任決議",
+    definition:
+      "衆議院が、内閣を信任しない意思を示す決議です。可決された場合、内閣は一定期間内に総辞職するか衆議院を解散します。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "国会召集",
+    definition:
+      "国会を開くために招集することです。憲法に定められた場合などに行われます。",
+    sources: [constitutionSource],
+  },
+  {
+    term: "国民投票",
+    definition:
+      "特定の事項について、有権者が投票によって意思を示す制度です。憲法改正の国民投票は法律で手続が定められています。",
+    sources: [
+      constitutionSource,
+      {
+        url: "https://laws.e-gov.go.jp/law/419AC0000000051",
+        publisher: "e-Gov法令検索（日本国憲法の改正手続に関する法律）",
+        checkedAt: glossaryCheckedAt,
+      },
+    ],
+  },
+  {
+    term: "憲法改正",
+    definition:
+      "憲法の条文を改めることです。日本国憲法では、国会の発議と国民投票による承認が必要です。",
+    sources: [constitutionSource],
   },
 ];
