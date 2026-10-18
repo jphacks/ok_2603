@@ -1,8 +1,73 @@
 import type { Candidate, CouncilMember, Election, GlossaryTerm } from "./model";
 
 // 人が公式資料を確認した後に登録する。未収録は選挙・候補者が存在しないという意味ではない。
-export const elections: Election[] = [];
-export const candidates: Candidate[] = [];
+const nahaMayorSource = {
+  url: "https://www.city.naha.okinawa.jp/_res/projects/default_project/_page_/001/012/245/r8sityou_riltukouhosyaitiran_0930.pdf",
+  publisher: "那覇市選挙管理委員会",
+  checkedAt: "2026-10-18",
+};
+export const elections: Election[] = [
+  {
+    id: "naha-mayor-2026",
+    name: "第24回那覇市長選挙",
+    kind: "municipal-mayor",
+    prefectureIds: ["沖縄県"],
+    municipality: "那覇市",
+    level: "local",
+    period: "current",
+    date: "2026-10-25",
+    sources: [
+      {
+        url: "https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html",
+        publisher: "那覇市選挙管理委員会",
+        checkedAt: "2026-10-18",
+      },
+    ],
+    turnout: { status: "unrecorded" },
+  },
+];
+const unrecorded = () => ({ status: "unrecorded" as const });
+const nahaMayorCandidates = [
+  {
+    id: "naha-mayor-2026-kudeken-sachiko",
+    name: "久手堅 さちこ",
+    profile: ["74歳", "新日本婦人の会沖縄県本部 会長"],
+  },
+  {
+    id: "naha-mayor-2026-yajima-kento",
+    name: "矢島 ケント",
+    profile: ["35歳", "Hope&futureサービス株式会社 代表取締役社長"],
+  },
+  {
+    id: "naha-mayor-2026-chinen-satoru",
+    name: "知念 さとる",
+    profile: ["63歳", "那覇市長"],
+  },
+  {
+    id: "naha-mayor-2026-yoshimine-ryo",
+    name: "ヨシミネ リョウ",
+    profile: ["25歳", "IT会社員"],
+  },
+] satisfies (Pick<Candidate, "id" | "name"> & { profile: string[] })[];
+export const candidates: Candidate[] = nahaMayorCandidates.map(
+  ({ id, name, profile }) => ({
+    id,
+    electionId: "naha-mayor-2026",
+    name,
+    party: { status: "recorded", value: "無所属", sources: [nahaMayorSource] },
+    photo: unrecorded(),
+    pledges: [],
+    profile: {
+      status: "recorded",
+      value: profile,
+      sources: [nahaMayorSource],
+    },
+    speeches: unrecorded(),
+    votes: unrecorded(),
+    history: unrecorded(),
+    sources: [nahaMayorSource],
+  }),
+);
 const glossaryCheckedAt = "2026-10-18";
 const ministrySource = (url: string) => ({
   url,

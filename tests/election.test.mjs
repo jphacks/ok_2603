@@ -48,6 +48,25 @@ const election = {
 test("対象地域は沖縄県のみ", () => {
   assert.deepEqual(model.prefectures, ["沖縄県"]);
 });
+test("那覇市長選の公式候補者一覧を比較対象として掲載し、公約は未収録のまま扱う", () => {
+  const election = data.elections.find((item) => item.id === "naha-mayor-2026");
+  const candidates = data.candidates.filter(
+    (item) => item.electionId === "naha-mayor-2026",
+  );
+  assert.equal(election?.date, "2026-10-25");
+  assert.deepEqual(
+    candidates.map((item) => item.name),
+    ["久手堅 さちこ", "矢島 ケント", "知念 さとる", "ヨシミネ リョウ"],
+  );
+  assert.ok(
+    candidates.every(
+      (item) =>
+        item.sources[0]?.url.endsWith(
+          "r8sityou_riltukouhosyaitiran_0930.pdf",
+        ) && item.pledges.length === 0,
+    ),
+  );
+});
 test("知事選挙は種別で判別し、既存の名称のみのデータにも対応する", () => {
   assert.equal(model.isGovernorElection({...election, kind:"governor"}), true);
   assert.equal(model.isGovernorElection({...election, name:"テスト専用知事選挙"}), true);

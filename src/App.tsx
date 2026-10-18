@@ -146,6 +146,25 @@ function App() {
   const electionCandidates = candidates.filter(
     (item) => item.electionId === electionId,
   );
+  const pledgesAwaitingOfficialBulletin =
+    activeElection?.id === "naha-mayor-2026" &&
+    electionCandidates.length > 0 &&
+    electionCandidates.every((item) => item.pledges.length === 0);
+  const pledgePublicationNotice = pledgesAwaitingOfficialBulletin ? (
+    <aside className="notice pledge-publication-notice" role="status">
+      <strong>公約公開前</strong>
+      <p>
+        那覇市選挙管理委員会の選挙公報は現在準備中です。公開後、公式資料を確認してから公約のAI要約を掲載します。
+      </p>
+      <a
+        href="https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html"
+        target="_blank"
+        rel="noreferrer"
+      >
+        那覇市選挙管理委員会で公開状況を確認 ↗
+      </a>
+    </aside>
+  ) : null;
   useEffect(() => {
     if (page !== "region") return;
     let cancelled = false;
@@ -876,6 +895,7 @@ function App() {
         {page === "candidates" && (
           <>
             {activeElection && <Sources sources={activeElection.sources} />}
+            {pledgePublicationNotice}
             <section className="panel">
               <label className="input-label" htmlFor="candidate-query">
                 公約・候補者名・政党名で検索
@@ -912,6 +932,7 @@ function App() {
                         <RecordText entry={item.party} />
                       </div>
                     </div>
+                    <RecordText entry={item.profile} />
                     <h3>公約</h3>
                     {pledgeText(item)}
                     <Sources sources={item.sources} />
@@ -1107,6 +1128,7 @@ function App() {
                     {activeElection.date}
                   </p>
                   <Sources sources={activeElection.sources} />
+                  {pledgePublicationNotice}
                 </section>
                 {electionCandidates.length > 0 && (
                   <section
@@ -1119,7 +1141,7 @@ function App() {
                           比較する候補者
                         </h2>
                         <p className="small">
-                          初期表示では全候補者を比較します。候補者を選ぶと、その人たちに比較対象を絞り込めます。
+                          初期表示では全候補者を表示します。候補者の「比較から外す」を押すと、選んだ人だけに絞り込めます。
                         </p>
                       </div>
                       <span className="badge">
@@ -1128,6 +1150,7 @@ function App() {
                           : `${electionCandidates.length}人全員を表示`}
                       </span>
                     </div>
+                    <Sources sources={electionCandidates[0]?.sources ?? []} />
                     <div className="comparison-candidate-list">
                       {electionCandidates.map((item) => (
                         <article
@@ -1148,6 +1171,7 @@ function App() {
                               ? item.party.value
                               : "未収録"}
                           </p>
+                          <RecordText entry={item.profile} />
                           {compareButton(item)}
                         </article>
                       ))}
@@ -1288,7 +1312,7 @@ function App() {
                               <RecordText entry={item.party} />
                             </section>
                             <section>
-                              <h3>公約</h3>
+                              <h3>公約の要約</h3>
                               {item.pledges.length ? (
                                 item.pledges.map((pledge) => (
                                   <article
@@ -1296,20 +1320,12 @@ function App() {
                                     key={pledge.id}
                                   >
                                     <RecordText entry={pledge.text} />
-                                    <dl>
-                                      {checkLabels.map((label) => (
-                                        <div key={label}>
-                                          <dt>{label}</dt>
-                                          <dd>
-                                            <RecordText
-                                              entry={pledge.checks[label]}
-                                            />
-                                          </dd>
-                                        </div>
-                                      ))}
-                                    </dl>
                                   </article>
                                 ))
+                              ) : pledgesAwaitingOfficialBulletin ? (
+                                <p className="pledge-not-published">
+                                  公式の選挙公報が公開される前です。公約はまだ比較できません。
+                                </p>
                               ) : (
                                 <RecordText entry={missing<string>()} />
                               )}

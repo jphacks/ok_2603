@@ -956,6 +956,30 @@ tbody tr:last-child > * {
 .comparison-heading > p {
   margin: 4px 0 12px;
 }
+.pledge-publication-notice {
+  margin: 16px 0;
+  background: #fff8e8;
+  border-left-color: #c58b22;
+  color: #5d4820;
+}
+.pledge-publication-notice strong {
+  display: block;
+  color: #654600;
+  font-size: 16px;
+}
+.pledge-publication-notice p {
+  margin: 6px 0;
+}
+.pledge-publication-notice a {
+  color: #174b78;
+  font-weight: 600;
+}
+.pledge-not-published {
+  margin: 0;
+  color: #72551d;
+  font-size: 14px;
+  line-height: 1.6;
+}
 .comparison-candidate-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1863,126 +1887,6 @@ tbody tr:last-child > * {
     font-size: 15px;
   }
 
-  .comparison-desktop-instruction,
-  .comparison-scroll {
-    display: none;
-  }
-
-  .comparison-candidate-picker {
-    display: none;
-  }
-
-  .comparison-mobile-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 12px 0;
-  }
-
-  .comparison-mobile-list {
-    display: grid;
-    gap: 16px;
-    margin: 16px 0 90px;
-  }
-
-  .comparison-mobile-card {
-    min-width: 0;
-    padding: 18px;
-    background: #fff;
-    border: 1px solid #d9e2ed;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px #18345c0d;
-  }
-
-  .comparison-mobile-card > header {
-    padding-bottom: 14px;
-    border-bottom: 1px solid #e3e9f0;
-  }
-
-  .comparison-mobile-card h2 {
-    margin: 0;
-    font-size: 20px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-  }
-
-  .comparison-mobile-card > header .small {
-    margin: 6px 0 12px;
-    line-height: 1.5;
-  }
-
-  .comparison-mobile-card .button {
-    min-height: 44px;
-  }
-
-  .comparison-mobile-fields > section {
-    padding: 16px 0;
-    border-bottom: 1px solid #e3e9f0;
-  }
-
-  .comparison-mobile-fields > section:last-child {
-    border-bottom: 0;
-  }
-
-  .comparison-mobile-fields h3 {
-    margin: 0 0 8px;
-    color: #526782;
-    font-size: 14px;
-  }
-
-  .comparison-mobile-fields .record,
-  .comparison-mobile-fields .comparison-pledge {
-    font-size: 16px;
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-  }
-
-  .comparison-mobile-fields .comparison-pledge + .comparison-pledge {
-    margin-top: 14px;
-    padding-top: 14px;
-  }
-
-  .comparison-mobile-pledge {
-    padding: 14px 0;
-    border-top: 1px solid #e3e9f0;
-  }
-
-  .comparison-mobile-pledge > .record {
-    font-weight: 600;
-  }
-
-  .comparison-mobile-pledge dl {
-    margin: 10px 0 0;
-  }
-
-  .comparison-mobile-pledge dl > div {
-    padding: 10px 0;
-    border-top: 1px solid #eef1f5;
-  }
-
-  .comparison-mobile-pledge dt {
-    margin-bottom: 3px;
-    color: #526782;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .comparison-mobile-pledge dd {
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .compare-tray {
-    bottom: calc(80px + env(safe-area-inset-bottom));
-    max-width: calc(100% - 24px);
-    white-space: normal;
-  }
-
-  .compare-tray .button {
-    min-height: 44px;
-  }
-
   .tour-shade {
     padding: 14px 12px calc(86px + env(safe-area-inset-bottom));
     overflow-y: auto;
@@ -2072,6 +1976,105 @@ tbody tr:last-child > * {
 }
 
 @container (max-width: 600px) {
+  .comparison-desktop-instruction,
+  .comparison-scroll {
+    display: none;
+  }
+
+  .comparison-candidate-picker {
+    display: none;
+  }
+
+  .comparison-mobile-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+
+  .comparison-mobile-list {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 90px;
+  }
+
+  .comparison-mobile-card {
+    min-width: 0;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid #d9e2ed;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #18345c0d;
+  }
+
+  .comparison-mobile-card > header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e3e9f0;
+  }
+
+  .comparison-mobile-card h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .comparison-mobile-card > header .small {
+    margin: 6px 0 12px;
+    line-height: 1.5;
+  }
+
+  .comparison-mobile-card .button {
+    min-height: 44px;
+  }
+
+  .comparison-mobile-fields > section {
+    padding: 12px 0;
+    border-bottom: 1px solid #e3e9f0;
+  }
+
+  .comparison-mobile-fields > section:last-child {
+    border-bottom: 0;
+  }
+
+  .comparison-mobile-fields h3 {
+    margin: 0 0 8px;
+    color: #526782;
+    font-size: 14px;
+  }
+
+  .comparison-mobile-fields .record,
+  .comparison-mobile-fields .comparison-pledge {
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .comparison-mobile-fields .comparison-pledge + .comparison-pledge {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  .comparison-mobile-pledge {
+    padding: 12px 0;
+    border-top: 1px solid #e3e9f0;
+  }
+
+  .comparison-mobile-pledge > .record {
+    font-weight: 600;
+  }
+
+  .compare-tray {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    max-width: calc(100% - 24px);
+    white-space: normal;
+  }
+
+  .compare-tray .button {
+    min-height: 44px;
+  }
+
   .region-page-heading {
     flex-direction: row;
     align-items: center;
