@@ -382,7 +382,7 @@ function App() {
                 ["guide", "book", "用語"],
               ] as const
             )
-              .filter(([target]) => page === "home" ? target === "home" || target === "guide" : target !== "compare" || !!electionId)
+              .filter(([target]) => page === "home" ? target === "home" || target === "polling" || target === "guide" : target !== "compare" || !!electionId)
               .map(([target, icon, label]) => {
                 const classes = page === target ? "nav-active" : "";
                 return (
@@ -394,7 +394,7 @@ function App() {
                     onClick={() => navigate(target)}
                   >
                     <Icon name={icon} />
-                    <span>{page === "home" && target === "guide" ? "データについて" : label}</span>
+                    <span>{label}</span>
                     {target === "compare" && (
                       <span className="count">{selected.length}</span>
                     )}
@@ -411,7 +411,7 @@ function App() {
                 <button onClick={() => chooseRegion("沖縄県")}>沖縄県知事選挙</button>
                 <button onClick={() => { setHomeMenuOpen(false); openRegionSearch(); }}>市町村別の選挙</button>
                 <button onClick={() => navigate("polling")}>投票所を探す</button>
-                <button onClick={() => navigate("guide")}>データについて</button>
+                <button onClick={() => navigate("guide")}>用語</button>
               </nav>}
             </div>
           )}

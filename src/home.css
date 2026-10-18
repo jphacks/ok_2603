@@ -165,7 +165,7 @@
   height: calc(82px + env(safe-area-inset-bottom));
   padding: 0 max(16px, calc((100vw - 1120px) / 2)) env(safe-area-inset-bottom);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
   border-top: 1px solid #dedfdc;
   background: #fffefbed;
