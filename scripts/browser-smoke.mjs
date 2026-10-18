@@ -157,8 +157,8 @@ try {
     true,
   );
   assert.equal(
-    await evaluate('document.querySelector(".navigation button span")?.textContent'),
-    "ホーム",
+    await evaluate('!![...document.querySelectorAll(".navigation button")].find(button => button.textContent.includes("地域を探す"))'),
+    true,
   );
   assert.equal(
     await evaluate('document.querySelectorAll("#region-suggestions button").length'),
@@ -401,8 +401,8 @@ try {
     mobile: true,
   });
   assert.equal(
-    await evaluate('!![...document.querySelectorAll(".navigation button")].find(button => button.textContent.includes("地域を探す"))'),
-    false,
+    await evaluate('getComputedStyle(document.querySelector(".navigation .nav-region")).display'),
+    "flex",
   );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),

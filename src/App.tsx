@@ -148,6 +148,22 @@ function App() {
     setPreview(false);
     window.scrollTo(0, 0);
   }
+  function openRegionSearch() {
+    const scrollToSearch = () => {
+      document.getElementById("region-search")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    };
+    if (page === "home") {
+      scrollToSearch();
+      return;
+    }
+    navigate("home");
+    window.setTimeout(scrollToSearch, 0);
+  }
   function chooseRegion(name: string) {
     setRegion(name);
     setMunicipality(null);
@@ -265,6 +281,7 @@ function App() {
             {(
               [
                 ["home", "home", "ホーム"],
+                ["region", "region", "地域を探す"],
                 ["polling", "region", "投票所を探す"],
                 ["compare", "compare", "公約比較"],
                 ["guide", "book", "用語"],
@@ -272,14 +289,25 @@ function App() {
             )
               .filter(([target]) => target !== "compare" || !!electionId)
               .map(([target, icon, label]) => {
-                const classes = page === target ? "nav-active" : "";
+                const classes = [
+                  target === "region" ? "nav-region" : "",
+                  page === target ||
+                  (target === "region" &&
+                    ["candidates", "detail"].includes(page))
+                    ? "nav-active"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
                 return (
                   <button
                     id={target === "compare" ? "comparison-link" : undefined}
                     key={target}
                     className={classes}
                     aria-current={page === target ? "page" : undefined}
-                    onClick={() => navigate(target)}
+                    onClick={() =>
+                      target === "region" ? openRegionSearch() : navigate(target)
+                    }
                   >
                     <Icon name={icon} />
                     <span>{label}</span>
