@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { candidates, elections, glossary } from "./election/data";
+import { PollingSearch } from "./polling/PollingSearch";
+import { PollingAdmin } from "./polling/PollingAdmin";
+import {
+  candidates,
+  elections,
+  glossary,
+  glossaryReadings,
+} from "./election/data";
 import { CouncilPage } from "./election/CouncilPage";
 import { IslandDecoration, FlowerDecoration } from "./election/HomeDecor";
 import "./home.css";
@@ -15,19 +22,25 @@ import {
   prefecturalDistrictFor,
   searchCandidates,
   searchMunicipalities,
+  searchGlossary,
   toggleSelection,
   type Candidate,
 } from "./election/model";
+import {
+  electionDayVotingPlacesByMunicipality,
+  earlyVotingPlacesByMunicipality,
+  earlyVotingPlacesSource,
+  mapSearchUrl,
+} from "./election/earlyVotingPlaces";
 import {
   Empty,
   Icon,
   Photo,
   RecordText,
-  RichText,
   Sources,
 } from "./election/components";
 
-type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "council";
+type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "council" | "polling" | "polling-admin";
 const tutorialKey = "election-prototype:tutorial:v1";
 const tabs = [
   "公約",
@@ -36,6 +49,8 @@ const tabs = [
   "議案への賛否",
   "過去の公約・実施状況",
 ];
+const comparisonLabels = ["所属政党", "公約", ...checkLabels] as const;
+type ComparisonLabel = (typeof comparisonLabels)[number];
 const steps = [
   [
     "まずは、沖縄県内の地域を選びましょう",
@@ -44,12 +59,12 @@ const steps = [
   ],
   [
     "地域の選挙を選ぶ",
-    "地域ページに表示される選挙から見たい選挙を選ぶと、その選挙の候補者と公約に進めます。未登録の情報は「未収録」と表示します。",
+    "地域ページの選挙を選ぶと、候補者全員の公約比較ページに進みます。未登録の情報は「未収録」と表示します。",
     "region-search",
   ],
   [
     "公約を読み比べる",
-    "選挙を選んだあと、候補者の「比較に追加」で公約を横並びに比べられます。推薦や順位付けは行いません。",
+    "比較ページには全候補者が表示されます。候補者を選ぶと比較対象を絞り込めます。推薦や順位付けは行いません。",
     "region-search",
   ],
 ];
@@ -69,9 +84,13 @@ function App() {
   const [electionId, setElectionId] = useState<string | null>(null);
   const [level, setLevel] = useState("all");
   const [period, setPeriod] = useState("current");
+  const [votingPlaceType, setVotingPlaceType] = useState<
+    "early" | "election-day"
+  >("early");
   const [selected, setSelected] = useState<string[]>([]);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
+  const [glossaryQuery, setGlossaryQuery] = useState("");
   const [preview, setPreview] = useState(false);
   const [slots, setSlots] = useState([1, 2]);
   const [tour, setTour] = useState<number | null>(() => {
@@ -89,14 +108,20 @@ function App() {
   const compared = selected
     .map((id) => candidates.find((item) => item.id === id))
     .filter((item): item is Candidate => !!item);
+  const electionCandidates = candidates.filter(
+    (item) => item.electionId === electionId,
+  );
+  const comparisonCandidates = compared.length ? compared : electionCandidates;
+  const visibleGlossary = searchGlossary(
+    glossary,
+    glossaryQuery,
+    glossaryReadings,
+  );
   const regionalElections = elections.filter((item) =>
     item.prefectureIds.includes(region) &&
     (governorOnly ? isGovernorElection(item) : !isGovernorElection(item)) &&
     (!municipality || electionAppliesToMunicipality(item, municipality)),
   );
-  const latestElection = [...regionalElections].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  )[0];
   const visibleElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
@@ -148,20 +173,12 @@ function App() {
     window.scrollTo(0, 0);
   }
   function openRegionSearch() {
-    const scrollToSearch = () => {
-      document.getElementById("region-search")?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
-          : "smooth",
-        block: "start",
-      });
-    };
-    if (page === "home") {
-      scrollToSearch();
-      return;
-    }
-    navigate("home");
-    window.setTimeout(scrollToSearch, 0);
+    const focusSearch = () => document.getElementById("region-search")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+    if (page === "home") focusSearch();
+    else { navigate("home"); window.setTimeout(focusSearch, 0); }
   }
   function chooseRegion(name: string) {
     setRegion(name);
@@ -225,6 +242,30 @@ function App() {
       <RecordText entry={missing<string>()} />
     );
   }
+  function comparisonCell(item: Candidate, label: ComparisonLabel) {
+    if (label === "所属政党") return <RecordText entry={item.party} />;
+    if (label === "公約") {
+      return item.pledges.length ? (
+        item.pledges.map((pledge) => (
+          <div className="comparison-pledge" key={pledge.id}>
+            <RecordText entry={pledge.text} />
+          </div>
+        ))
+      ) : (
+        <RecordText entry={missing<string>()} />
+      );
+    }
+    return item.pledges.length ? (
+      item.pledges.map((pledge) => (
+        <div className="comparison-pledge" key={pledge.id}>
+          <RecordText entry={pledge.text} />
+          <RecordText entry={pledge.checks[label]} />
+        </div>
+      ))
+    ) : (
+      <RecordText entry={missing<string>()} />
+    );
+  }
   const title =
     page === "region"
       ? governorOnly ? "沖縄県知事選挙" : municipality || region
@@ -234,9 +275,12 @@ function App() {
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
             ? "公約を比較する"
-            : page === "council"
-              ? "沖縄県議会議員"
-              : "データについて";
+            : page === "council" ? "沖縄県議会議員"
+            : page === "polling" ? "投票所を探す"
+            : page === "polling-admin" ? "投票所管理"
+            : page === "guide"
+              ? "政治・選挙の用語"
+              : "用語";
 
   return (
     <div className={page === "home" ? "app-shell home-shell" : "app-shell"}>
@@ -257,35 +301,24 @@ function App() {
             {(
               [
                 ["home", "home", "ホーム"],
-                ["region", "region", "地域を探す"],
+                ["polling", "region", "投票所を探す"],
                 ["compare", "compare", "公約比較"],
-                ["guide", "book", "データについて"],
+                ["guide", "book", "用語"],
               ] as const
             )
               .filter(([target]) => page === "home" ? target === "home" || target === "guide" : target !== "compare" || !!electionId)
               .map(([target, icon, label]) => {
-                const classes = [
-                  target === "region" ? "nav-region" : "",
-                  page === target ||
-                  (target === "region" &&
-                    ["candidates", "detail"].includes(page))
-                    ? "nav-active"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
+                const classes = page === target ? "nav-active" : "";
                 return (
                   <button
                     id={target === "compare" ? "comparison-link" : undefined}
                     key={target}
                     className={classes}
                     aria-current={page === target ? "page" : undefined}
-                    onClick={() =>
-                      target === "region" ? openRegionSearch() : navigate(target)
-                    }
+                    onClick={() => navigate(target)}
                   >
                     <Icon name={icon} />
-                    <span>{label}</span>
+                    <span>{page === "home" && target === "guide" ? "データについて" : label}</span>
                     {target === "compare" && (
                       <span className="count">{selected.length}</span>
                     )}
@@ -301,6 +334,7 @@ function App() {
               {homeMenuOpen && <nav id="home-menu-links" className="home-menu-links" aria-label="ホームメニュー">
                 <button onClick={() => chooseRegion("沖縄県")}>沖縄県知事選挙</button>
                 <button onClick={() => { setHomeMenuOpen(false); openRegionSearch(); }}>市町村別の選挙</button>
+                <button onClick={() => navigate("polling")}>投票所を探す</button>
                 <button onClick={() => navigate("guide")}>データについて</button>
               </nav>}
             </div>
@@ -318,7 +352,7 @@ function App() {
             <div className="breadcrumb">
               <button onClick={() => navigate("home")}>ホーム</button>
               <span>/</span>
-              {!["guide", "compare", "council"].includes(page) && (
+              {!["guide", "council", "compare", "polling", "polling-admin"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
                   {!(page === "region" && !municipality) && <span>/</span>}
@@ -326,25 +360,34 @@ function App() {
               )}
               <span>{title}</span>
             </div>
-            <div className="page-heading">
+            <div
+              className={`page-heading${page === "guide" ? " glossary-page-heading" : ""}`}
+            >
               <div>
                 <p className="eyebrow">
                   {page === "region"
                     ? "REGIONAL DASHBOARD"
-                    : page === "council"
-                      ? "OKINAWA PREFECTURAL ASSEMBLY"
-                      : page === "compare"
-                        ? "PLEDGE COMPARISON"
+                    : page === "council" ? "OKINAWA PREFECTURAL ASSEMBLY"
+                    : page === "compare"
+                      ? "PLEDGE COMPARISON"
+                      : page === "guide"
+                        ? "POLITICAL & ELECTION TERMS"
                         : "ELECTION INFORMATION"}
                 </p>
-                <h1 ref={heading} tabIndex={-1}>
+                <h1
+                  id={page === "guide" ? "glossary-title" : undefined}
+                  ref={heading}
+                  tabIndex={-1}
+                >
                   {title}
                 </h1>
                 <p>
                   {page === "council"
                     ? "現職の県議会議員を、氏名・選挙区から探せます。"
                     : page === "compare"
-                      ? "同じ項目を横並びに。自分の視点で、読み比べる。"
+                    ? "公約と実施方法を、候補者ごとに確認できます。"
+                    : page === "guide"
+                      ? "政治や選挙の基本用語を、公式情報をもとに解説します。"
                       : ["candidates", "detail"].includes(page)
                         ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
                         : page === "region" && municipality
@@ -364,6 +407,8 @@ function App() {
             </div>
           </>
         )}
+        {page === "polling" && <PollingSearch openAdmin={() => navigate("polling-admin")} />}
+        {page === "polling-admin" && <PollingAdmin />}
         {page === "home" && (
           <>
             <section className="home-visual" aria-label="沖縄の選挙情報">
@@ -512,30 +557,108 @@ function App() {
               <Sources sources={[districtSource]} />
             </div>}
             {municipality && (
-              <section className="panel" aria-labelledby="latest-election-title">
-                <h2 id="latest-election-title">直近の選挙</h2>
-                {latestElection ? (
-                  <article className="election-card">
-                    <span className="badge">
-                      {latestElection.level === "national"
-                        ? "国政選挙"
-                        : "地方選挙"}
-                    </span>
-                    <h3>{latestElection.name}</h3>
-                    <p>
-                      {latestElection.municipality || municipality} · 投票日{" "}
-                      {latestElection.date}
-                    </p>
-                    <Sources sources={latestElection.sources} />
+              <section className="panel" aria-labelledby="map-search-title">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">VOTING PLACES</p>
+                    <h2 id="map-search-title">投票場所</h2>
+                  </div>
+                </div>
+                <div className="segmented" role="group" aria-label="投票場所の種類">
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "early"}
+                    onClick={() => setVotingPlaceType("early")}
+                  >
+                    期日前投票
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "election-day"}
+                    onClick={() => setVotingPlaceType("election-day")}
+                  >
+                    当日投票
+                  </button>
+                </div>
+                {votingPlaceType === "early" ? (
+                  <>
                     <p className="small">
-                      選挙情報を確認したうえで要約を掲載します。AIによる要約はまだ未実装です。
+                      {earlyVotingPlacesSource.title}（{earlyVotingPlacesSource.publisher}、
+                      {earlyVotingPlacesSource.asOf}時点）に掲載された場所です。
+                      {earlyVotingPlacesSource.electionDate}執行の選挙は終了しており、
+                      現在の投票所や施設の営業状況を示すものではありません。
                     </p>
-                  </article>
+                    <p className="small">
+                      市町村内の掲載場所を表示しています。距離順ではなく、地図リンクを開くと施設名でGoogle
+                      Mapsを検索します。
+                    </p>
+                    {earlyVotingPlacesByMunicipality[municipality]?.length ? (
+                      <ul className="place-list">
+                        {earlyVotingPlacesByMunicipality[municipality].map(
+                          (place) => (
+                            <li key={place}>
+                              <span>{place}</span>
+                              <a
+                                className="button secondary"
+                                href={mapSearchUrl(municipality, place)}
+                                aria-label={`${municipality}の${place}をGoogle Mapsで検索（新しいタブで開く）`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                地図で検索
+                              </a>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    ) : (
+                      <Empty title="掲載場所はありません">
+                        この市町村の期日前投票所は添付資料に記載されていません。
+                      </Empty>
+                    )}
+                    <p className="small place-source">
+                      出典: {earlyVotingPlacesSource.fileName} · 地図検索を選ぶと
+                      Google Mapsに検索語が送信されます。
+                    </p>
+                  </>
                 ) : (
-                  <Empty title="選挙情報は未収録です">
-                    {municipality}に関係する直近の選挙情報はまだ登録されていません。
-                    AI要約機能は未実装です。公式資料の登録後、出典を示して概要を掲載します。
-                  </Empty>
+                  electionDayVotingPlacesByMunicipality[municipality]?.length ? (
+                    <>
+                      <p className="small">
+                        以下は提供された情報です。対象となる選挙・年度と最新性は未確認のため、投票前に市町村選挙管理委員会の公式情報をご確認ください。
+                      </p>
+                      <ul className="place-list">
+                        {electionDayVotingPlacesByMunicipality[
+                          municipality
+                        ].map((place) => (
+                          <li key={place.name}>
+                            <span>
+                              <strong>{place.name}</strong>
+                              <span className="place-address">
+                                所在地：{place.address}
+                              </span>
+                            </span>
+                            <a
+                              className="button secondary"
+                              href={mapSearchUrl(
+                                municipality,
+                                `${place.name} ${place.address}`,
+                              )}
+                              aria-label={`${municipality}の${place.name}（${place.address}）をGoogle Mapsで検索（新しいタブで開く）`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              地図で検索
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <Empty title="当日投票所は未収録です">
+                      当日投票所は、公式情報を確認後に掲載します。
+                    </Empty>
+                  )
                 )}
               </section>
             )}
@@ -597,10 +720,10 @@ function App() {
                         setSelected([]);
                         setCandidateId(null);
                         setQuery("");
-                        navigate("candidates");
+                        navigate("compare");
                       }}
                     >
-                      この選挙の候補者・公約を見る →
+                      この選挙の公約を比較する →
                     </button>
                   </article>
                 ))}
@@ -610,59 +733,6 @@ function App() {
                   {governorOnly ? "沖縄県知事選挙" : municipality || region}の{period === "past" ? "過去" : "現在"}
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
-              )}
-            </section>
-            <section className="panel">
-              <h2>年代別投票率</h2>
-              <p className="small">
-                選挙ごとの公式集計を数値で表示します。推計や他の地域の数値による補完はしません。
-              </p>
-              {regionalElections.length ? (
-                regionalElections.map((item) => (
-                  <article key={item.id}>
-                    <h3>{item.name}</h3>
-                    {item.turnout.status === "recorded" ? (
-                      <>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>年代</th>
-                              <th>投票率</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.turnout.value.map((row) => (
-                              <tr key={row.age}>
-                                <td>{row.age}</td>
-                                <td>{row.rate}%</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <Sources sources={item.turnout.sources} />
-                      </>
-                    ) : (
-                      <RecordText entry={item.turnout} />
-                    )}
-                  </article>
-                ))
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>対象選挙</th>
-                      <th>年代</th>
-                      <th>投票率</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                    </tr>
-                  </tbody>
-                </table>
               )}
             </section>
           </>
@@ -881,20 +951,102 @@ function App() {
         )}
         {page === "compare" && (
           <>
-            <p className="notice">
-              人数制限なし・横スクロール対応。候補者の独自採点、推薦、順位付けは行いません。
-            </p>
-            {!compared.length && !preview && (
+            {activeElection && (
+              <>
+                <button
+                  className="text-button back"
+                  onClick={() => navigate("region")}
+                >
+                  ← 選挙一覧に戻る
+                </button>
+                <section className="comparison-heading panel">
+                  <span className="badge">
+                    {activeElection.level === "national"
+                      ? "国政選挙"
+                      : "地方選挙"}
+                  </span>
+                  <h2>{activeElection.name}</h2>
+                  <p>
+                    {activeElection.municipality || region} · 投票日{" "}
+                    {activeElection.date}
+                  </p>
+                  <Sources sources={activeElection.sources} />
+                </section>
+                {electionCandidates.length > 0 && (
+                  <section
+                    className="panel comparison-candidate-picker"
+                    aria-labelledby="comparison-candidates-heading"
+                  >
+                    <div className="section-heading">
+                      <div>
+                        <h2 id="comparison-candidates-heading">
+                          比較する候補者
+                        </h2>
+                        <p className="small">
+                          初期表示では全候補者を比較します。候補者を選ぶと、その人たちに比較対象を絞り込めます。
+                        </p>
+                      </div>
+                      <span className="badge">
+                        {selected.length
+                          ? `${selected.length}人を選択中`
+                          : `${electionCandidates.length}人全員を表示`}
+                      </span>
+                    </div>
+                    <div className="comparison-candidate-list">
+                      {electionCandidates.map((item) => (
+                        <article
+                          className="comparison-candidate"
+                          key={item.id}
+                        >
+                          <h3>
+                            <button
+                              className="candidate-name"
+                              onClick={() => openCandidate(item.id)}
+                            >
+                              {item.name}
+                            </button>
+                          </h3>
+                          <p className="party-label">
+                            <span>所属</span>
+                            {item.party.status === "recorded"
+                              ? item.party.value
+                              : "未収録"}
+                          </p>
+                          {compareButton(item)}
+                        </article>
+                      ))}
+                    </div>
+                    <div className="comparison-actions">
+                      <button
+                        className="text-button"
+                        onClick={() => navigate("candidates")}
+                      >
+                        候補者一覧・検索を見る →
+                      </button>
+                      {selected.length > 0 && (
+                        <button
+                          className="text-button"
+                          onClick={() => setSelected([])}
+                        >
+                          全候補者の比較に戻す
+                        </button>
+                      )}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+            {!electionCandidates.length && !preview && (
               <section className="panel">
-                <Empty title="比較する候補者が選択されていません">
-                  候補者一覧の「比較に追加」から選択できます。候補者データは現在未収録です。
+                <Empty title="候補者情報は未収録です">
+                  この選挙の候補者・公約は、公式資料を確認してから掲載します。
                 </Empty>
                 <div className="center-actions">
                   <button
                     className="button primary"
-                    onClick={() => navigate(region ? "candidates" : "home")}
+                    onClick={() => navigate(activeElection ? "region" : "home")}
                   >
-                    {region ? "候補者一覧へ" : "地域を選ぶ"}
+                    {activeElection ? "選挙一覧へ戻る" : "地域を選ぶ"}
                   </button>
                   <button
                     className="button secondary"
@@ -929,9 +1081,108 @@ function App() {
                 </button>
               </div>
             )}
-            {(compared.length > 0 || preview) && (
+            {(comparisonCandidates.length > 0 || preview) && (
               <>
-                <p className="small">
+                {!preview && (
+                  <div className="comparison-mobile-actions">
+                    <button
+                      className="text-button"
+                      onClick={() => navigate("candidates")}
+                    >
+                      候補者一覧・検索を見る →
+                    </button>
+                    {selected.length > 0 && (
+                      <button
+                        className="text-button"
+                        onClick={() => setSelected([])}
+                      >
+                        全候補者の比較に戻す
+                      </button>
+                    )}
+                  </div>
+                )}
+                <div className="comparison-mobile-list">
+                  {preview
+                    ? slots.map((slot) => (
+                        <article className="comparison-mobile-card" key={slot}>
+                          <h2>未入力の表示枠 {slot}</h2>
+                          <div className="comparison-mobile-fields">
+                            {comparisonLabels.map((label) => (
+                              <section key={label}>
+                                <h3>{label}</h3>
+                                <RecordText entry={missing<string>()} />
+                              </section>
+                            ))}
+                          </div>
+                          <button
+                            className="text-button"
+                            onClick={() =>
+                              setSlots((items) =>
+                                items.filter((item) => item !== slot),
+                              )
+                            }
+                          >
+                            表示枠を削除
+                          </button>
+                        </article>
+                      ))
+                    : comparisonCandidates.map((item) => (
+                        <article className="comparison-mobile-card" key={item.id}>
+                          <header>
+                            <h2>
+                              <button
+                                className="candidate-name"
+                                onClick={() => openCandidate(item.id)}
+                              >
+                                {item.name}
+                              </button>
+                            </h2>
+                            <p className="small">
+                              {
+                                elections.find(
+                                  (election) => election.id === item.electionId,
+                                )?.name
+                              }
+                            </p>
+                            {compareButton(item)}
+                          </header>
+                          <div className="comparison-mobile-fields">
+                            <section>
+                              <h3>所属政党</h3>
+                              <RecordText entry={item.party} />
+                            </section>
+                            <section>
+                              <h3>公約</h3>
+                              {item.pledges.length ? (
+                                item.pledges.map((pledge) => (
+                                  <article
+                                    className="comparison-mobile-pledge"
+                                    key={pledge.id}
+                                  >
+                                    <RecordText entry={pledge.text} />
+                                    <dl>
+                                      {checkLabels.map((label) => (
+                                        <div key={label}>
+                                          <dt>{label}</dt>
+                                          <dd>
+                                            <RecordText
+                                              entry={pledge.checks[label]}
+                                            />
+                                          </dd>
+                                        </div>
+                                      ))}
+                                    </dl>
+                                  </article>
+                                ))
+                              ) : (
+                                <RecordText entry={missing<string>()} />
+                              )}
+                            </section>
+                          </div>
+                        </article>
+                      ))}
+                </div>
+                <p className="small comparison-desktop-instruction">
                   左右にスクロールして、すべての列を確認できます。
                 </p>
                 <div
@@ -963,7 +1214,7 @@ function App() {
                                 </button>
                               </th>
                             ))
-                          : compared.map((item) => (
+                          : comparisonCandidates.map((item) => (
                               <th scope="col" key={item.id}>
                                 <button
                                   className="candidate-name"
@@ -979,13 +1230,19 @@ function App() {
                                     )?.name
                                   }
                                 </p>
+                                <div className="party-label">
+                                  <span>所属</span>
+                                  {item.party.status === "recorded"
+                                    ? item.party.value
+                                    : "未収録"}
+                                </div>
                                 {compareButton(item)}
                               </th>
                             ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {["所属政党", "公約", ...checkLabels].map((label) => (
+                      {comparisonLabels.map((label) => (
                         <tr key={label}>
                           <th scope="row">{label}</th>
                           {preview
@@ -994,33 +1251,9 @@ function App() {
                                   <RecordText entry={missing<string>()} />
                                 </td>
                               ))
-                            : compared.map((item) => (
+                            : comparisonCandidates.map((item) => (
                                 <td key={item.id}>
-                                  {label === "所属政党" ? (
-                                    <RecordText entry={item.party} />
-                                  ) : !item.pledges.length ? (
-                                    <RecordText entry={missing<string>()} />
-                                  ) : (
-                                    item.pledges.map((pledge) => (
-                                      <div
-                                        className="comparison-pledge"
-                                        key={pledge.id}
-                                      >
-                                        {label !== "公約" && (
-                                          <RecordText entry={pledge.text} />
-                                        )}
-                                        <RecordText
-                                          entry={
-                                            label === "公約"
-                                              ? pledge.text
-                                              : pledge.checks[
-                                                  label as (typeof checkLabels)[number]
-                                                ]
-                                          }
-                                        />
-                                      </div>
-                                    ))
-                                  )}
+                                  {comparisonCell(item, label)}
                                 </td>
                               ))}
                         </tr>
@@ -1033,80 +1266,61 @@ function App() {
           </>
         )}
         {page === "guide" && (
-          <>
-            <section className="panel">
-              <h2>公式資料を、人が確認して登録</h2>
-              <p>
-                公約・経歴・議会記録・投票率には、公式リンク、発行元、最終確認日を表示します。現在、選挙・候補者・投票率の確認済みデータは未収録です。
-              </p>
-              <div className="status-guide">
-                {[
-                  [
-                    "未収録",
-                    "まだ情報を登録していません。存在しないという意味ではありません。",
-                  ],
-                  [
-                    "確認できず",
-                    "確認した資料では内容を確認できませんでした。確認に使った資料を表示します。",
-                  ],
-                  [
-                    "該当記録なし",
-                    "確認した公式資料の対象範囲に、該当記録がないと確認しています。対象範囲と資料を表示します。",
-                  ],
-                ].map(([label, text]) => (
-                  <div key={label}>
-                    <span className="badge">{label}</span>
-                    <p>{text}</p>
-                  </div>
+          <section className="glossary-page" aria-labelledby="glossary-title">
+            <div className="glossary-search">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="10.8" cy="10.8" r="6.8" />
+                <path d="m16 16 4.5 4.5" />
+              </svg>
+              <input
+                id="glossary-search"
+                type="search"
+                aria-label="用語を検索"
+                value={glossaryQuery}
+                onChange={(event) => setGlossaryQuery(event.target.value)}
+                placeholder="用語を検索"
+              />
+            </div>
+            <p className="glossary-results" role="status">
+              {visibleGlossary.length}件の用語
+            </p>
+            {visibleGlossary.length ? (
+              <div className="glossary-list">
+                {visibleGlossary.map((item) => (
+                  <article className="glossary-entry" key={item.term}>
+                    <h3>
+                      <ruby>
+                        {item.term}
+                        <rt>{glossaryReadings[item.term]}</rt>
+                      </ruby>
+                    </h3>
+                    <p>{item.definition}</p>
+                    <Sources sources={item.sources} />
+                  </article>
                 ))}
               </div>
-            </section>
-            <section className="panel">
-              <h2>公約の具体性チェック</h2>
-              <p>
-                5項目の記載状況と根拠文章を確認できます。記載の有無を能力や実現可能性の採点に変換しません。
+            ) : (
+              <p className="glossary-no-results">
+                該当する用語はありません。別の言葉で検索してください。
               </p>
-            </section>
-            <section className="panel">
-              <h2>政治用語の解説</h2>
-              <p>
-                公約内で下線が付いた用語を押すと、短い解説と出典が開きます。
-              </p>
-              {glossary.length ? (
-                glossary.map((item) => (
-                  <p key={item.term}>
-                    <RichText text={item.term} />
-                  </p>
-                ))
-              ) : (
-                <p className="small">
-                  解説文と出典は未収録です。人が確認した用語が登録されると、公約内でも利用できます。
-                </p>
-              )}
-            </section>
-            <section className="panel">
-              <h2>この試作品について</h2>
-              <p>
-                管理者画面・認証・公開承認フロー・データベース・デプロイ先は未決定のため未実装です。チュートリアルの完了状態のみブラウザー内に保存します。比較の選択状態は再読み込みでリセットされます。
-              </p>
-              <button
-                className="button secondary"
-                onClick={() => {
-                  navigate("home");
-                  setTour(0);
-                }}
-              >
-                操作ガイドをもう一度見る
-              </button>
-            </section>
-          </>
+            )}
+          </section>
         )}
         <footer className="footer">
           <span>選挙情報（仮称）</span>
           <p>情報を知る。根拠を読む。自分で考える。</p>
-          <button className="text-button" onClick={() => navigate("guide")}>
-            データと収録方針 →
-          </button>
+          {page !== "guide" && (
+            <button className="text-button" onClick={() => navigate("guide")}>
+              用語解説 →
+            </button>
+          )}
         </footer>
       </main>
       {selected.length > 0 && page !== "compare" && (

@@ -1,3 +1,4 @@
+import municipalityNames from "../../shared/municipalities.json";
 export type Source = { url: string; publisher: string; checkedAt: string };
 export type Entry<T> =
   | { status: "recorded"; value: T; sources: Source[] }
@@ -108,49 +109,7 @@ export function searchCouncilMembers(members: CouncilMember[], query: string) {
   });
 }
 export const prefectures = ["沖縄県"];
-export const municipalities = [
-  "那覇市",
-  "宜野湾市",
-  "石垣市",
-  "浦添市",
-  "名護市",
-  "糸満市",
-  "沖縄市",
-  "豊見城市",
-  "うるま市",
-  "宮古島市",
-  "南城市",
-  "国頭村",
-  "大宜味村",
-  "東村",
-  "今帰仁村",
-  "本部町",
-  "恩納村",
-  "宜野座村",
-  "金武町",
-  "伊江村",
-  "読谷村",
-  "嘉手納町",
-  "北谷町",
-  "北中城村",
-  "中城村",
-  "西原町",
-  "与那原町",
-  "南風原町",
-  "渡嘉敷村",
-  "座間味村",
-  "粟国村",
-  "渡名喜村",
-  "南大東村",
-  "北大東村",
-  "伊平屋村",
-  "伊是名村",
-  "久米島町",
-  "八重瀬町",
-  "多良間村",
-  "竹富町",
-  "与那国町",
-];
+export const municipalities = municipalityNames;
 // 名称・読みの出典：沖縄県「沖縄県内の市町村」（2026-10-18確認）
 // https://www.pref.okinawa.lg.jp/machizukuri/jutakutochi/1012354/1012440.html
 // 既存のmunicipalities配列と画面遷移には正式名称を使い続ける。
@@ -213,6 +172,18 @@ export function searchCandidates(candidates: Candidate[], query: string) {
     );
     return words.every((word) => text.includes(word));
   });
+}
+export function searchGlossary(
+  terms: GlossaryTerm[],
+  query: string,
+  readings: Record<string, string> = {},
+) {
+  const normalizedQuery = normalize(query);
+  return terms.filter((item) =>
+    normalize(`${item.term} ${readings[item.term] ?? ""} ${item.definition}`).includes(
+      normalizedQuery,
+    ),
+  );
 }
 export function toggleSelection(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id];
