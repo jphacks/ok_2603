@@ -449,10 +449,19 @@ function App() {
               ] as const
             )
               .filter(([target]) => {
-                if (page === "home") return target === "home" || target === "guide";
-                if (target === "compare" && !electionId) return false;
-                if (target === "polling" && (page === "guide" || (page === "region" && (municipality || governorOnly)))) return false;
-                return true;
+                if (page === "home")
+                  return target === "home" || target === "guide";
+                if (
+                  target === "polling" &&
+                  (page === "guide" ||
+                    (page === "region" && (municipality || governorOnly)))
+                )
+                  return false;
+                return (
+                  target === "home" ||
+                  target === "polling" ||
+                  target === "guide"
+                );
               })
               .map(([target, icon, label]) => {
                 const classes = page === target ? "nav-active" : "";

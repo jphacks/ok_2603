@@ -20,9 +20,13 @@ Supabaseの選挙一覧は公開情報として匿名ロールから読み取る
 
 ## 市町村別の投票場所
 
-市町村ページの「投票場所」は `GET /api/polling/municipality-places?municipality_id=...` を通じ、Supabaseの `public.municipality_voting_places` から取得する。アプリは投票場所一覧をソースコードから読み込まない。新規環境では `supabase/migrations/202610180003_municipality_voting_places.sql` を適用する。このマイグレーションは匿名ロールに読み取りだけを許可し、41市町村の期日前投票所70件と宜野湾市の当日投票所4件を登録する。
+市町村ページの「投票場所」は `GET /api/polling/municipality-places?municipality_id=...` を通じ、Supabaseの `public.municipality_voting_places` から取得する。アプリは投票場所一覧をソースコードから読み込まない。新規環境では `supabase/migrations/202610180004_municipality_voting_places.sql` を適用する。このマイグレーションは匿名ロールに読み取りだけを許可し、41市町村の期日前投票所70件と宜野湾市の当日投票所4件を登録する。
 
 期日前投票所は沖縄県選挙管理委員会の2026年9月4日時点の資料（2026年9月13日執行）であり、過去の情報として表示する。当日投票所の宜野湾市4件はユーザー提供で公式確認未了の状態として登録し、その旨を画面に表示する。いずれも現在の投票所を示すものではない。
+
+## 那覇市長選挙
+
+那覇市長選（第24回、投票日2026-10-25）は、公式特設ページの情報を `supabase/migrations/202610180003_naha_mayor_election.sql` で登録する。投票日前は市町村画面の「現在の選挙」に表示される。候補者情報は別途収録されるまで表示されない。
 
 ## 現職の沖縄県議会議員
 
