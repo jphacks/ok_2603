@@ -251,16 +251,18 @@ try {
     const recorded = value => ({status:'recorded', value, sources:[source]});
     d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
     d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
-    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
   })()`);
   await click("ホーム");
   await input("region-query", "沖縄");
   await click("沖縄県 都道府県");
   assert.equal((await text()).includes("年代別投票率"), false);
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
-  await click("この選挙の候補者・公約を見る →");
+  await click("この選挙の公約を比較する →");
+  assert.equal(
+    await evaluate('document.querySelector("h1")?.textContent === "公約を比較する"'),
+    true,
+  );
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
-  await click("公約比較0");
   await click("未収録の比較表示を見る");
   for (let i = 0; i < 4; i++) await click("＋ 表示枠を追加");
   assert.equal(
@@ -275,9 +277,49 @@ try {
     ),
     true,
   );
-  await screenshot("election-comparison.png");
   await click("表示例を閉じる");
-  await click("候補者一覧へ");
+  await evaluate(`(async () => {
+    const appSource = await (await fetch('/src/App.tsx')).text();
+    const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
+    if (!dataPath) throw new Error('Cannot locate the active Vite data module');
+    const d = await import(dataPath); const m = await import('/src/election/model.ts');
+    const source = {url:'https://example.invalid/test-only', publisher:'UIテスト専用', checkedAt:'2026-10-17'};
+    const recorded = value => ({status:'recorded', value, sources:[source]});
+    for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
+  })()`);
+  await click("← 選挙一覧に戻る");
+  await click("現在の選挙");
+  await click("この選挙の公約を比較する →");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
+    2,
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table thead th").length',
+    ),
+    3,
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table tbody tr").length',
+    ),
+    7,
+  );
+  assert.equal(await evaluate('!!document.querySelector(".issue-filter-panel")'), false);
+  await screenshot("election-comparison.png");
+  await click("＋ 比較に追加");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".comparison-table thead th").length'),
+    2,
+  );
+  await click("＋ 比較に追加");
+  assert.equal(
+    await evaluate('document.querySelectorAll(".comparison-table thead th").length'),
+    3,
+  );
+  await click("全候補者の比較に戻す");
+  await click("候補者一覧・検索を見る →");
   assert.equal(
     await evaluate('document.querySelectorAll(".candidate-card").length'),
     2,
@@ -315,12 +357,38 @@ try {
     ),
     3,
   );
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+  assert.equal(
+    await evaluate('getComputedStyle(document.querySelector(".comparison-mobile-list")).display !== "none"'),
+    true,
+  );
+  assert.equal(
+    await evaluate('document.querySelectorAll(".comparison-mobile-card").length'),
+    2,
+  );
+  assert.equal(
+    await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
+    true,
+  );
+  await screenshot("election-mobile-comparison.png");
   await click("✓ 比較から外す");
   assert.equal(
     await evaluate(
       'document.querySelectorAll(".comparison-table thead th").length',
     ),
     2,
+  );
+  await click("全候補者の比較に戻す");
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".comparison-table thead th").length',
+    ),
+    3,
   );
   // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
   await evaluate('document.documentElement.dataset.testReload = "pending"');
