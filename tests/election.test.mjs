@@ -75,13 +75,38 @@ test("公開データの整合性と、空状態を有効な未収録として�
   assert.deepEqual(validateData({ elections: [], candidates: [], glossary: [] }, model), []);
   assert.ok(!data.candidates.some(item => item.id === 'test-only'));
   assert.deepEqual(validateData(data, model), []);
-  assert.ok(data.glossary.length >= 25);
+  assert.ok(data.glossary.length >= 45);
+  assert.ok(
+    data.glossary.some((item) => item.term === "公示と告示") &&
+      data.glossary.some((item) => item.term === "与党と野党"),
+  );
+  assert.ok(
+    !["公示", "告示", "与党", "野党"].some((term) =>
+      data.glossary.some((item) => item.term === term),
+    ),
+  );
   assert.ok(
     data.glossary.every((item) =>
       item.sources.some((itemSource) =>
+        [
+          "soumu.go.jp",
+          "laws.e-gov.go.jp",
+        ].includes(new URL(itemSource.url).hostname) ||
         new URL(itemSource.url).hostname.endsWith(".soumu.go.jp"),
       ),
     ),
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "公示と告示").definition,
+    /国政選挙.*告示/,
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "公示と告示").definition,
+    /地方選挙/,
+  );
+  assert.match(
+    data.glossary.find((item) => item.term === "与党と野党").definition,
+    /内閣に参加していない/,
   );
   assert.ok(
     model

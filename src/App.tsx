@@ -1060,9 +1060,11 @@ function App() {
         <footer className="footer">
           <span>選挙情報（仮称）</span>
           <p>情報を知る。根拠を読む。自分で考える。</p>
-          <button className="text-button" onClick={() => navigate("guide")}>
-            用語解説 →
-          </button>
+          {page !== "guide" && (
+            <button className="text-button" onClick={() => navigate("guide")}>
+              用語解説 →
+            </button>
+          )}
         </footer>
       </main>
       {selected.length > 0 && page !== "compare" && (

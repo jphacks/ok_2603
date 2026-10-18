@@ -322,7 +322,11 @@ try {
   const glossaryText = await text();
   assert.ok(glossaryText.includes("政治・選挙の用語"));
   assert.ok(glossaryText.includes("最終確認 2026-10-18"));
-  assert.equal(await evaluate('document.querySelectorAll(".glossary-entry").length'), 30);
+  assert.equal(await evaluate('document.querySelectorAll(".glossary-entry").length'), 49);
+  assert.equal(
+    await evaluate('[...document.querySelectorAll("footer button")].some(button => button.textContent.includes("用語解説"))'),
+    false,
+  );
   await input("glossary-search", "議員1人");
   assert.ok((await text()).includes("小選挙区選挙"));
   assert.ok((await text()).includes("1件の用語"));
