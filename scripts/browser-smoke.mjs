@@ -155,6 +155,13 @@ try {
   };
   await send("Runtime.enable");
   await send("Page.enable");
+  await send("Page.addScriptToEvaluateOnNewDocument", { source: `
+    window.__testElections = [];
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, options) => typeof input === 'string' && /^\\/api\\/elections(?:\\?|$)/.test(input)
+      ? Promise.resolve(new Response(JSON.stringify({data:window.__testElections,collectionStatus:'idle'}), {headers:{'content-type':'application/json'}}))
+      : originalFetch(input, options);
+  ` });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1440,
     height: 1100,
@@ -318,6 +325,7 @@ try {
     d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
     d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
     d.elections.push({id:'ui-governor',name:'UIテスト専用知事選挙',kind:'governor',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:m.missing()});
+    window.__testElections = d.elections.map(election => ({...election, municipality:null, voting_on:'2099-10-17'}));
   })()`);
   await click("ホーム");
   await evaluate('document.querySelector(".governor-entry").click()');
@@ -330,27 +338,8 @@ try {
   assert.equal((await text()).includes("年代別投票率"), false);
   assert.ok(!(await text()).includes("UIテスト専用知事選挙"));
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
-  await click("この選挙の公約を比較する →");
-  assert.equal(
-    await evaluate('document.querySelector("h1")?.textContent === "公約を比較する"'),
-    true,
-  );
-  assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
-  await click("未収録の比較表示を見る");
-  for (let i = 0; i < 4; i++) await click("＋ 表示枠を追加");
-  assert.equal(
-    await evaluate(
-      'document.querySelectorAll(".comparison-table thead th").length',
-    ),
-    7,
-  );
-  assert.equal(
-    await evaluate(
-      'document.querySelector(".comparison-scroll").scrollWidth > document.querySelector(".comparison-scroll").clientWidth',
-    ),
-    true,
-  );
-  await click("表示例を閉じる");
+  assert.ok(!(await text()).includes("この選挙の公約を比較する →"));
+  assert.ok((await text()).includes("候補者・公約情報は、公式資料を確認後に掲載します。"));
   await evaluate(`(async () => {
     const appSource = await (await fetch('/src/App.tsx')).text();
     const dataPath = appSource.match(new RegExp('from "([^"]*election/data[.]ts[^"]*)"'))?.[1];
@@ -360,8 +349,9 @@ try {
     const recorded = value => ({status:'recorded', value, sources:[source]});
     for (const id of ['one','two']) d.candidates.push({id,electionId:'ui-election',name:'テスト専用氏名 '+id,party:recorded('テスト専用所属'),photo:m.missing(),pledges:[{id:'p',text:recorded('テスト用語 検索確認ABC'),checks:m.emptyChecks()}],profile:{status:'not-confirmed',note:'テスト対象範囲',sources:[source]},speeches:{status:'no-record',note:'テスト対象範囲',sources:[source]},votes:m.missing(),history:m.missing(),sources:[source]});
   })()`);
-  await click("← 選挙一覧に戻る");
-  await click("現在の選挙");
+  await click("ホーム");
+  await input("region-query", "沖縄");
+  await click("沖縄市 おきなわし");
   await click("この選挙の公約を比較する →");
   assert.equal(
     await evaluate('document.querySelectorAll(".comparison-candidate").length'),

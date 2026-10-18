@@ -85,7 +85,7 @@ export function electionAppliesToMunicipality(election: Election, municipality: 
     if (election.name.includes(district.name)) return true;
     return election.municipality === municipality;
   }
-  return !election.municipality || election.municipality === municipality;
+  return !election.municipality || election.municipality === municipality || election.municipality === "沖縄県";
 }
 export type GlossaryTerm = {
   term: string;

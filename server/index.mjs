@@ -16,6 +16,7 @@ import { candidateWebsitesFromPdf, candidateSiteIdentity, normalizeXUrl, relevan
 import { verifiedPortraitBox } from './portrait-layout.mjs';
 import { createPollingHandler } from './polling-api.mjs';
 import { requireAdmin } from './admin-auth.mjs';
+import { fetchIssueOfficialRoots, electionLinksForRoot, extractMunicipalElection } from './issue-election-discovery.mjs';
 
 const PORT = Number(process.env.API_PORT || 8787);
 const HOST = process.env.API_HOST || '127.0.0.1';
@@ -69,7 +70,7 @@ function transact(fn) { db.run('BEGIN'); try { fn(); db.run('COMMIT'); save(); }
 function send(res, status, body) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); }
 function validPrefecture(url) {
   const host = new URL(url).hostname;
-  return OFFICIAL_HOSTS.has(host) || host.endsWith('.okinawa.lg.jp') || host.endsWith('.okinawa.jp');
+  return OFFICIAL_HOSTS.has(host);
 }
 function publicAddress(address) {
   if (isIP(address) === 4) {
@@ -112,7 +113,7 @@ function saveCandidateX(candidateId,candidacyId,evidence,candidateSource) {
   const source=addSource({url:evidence.sourceUrl,title:'候補者本人の公式X案内',type:'candidate_x_evidence',excerpt:evidence.excerpt,hash:evidence.hash||createHash('sha256').update(evidence.excerpt).digest('hex')});
   db.run('INSERT OR IGNORE INTO candidacy_sources(candidacy_id,source_id) VALUES(?,?)',[candidacyId,source]);
 }
-async function safeFetch(rawUrl, allowedExternalHosts = new Set()) {
+async function safeFetch(rawUrl, allowedExternalHosts = new Set(), requestTimeout = allowedExternalHosts.size ? 30000 : 12000) {
   let u = new URL(rawUrl);
   for (let hop = 0; hop < 4; hop++) {
     if (u.protocol !== 'https:' || u.username || u.password) throw Error('unsafe_url');
@@ -127,7 +128,7 @@ async function safeFetch(rawUrl, allowedExternalHosts = new Set()) {
     if(wait) await new Promise(resolve=>setTimeout(resolve,wait));
     let response;
     for(let attempt=0;attempt<2;attempt++) {
-      try { response=await fetch(u,{headers,redirect:'manual',signal:timeoutSignal(allowedExternalHosts.size?30000:12000)}); lastFetchAt=Date.now(); break; }
+      try { response=await fetch(u,{headers,redirect:'manual',signal:timeoutSignal(requestTimeout)}); lastFetchAt=Date.now(); break; }
       catch(error) { if(attempt===1) throw Object.assign(error,{type:'network_error'}); }
     }
     if ([301,302,303,307,308].includes(response.status)) {
@@ -150,12 +151,12 @@ async function safeFetch(rawUrl, allowedExternalHosts = new Set()) {
   }
   throw Error('too_many_redirects');
 }
-async function robotsAllowed(targetUrl, allowedExternalHosts = new Set()) {
+async function robotsAllowed(targetUrl, allowedExternalHosts = new Set(), requestTimeout) {
   const target=new URL(targetUrl); const origin=target.origin;
   let rules=robotsCache.get(origin);
   if(!rules) {
     try {
-      const {bytes}=await safeFetch(`${origin}/robots.txt`,allowedExternalHosts);
+      const {bytes}=await safeFetch(`${origin}/robots.txt`,allowedExternalHosts,requestTimeout);
       rules=bytes.toString('utf8').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
     } catch(error) {
       if(error.type==='not_found') rules=[];
@@ -190,6 +191,57 @@ async function fetchOfficialHtml(url) {
   const doc=await safeFetch(url);
   if(!/text\/html|application\/xhtml\+xml/i.test(doc.contentType)) throw Object.assign(Error('official_link_is_not_html'),{type:'content_type_error'});
   return {...doc,text:pageText(doc.bytes.toString('utf8')),links:parseOfficialLinks(doc.bytes.toString('utf8'),doc.url)};
+}
+async function fetchIssueOfficialHtml(url, allowedHosts) {
+  if(!allowedHosts.has(new URL(url).hostname)) throw Object.assign(Error('issue_source_host_not_allowed'),{type:'source_not_allowed'});
+  if(!await robotsAllowed(url,allowedHosts,12000)) throw Object.assign(Error('blocked_by_robots_txt'),{type:'robots_disallowed'});
+  const doc=await safeFetch(url,allowedHosts,12000);
+  if(!/text\/html|application\/xhtml\+xml/i.test(doc.contentType)) throw Object.assign(Error('issue_source_is_not_html'),{type:'content_type_error'});
+  return {...doc,html:doc.bytes.toString('utf8'),text:pageText(doc.bytes.toString('utf8'))};
+}
+function persistMunicipalElection(election) {
+  addSource({
+    url:election.officialUrl,title:election.sourceTitle,type:'official_municipal_election_page',
+    excerpt:election.sourceExcerpt,hash:election.sourceHash,
+  });
+  transact(()=>db.run(`INSERT INTO elections(id,name,kind,status,district_id,municipality,announced_on,voting_on,official_url,complete_candidates,last_updated)
+    VALUES(?,?,?,?,NULL,?,?,?, ?,0,?) ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,status=excluded.status,announced_on=excluded.announced_on,voting_on=excluded.voting_on,
+      official_url=excluded.official_url,last_updated=excluded.last_updated`,
+    [election.id,election.name,election.kind,election.status,election.municipality,election.announcedOn,election.votingOn,election.officialUrl,now()]));
+}
+async function collectIssueMunicipalElections(jobId, registered) {
+  let processed=0;
+  for(const entry of registered.filter(item=>!OFFICIAL_EXPLORATION_ROOTS.includes(item.url))) {
+    const allowedHosts=new Set([entry.hostname]);
+    let pages=[];
+    try {
+      const root=await fetchIssueOfficialHtml(entry.url,allowedHosts);
+      addSource({
+        url:root.url,title:root.text.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g,'').trim()||`${entry.municipality}公式サイト`,
+        type:entry.municipality==='沖縄県'?'official_issue_root':entry.type==='election'?'official_municipal_election_page':'official_municipality_root',
+        excerpt:root.text.slice(0,1600),hash:root.hash,
+      });
+      if(entry.type==='election') pages=[root];
+      else if(entry.municipality!=='沖縄県') {
+        for(const link of electionLinksForRoot(root.html,root.url,allowedHosts)) {
+          try { pages.push(await fetchIssueOfficialHtml(link.url,allowedHosts)); }
+          catch(error) { errorRecord(jobId,'municipal_election_page',error.type||'network_error',error.message,link.url); }
+        }
+      }
+    } catch(error) {
+      errorRecord(jobId,'municipal_root',error.type||'network_error',error.message,entry.url);
+      continue;
+    }
+    if(entry.municipality==='沖縄県') continue;
+    for(const page of pages) {
+      const election=extractMunicipalElection(page.html,page.url,entry.municipality,now().slice(0,10));
+      if(!election) continue;
+      persistMunicipalElection(election);
+      processed++;
+    }
+  }
+  return processed;
 }
 async function fetchCandidateHtml(url, allowedHosts) {
   if (!await robotsAllowed(url,allowedHosts)) throw Object.assign(Error('blocked_by_robots_txt'),{type:'robots_disallowed'});
@@ -322,9 +374,13 @@ async function extractPledges(ai,candidates,pdfBytes,pageCount,remainingTokenBud
   if(pages) parsed=parseGeminiCandidates(response.text,candidates,pages.length);
   return {data:parsed,usage:{...(response.usageMetadata||{}),totalTokenCount:usedTokenCount},pages};
 }
-async function collectOfficialSites(jobId) {
+async function collectOfficialSites(jobId, registeredPrefectureUrls) {
   const roots=[];
   for(const url of OFFICIAL_EXPLORATION_ROOTS) {
+    if(!registeredPrefectureUrls.has(url)) {
+      errorRecord(jobId,'issue_registry','official_root_not_registered','A fixed prefecture source is not registered in Issue #2',url);
+      continue;
+    }
     try {
       const root=await fetchOfficialHtml(url);
       roots.push(root);
@@ -522,10 +578,20 @@ async function collect(jobId) {
       if (!fixture.election.completeCandidates || fixture.candidates.length!==6 || !validPrefecture(fixture.election.url)) throw Error('invalid_official_fixture');
       addSource({url:fixture.election.pageUrl,title:'令和8年沖縄県知事選挙公式ページ',type:'official_html',excerpt:'候補者情報PDFへの公式リンクを掲載',hash:'official-page-crawler-fixture-r8'});
       const candidateSource=addSource({url:fixture.election.url,title:fixture.sourceTitle,type:'official_pdf',excerpt:fixture.sourceExcerpt,page:1,hash:fixture.sourceContentHash});
+      const municipalElection={
+        id:'municipal-naha-mayor-2026-test',name:'第24回那覇市長選挙',kind:'municipal-mayor',status:'告示済み',
+        municipality:'那覇市',announcedOn:'2026-10-18',votingOn:'2026-10-25',
+        officialUrl:'https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html',
+      };
+      addSource({url:municipalElection.officialUrl,title:'第24回那覇市長選挙',type:'official_municipal_election_page',excerpt:'選挙期日 令和8年10月25日',hash:'test-naha-election-page'});
       transact(()=>{
         db.run(`INSERT INTO elections(id,name,kind,status,district_id,municipality,announced_on,voting_on,official_url,complete_candidates,last_updated)
           VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,status=excluded.status,announced_on=excluded.announced_on,voting_on=excluded.voting_on,official_url=excluded.official_url,complete_candidates=excluded.complete_candidates,last_updated=excluded.last_updated`,
           [fixture.election.id,fixture.election.name,fixture.election.kind,fixture.election.status,null,fixture.election.municipality,fixture.election.announcedOn,fixture.election.votingOn,fixture.election.pageUrl,1,now()]);
+        db.run(`INSERT INTO elections(id,name,kind,status,district_id,municipality,announced_on,voting_on,official_url,complete_candidates,last_updated)
+          VALUES(?,?,?,?,NULL,?,?,?,?,0,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,status=excluded.status,
+          announced_on=excluded.announced_on,voting_on=excluded.voting_on,official_url=excluded.official_url,last_updated=excluded.last_updated`,
+          [municipalElection.id,municipalElection.name,municipalElection.kind,municipalElection.status,municipalElection.municipality,municipalElection.announcedOn,municipalElection.votingOn,municipalElection.officialUrl,now()]);
         db.run("UPDATE candidacies SET status='not_on_current_list' WHERE election_id=?",[fixture.election.id]);
         for (const c of fixture.candidates) {
           const candidateId=createHash('sha256').update(`${fixture.election.id}:${c.name}`).digest('hex').slice(0,32);
@@ -541,8 +607,13 @@ async function collect(jobId) {
       run('UPDATE collection_jobs SET status=?,finished_at=?,processed=? WHERE id=?',['completed',now(),processed,jobId]);
       return;
     }
-    const result=await collectOfficialSites(jobId);
-    tokens=result.tokens; processed=result.processed;
+    const registeredRoots=await fetchIssueOfficialRoots();
+    processed+=await collectIssueMunicipalElections(jobId,registeredRoots);
+    const registeredPrefectureUrls=new Set(registeredRoots
+      .filter(item=>item.municipality==='沖縄県')
+      .map(item=>item.url));
+    const result=await collectOfficialSites(jobId,registeredPrefectureUrls);
+    tokens=result.tokens; processed+=result.processed;
     run("UPDATE collection_jobs SET status=?,finished_at=?,search_queries=0,tokens=?,processed=?,estimated_cost_usd=0 WHERE id=?",['completed',now(),tokens,processed,jobId]);
   } catch (e) {
     errorRecord(jobId,'collection',e.type||'collection_error',e.message);
@@ -581,8 +652,19 @@ const server=createServer(async (req,res)=>{
     if (req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true});
     if (req.method==='GET' && url.pathname==='/api/elections') {
       const conditions=['EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status=\'verified\')']; const args=[];
-      for(const field of ['kind','municipality','status']) if(url.searchParams.has(field)){conditions.push(`${field}=?`);args.push(url.searchParams.get(field));}
-      return send(res,200,{data:rows(`SELECT * FROM elections WHERE ${conditions.join(' AND ')} ORDER BY voting_on DESC`,args)});
+      for(const field of ['kind','status']) if(url.searchParams.has(field)){conditions.push(`${field}=?`);args.push(url.searchParams.get(field));}
+      if(url.searchParams.has('municipality')) {
+        const name=url.searchParams.get('municipality');
+        conditions.push(name==='沖縄県'?'municipality=?':"(municipality=? OR municipality='沖縄県')");
+        args.push(name);
+      }
+      const data=rows(`SELECT * FROM elections WHERE ${conditions.join(' AND ')} ORDER BY voting_on DESC`,args)
+        .map(election=>({...election,sources:rows(`SELECT url,title AS publisher,substr(COALESCE(verified_at,retrieved_at),1,10) AS checkedAt
+          FROM sources WHERE url=? AND verification_status='verified' ORDER BY retrieved_at DESC LIMIT 1`,[election.official_url])}));
+      const latestJob=rows('SELECT id,status FROM collection_jobs ORDER BY started_at DESC LIMIT 1')[0];
+      const hasCollectionErrors=latestJob&&rows('SELECT 1 FROM collection_errors WHERE job_id=? LIMIT 1',[latestJob.id]).length>0;
+      const collectionStatus=!latestJob?'idle':latestJob.status==='completed'&&hasCollectionErrors?'partial':latestJob.status;
+      return send(res,200,{data,collectionStatus});
     }
     let m=url.pathname.match(/^\/api\/elections\/([^/]+)$/);
     if(req.method==='GET'&&m){const e=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];return send(res,e?200:404,e?{data:e}:{error:'not_found'});}
@@ -617,7 +699,7 @@ const server=createServer(async (req,res)=>{
 });
 server.listen(PORT,HOST,()=>console.log(`Election API listening on http://${HOST}:${PORT}`));
 if (process.env.COLLECTION_ON_START==='true' && process.env.NODE_ENV!=='test') {
-  setTimeout(()=>{if(!rows('SELECT 1 FROM elections LIMIT 1').length) void collect(key('job'));},0).unref();
+  setTimeout(()=>{if(!rows("SELECT 1 FROM sources WHERE source_type='official_municipality_root' LIMIT 1").length) void collect(key('job'));},0).unref();
 }
 if (process.env.COLLECTION_SCHEDULE_ENABLED==='true') {
   const interval=Math.max(1,Number(process.env.COLLECTION_INTERVAL_HOURS||24))*60*60*1000;
