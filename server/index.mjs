@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import { lookup } from 'node:dns/promises';
@@ -14,6 +14,8 @@ import { OFFICIAL_EXPLORATION_ROOTS, countOfficialCandidateRows, parseOfficialCa
   electionIdFromSource, yearFromLabel } from './official-parser.mjs';
 import { candidateWebsitesFromPdf, candidateSiteIdentity, normalizeXUrl, relevantSameSitePages, verifiedXLinksOnPage } from './x-discovery.mjs';
 import { verifiedPortraitBox } from './portrait-layout.mjs';
+import { createPollingHandler } from './polling-api.mjs';
+import { requireAdmin } from './admin-auth.mjs';
 
 const PORT = Number(process.env.API_PORT || 8787);
 const HOST = process.env.API_HOST || '127.0.0.1';
@@ -65,12 +67,6 @@ function rows(sql, args = []) {
 function run(sql, args = []) { db.run(sql, args); save(); }
 function transact(fn) { db.run('BEGIN'); try { fn(); db.run('COMMIT'); save(); } catch (e) { db.run('ROLLBACK'); throw e; } }
 function send(res, status, body) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); }
-function requireAdmin(req) {
-  const expected = process.env.ADMIN_API_TOKEN;
-  const actual=String(req.headers.authorization || '').replace(/^Bearer\s+/i,'');
-  const expectedBytes=Buffer.from(expected || ''); const actualBytes=Buffer.from(actual);
-  if (!expected || actualBytes.length!==expectedBytes.length || !timingSafeEqual(actualBytes,expectedBytes)) throw Object.assign(Error('Unauthorized'), { status: 401 });
-}
 function validPrefecture(url) {
   const host = new URL(url).hostname;
   return OFFICIAL_HOSTS.has(host) || host.endsWith('.okinawa.lg.jp') || host.endsWith('.okinawa.jp');
@@ -571,10 +567,17 @@ function photoDisplay(row) {
   const available=Boolean(row.photo_path&&row.photo_match_status==='verified'&&(approved||PHOTO_PREVIEW));
   return {photo_available:available,photo_preview:available&&!approved};
 }
+const municipalityNames = JSON.parse(await readFile(new URL('../shared/municipalities.json', import.meta.url), 'utf8'));
+const handlePolling = createPollingHandler({
+  requireAdmin, send,
+  getMunicipalities: () => municipalityNames,
+  getElections: () => rows("SELECT id,name,municipality,voting_on,official_url FROM elections WHERE voting_on IS NOT NULL AND EXISTS (SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')"),
+});
 const server=createServer(async (req,res)=>{
   if (req.method==='OPTIONS') { res.writeHead(204,{Allow:'GET,POST,OPTIONS'}); return res.end(); }
   const url=new URL(req.url,'http://localhost');
   try {
+    if (await handlePolling(req,res,url)) return;
     if (req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true});
     if (req.method==='GET' && url.pathname==='/api/elections') {
       const conditions=['EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status=\'verified\')']; const args=[];

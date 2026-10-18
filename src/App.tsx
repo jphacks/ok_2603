@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { PollingSearch } from "./polling/PollingSearch";
+import { PollingAdmin } from "./polling/PollingAdmin";
 import { candidates, elections, glossary } from "./election/data";
 import {
   checkLabels,
@@ -19,7 +21,7 @@ import {
   Sources,
 } from "./election/components";
 
-type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide";
+type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "polling" | "polling-admin";
 const tutorialKey = "election-prototype:tutorial:v1";
 const tabs = [
   "公約",
@@ -216,6 +218,8 @@ function App() {
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
             ? "公約を比較する"
+            : page === "polling" ? "投票所を探す"
+            : page === "polling-admin" ? "投票所管理"
             : "データについて";
 
   return (
@@ -238,6 +242,7 @@ function App() {
               [
                 ["home", "home", "ホーム"],
                 ["region", "region", "地域を探す"],
+                ["polling", "region", "投票所を探す"],
                 ["compare", "compare", "公約比較"],
                 ["guide", "book", "データについて"],
               ] as const
@@ -286,7 +291,7 @@ function App() {
             <div className="breadcrumb">
               <button onClick={() => navigate("home")}>ホーム</button>
               <span>/</span>
-              {!["guide", "compare"].includes(page) && (
+              {!["guide", "compare", "polling", "polling-admin"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
                   {!(page === "region" && !municipality) && <span>/</span>}
@@ -328,6 +333,8 @@ function App() {
             </div>
           </>
         )}
+        {page === "polling" && <PollingSearch openAdmin={() => navigate("polling-admin")} />}
+        {page === "polling-admin" && <PollingAdmin />}
         {page === "home" && (
           <>
             <section className="hero">
