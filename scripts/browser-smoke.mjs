@@ -196,7 +196,8 @@ try {
   );
   await click("検索");
   await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
-  assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
+  assert.equal((await text()).includes("直近の選挙"), false);
+  assert.equal((await text()).includes("年代別投票率"), false);
   await click("ホーム");
   await waitFor('document.querySelector("#region-search") !== null');
   await input("region-query", "沖縄");
@@ -224,7 +225,7 @@ try {
   await click("ホーム");
   await input("region-query", "沖縄");
   await click("沖縄県 都道府県");
-  assert.ok((await text()).includes("50%"));
+  assert.equal((await text()).includes("年代別投票率"), false);
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("この選挙の候補者・公約を見る →");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
