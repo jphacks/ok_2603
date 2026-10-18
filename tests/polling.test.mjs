@@ -103,3 +103,28 @@ test('Supabaseページングで500件を超えても施設を欠落させない
   const store = createSupabaseStore({ SUPABASE_URL: 'https://example.invalid', SUPABASE_ANON_KEY: 'test' }, async url => new Response(JSON.stringify(url.searchParams.get('offset') === '0' ? Array.from({ length: 500 }, (_, id) => ({ id })) : [{ id: 500 }])));
   assert.equal((await store.list('polling_places')).length, 501);
 });
+test('選挙カタログをSupabaseから読み、市町村・選挙種別で絞り込む', async () => {
+  const calls = [];
+  const rows = [
+    { id: 'pref-election', name: '沖縄県知事選挙', municipality: null, voting_on: '2026-10-25', official_url: 'https://pref.example/election' },
+    { id: 'naha-election', name: '那覇市長選挙', municipality: '那覇市', voting_on: '2026-11-01', official_url: 'https://naha.example/election' },
+    { id: 'ginowan-election', name: '宜野湾市長選挙', municipality: '宜野湾市', voting_on: '2026-11-08', official_url: 'https://ginowan.example/election' },
+  ];
+  const store = createSupabaseStore(
+    { SUPABASE_URL: 'https://example.invalid', SUPABASE_ANON_KEY: 'public-test-key' },
+    async (url, options) => {
+      calls.push({ url, options });
+      return new Response(JSON.stringify(rows));
+    },
+  );
+  const naha = await store.listElectionCatalog({ municipality: '那覇市' });
+  assert.deepEqual(naha.map(election => election.id), ['pref-election', 'naha-election']);
+  assert.equal(naha[0].kind, 'governor');
+  assert.equal(naha[0].sources[0].publisher, 'Supabase登録');
+  assert.equal(naha[0].sources[0].checkedAt, '');
+  const governors = await store.listElectionCatalog({ kind: 'governor' });
+  assert.deepEqual(governors.map(election => election.id), ['pref-election']);
+  assert.equal(calls[0].url.pathname, '/rest/v1/elections');
+  assert.equal(calls[0].url.searchParams.get('select'), 'id,name,municipality,voting_on,official_url');
+  assert.equal(calls[0].options.headers.apikey, 'public-test-key');
+});

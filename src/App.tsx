@@ -437,7 +437,7 @@ function App() {
               <span>{title}</span>
             </div>
             <div
-              className={`page-heading${page === "guide" ? " glossary-page-heading" : ""}`}
+              className={`page-heading${page === "guide" ? " glossary-page-heading" : ""}${page === "region" ? " region-page-heading" : ""}`}
             >
               <div>
                 <p className="eyebrow">
@@ -720,6 +720,7 @@ function App() {
               {!visibleElections.length && (
                 <>
                   <Empty
+                    className="election-empty-state"
                     title={
                       electionError
                         ? "選挙情報を取得できません"

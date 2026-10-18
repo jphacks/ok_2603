@@ -12,6 +12,12 @@
 
 選挙・候補者・現職県議の公開データは現在空配列。政治・選挙の用語解説は81件収録。テスト専用の氏名・本文はtestsとUIテストに隔離され、公開ファイルには含まれない。
 
+## 選挙一覧APIとSupabase
+
+`GET /api/elections` はSupabaseの `public.elections` を参照する。必要な列は `id`, `name`, `municipality`, `voting_on`, `official_url`。市町村を指定した場合は、その市町村の選挙に加えて沖縄県全体の選挙も返す。選挙種別は登録名から判定する。公式URLの確認日がDBにない場合、画面には確認日未記録と表示する。
+
+Supabaseの選挙一覧は公開情報として匿名ロールから読み取る。新規環境では `supabase/migrations/202610180002_public_election_catalog.sql` を適用し、RLSで選挙カタログを読み取り可能にする。候補者・公約の収集データは引き続きローカルSQLiteを使用するため、Supabaseに選挙行を登録しただけでは候補者・公約は収録されない。
+
 ## 現職の沖縄県議会議員
 
 `councilMembers` は選挙ごとの `candidates` と分けて管理する。今回は専用画面だけを実装し、収録データは空配列とする。選挙の候補者や過去の当選者から現職議員を推測しない。
