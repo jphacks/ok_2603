@@ -382,7 +382,7 @@ function App() {
                 ["guide", "book", "用語"],
               ] as const
             )
-              .filter(([target]) => page === "home" ? target === "home" || target === "polling" || target === "guide" : target !== "compare" || !!electionId)
+              .filter(([target]) => target === "home" || target === "polling" || target === "guide")
               .map(([target, icon, label]) => {
                 const classes = page === target ? "nav-active" : "";
                 return (
