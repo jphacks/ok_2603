@@ -196,7 +196,39 @@ try {
   );
   await click("検索");
   await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
-  assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
+  assert.equal((await text()).includes("直近の選挙"), false);
+  assert.equal((await text()).includes("年代別投票率"), false);
+  assert.ok((await text()).includes("投票場所"));
+  assert.equal(await evaluate('document.querySelectorAll(".place-list li").length'), 5);
+  assert.ok((await text()).includes("首里支所1階会議室"));
+  assert.equal(
+    await evaluate('document.querySelector(".place-list a")?.href.startsWith("https://www.google.com/maps/search/")'),
+    true,
+  );
+  await click("当日投票");
+  assert.ok((await text()).includes("当日投票所は未収録です"));
+  assert.equal(await evaluate('document.querySelectorAll(".place-list li").length'), 0);
+  assert.equal(
+    await evaluate("document.querySelector('[aria-label=\"投票場所の種類\"] button[aria-pressed=\"true\"]')?.textContent.trim()"),
+    "当日投票",
+  );
+  await click("期日前投票");
+  assert.equal(await evaluate('document.querySelectorAll(".place-list li").length'), 5);
+  await click("ホーム");
+  await waitFor('document.querySelector("#region-search") !== null');
+  await input("region-query", "宜野湾市");
+  await click("検索");
+  await waitFor('document.querySelector("h1")?.textContent === "宜野湾市"');
+  await click("当日投票");
+  assert.equal(await evaluate('document.querySelectorAll(".place-list li").length'), 4);
+  assert.ok((await text()).includes("野嵩一区自治会事務所"));
+  assert.ok((await text()).includes("所在地：野嵩2－21－1"));
+  assert.ok((await text()).includes("普天間第二小学校クラブハウス"));
+  assert.ok((await text()).includes("普天間中学校体育館"));
+  assert.equal(
+    await evaluate('document.querySelector(".place-list a")?.href.startsWith("https://www.google.com/maps/search/")'),
+    true,
+  );
   await click("ホーム");
   await waitFor('document.querySelector("#region-search") !== null');
   await input("region-query", "沖縄");
@@ -224,7 +256,7 @@ try {
   await click("ホーム");
   await input("region-query", "沖縄");
   await click("沖縄県 都道府県");
-  assert.ok((await text()).includes("50%"));
+  assert.equal((await text()).includes("年代別投票率"), false);
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("この選挙の候補者・公約を見る →");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
@@ -318,9 +350,27 @@ try {
     true,
   );
   await screenshot("election-mobile-detail.png");
+  await click("用語");
+  const glossaryText = await text();
+  assert.ok(glossaryText.includes("政治・選挙の用語"));
+  assert.ok(glossaryText.includes("最終確認 2026-10-18"));
+  assert.equal(await evaluate('document.querySelectorAll(".glossary-entry").length'), 49);
+  assert.equal(
+    await evaluate('[...document.querySelectorAll("footer button")].some(button => button.textContent.includes("用語解説"))'),
+    false,
+  );
+  await input("glossary-search", "議員1人");
+  assert.ok((await text()).includes("小選挙区選挙"));
+  assert.ok((await text()).includes("1件の用語"));
+  await input("glossary-search", "該当しない検索語");
+  assert.ok((await text()).includes("該当する用語はありません"));
+  assert.equal(
+    await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
+    true,
+  );
   assert.deepEqual(errors, []);
   console.log(
-    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
+    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, comparison, detail and glossary source/search states, mobile overflow, no JS exceptions",
   );
 } finally {
   socket?.close();

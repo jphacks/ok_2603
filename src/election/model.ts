@@ -79,6 +79,12 @@ export function searchCandidates(candidates: Candidate[], query: string) {
     return words.every((word) => text.includes(word));
   });
 }
+export function searchGlossary(terms: GlossaryTerm[], query: string) {
+  const normalizedQuery = normalize(query);
+  return terms.filter((item) =>
+    normalize(`${item.term} ${item.definition}`).includes(normalizedQuery),
+  );
+}
 export function toggleSelection(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id];
 }
