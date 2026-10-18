@@ -5,9 +5,7 @@ import { validateData } from "../scripts/validate-election-data.mjs";
 
 const model = await loadTypescript("../src/election/model.ts");
 const data = await loadTypescript("../src/election/data.ts");
-const earlyVotingPlaces = await loadTypescript(
-  "../src/election/earlyVotingPlaces.ts",
-);
+const mapSearch = await loadTypescript("../src/election/mapSearch.ts");
 // 以下は処理検証専用。公開data.tsには登録せず、実在人物・政策を表さない。
 const source = {
   url: "https://example.invalid/test-only",
@@ -93,37 +91,15 @@ test("市町村は1文字・読み仮名・カタカナ・部分一致で検索�
   for (const name of model.municipalities) assert.ok(model.searchMunicipalities(model.municipalityReadings[name]).includes(name));
   for (const query of ["", "  ", "東京都", "市町村なし"]) assert.deepEqual(model.searchMunicipalities(query), []);
 });
-test("過去の期日前投票所資料を全市町村分だけ掲載し、地図検索URLを安全に組み立てる", () => {
-  const places = earlyVotingPlaces.earlyVotingPlacesByMunicipality;
-  assert.deepEqual(
-    Object.keys(places).sort(),
-    [...model.municipalities].sort(),
-  );
-  for (const venues of Object.values(places)) {
-    assert.ok(venues.length > 0);
-    assert.equal(new Set(venues).size, venues.length);
-  }
-  assert.equal(
-    earlyVotingPlaces.earlyVotingPlacesSource.electionDate,
-    "2026-09-13",
-  );
-  const url = new URL(earlyVotingPlaces.mapSearchUrl("那覇市", "首里支所"));
+test("地図検索URLを安全に組み立てる", () => {
+  const url = new URL(mapSearch.mapSearchUrl("那覇市", "首里支所"));
   assert.equal(url.origin, "https://www.google.com");
   assert.equal(url.pathname, "/maps/search/");
   assert.equal(url.searchParams.get("query"), "沖縄県 那覇市 首里支所");
 });
-test("宜野湾市の当日投票所は提供された4施設と所在地を表示する", () => {
-  assert.deepEqual(
-    earlyVotingPlaces.electionDayVotingPlacesByMunicipality["宜野湾市"],
-    [
-      { name: "野嵩一区自治会事務所", address: "野嵩2－21－1" },
-      { name: "普天間小学校", address: "普天間1-10-1" },
-      { name: "普天間第二小学校クラブハウス", address: "新城2-8-19" },
-      { name: "普天間中学校体育館", address: "新城2-41-1" },
-    ],
-  );
+test("住所を含む投票場所の地図検索URLを組み立てる", () => {
   const url = new URL(
-    earlyVotingPlaces.mapSearchUrl("宜野湾市", "普天間小学校 普天間1-10-1"),
+    mapSearch.mapSearchUrl("宜野湾市", "普天間小学校 普天間1-10-1"),
   );
   assert.equal(
     url.searchParams.get("query"),

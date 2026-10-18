@@ -27,11 +27,8 @@ import {
   type Election,
 } from "./election/model";
 import {
-  electionDayVotingPlacesByMunicipality,
-  earlyVotingPlacesByMunicipality,
-  earlyVotingPlacesSource,
   mapSearchUrl,
-} from "./election/earlyVotingPlaces";
+} from "./election/mapSearch";
 import {
   Empty,
   Icon,
@@ -54,6 +51,20 @@ type ElectionResponse = {
   data: ApiElection[];
   collectionStatus: string;
 };
+type MunicipalVotingPlace = {
+  id: string;
+  municipality_id: string;
+  voting_type: "early" | "election_day";
+  name: string;
+  address: string;
+  election_date: string;
+  source_title: string;
+  source_publisher: string;
+  source_checked_at: string | null;
+  source_reference: string;
+  verification_status: "official_historical" | "user_provided_unverified";
+};
+type MunicipalVotingPlaceResponse = { data: MunicipalVotingPlace[] };
 function mapApiElection(item: ApiElection): Election {
   const today = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Tokyo",
@@ -117,6 +128,14 @@ function App() {
   const [electionLoading, setElectionLoading] = useState(false);
   const [electionError, setElectionError] = useState<string | null>(null);
   const [collectionStatus, setCollectionStatus] = useState("idle");
+  const [municipalVotingPlaces, setMunicipalVotingPlaces] = useState<
+    MunicipalVotingPlace[]
+  >([]);
+  const [municipalVotingPlacesLoading, setMunicipalVotingPlacesLoading] =
+    useState(false);
+  const [municipalVotingPlacesError, setMunicipalVotingPlacesError] = useState<
+    string | null
+  >(null);
   const [level, setLevel] = useState("all");
   const [period, setPeriod] = useState("current");
   const [votingPlaceType, setVotingPlaceType] = useState<
@@ -180,6 +199,47 @@ function App() {
       if (timer) clearTimeout(timer);
     };
   }, [page, region, municipality]);
+  useEffect(() => {
+    if (page !== "region" || !municipality) {
+      setMunicipalVotingPlaces([]);
+      setMunicipalVotingPlacesLoading(false);
+      setMunicipalVotingPlacesError(null);
+      return;
+    }
+    let cancelled = false;
+    const loadMunicipalVotingPlaces = async () => {
+      setMunicipalVotingPlaces([]);
+      setMunicipalVotingPlacesLoading(true);
+      setMunicipalVotingPlacesError(null);
+      try {
+        const params = new URLSearchParams({ municipality_id: municipality });
+        const response = await fetch(
+          `/api/polling/municipality-places?${params.toString()}`,
+        );
+        if (!response.ok)
+          throw new Error(`投票場所を取得できませんでした（${response.status}）。`);
+        const result =
+          (await response.json()) as MunicipalVotingPlaceResponse;
+        if (!Array.isArray(result.data))
+          throw new Error("投票場所データの形式が正しくありません。");
+        if (cancelled) return;
+        setMunicipalVotingPlaces(result.data);
+        setMunicipalVotingPlacesLoading(false);
+      } catch (error) {
+        if (cancelled) return;
+        setMunicipalVotingPlacesError(
+          error instanceof Error
+            ? error.message
+            : "投票場所データを取得できませんでした。",
+        );
+        setMunicipalVotingPlacesLoading(false);
+      }
+    };
+    void loadMunicipalVotingPlaces();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, municipality]);
   const comparisonCandidates = compared.length ? compared : electionCandidates;
   const visibleGlossary = searchGlossary(
     glossary,
@@ -194,6 +254,12 @@ function App() {
   const visibleElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
+  );
+  const earlyMunicipalVotingPlaces = municipalVotingPlaces.filter(
+    (place) => place.voting_type === "early",
+  );
+  const electionDayMunicipalVotingPlaces = municipalVotingPlaces.filter(
+    (place) => place.voting_type === "election_day",
   );
   const regionalCandidates = candidates.filter(
     (item) =>
@@ -382,7 +448,12 @@ function App() {
                 ["guide", "book", "用語"],
               ] as const
             )
-              .filter(([target]) => page === "home" ? target === "home" || target === "polling" || target === "guide" : target !== "compare" || !!electionId)
+              .filter(([target]) => {
+                if (page === "home") return target === "home" || target === "guide";
+                if (target === "compare" && !electionId) return false;
+                if (target === "polling" && (page === "guide" || (page === "region" && (municipality || governorOnly)))) return false;
+                return true;
+              })
               .map(([target, icon, label]) => {
                 const classes = page === target ? "nav-active" : "";
                 return (
@@ -789,80 +860,101 @@ function App() {
                     当日投票
                   </button>
                 </div>
-                {votingPlaceType === "early" ? (
-                  <>
-                    <p className="small">
-                      {earlyVotingPlacesSource.title}（
-                      {earlyVotingPlacesSource.publisher}、
-                      {earlyVotingPlacesSource.asOf}時点）に掲載された場所です。
-                      {earlyVotingPlacesSource.electionDate}
-                      執行の選挙は終了しており、現在の投票所や施設の営業状況を示すものではありません。
-                    </p>
-                    <p className="small">
-                      市町村内の掲載場所を表示しています。距離順ではなく、地図リンクを開くと施設名でGoogle
-                      Mapsを検索します。
-                    </p>
-                    {earlyVotingPlacesByMunicipality[municipality]?.length ? (
+                {municipalVotingPlacesLoading ? (
+                  <p className="small" role="status">
+                    データベースから投票場所を取得しています。
+                  </p>
+                ) : municipalVotingPlacesError ? (
+                  <p className="notice" role="alert">
+                    {municipalVotingPlacesError}
+                  </p>
+                ) : votingPlaceType === "early" ? (
+                  earlyMunicipalVotingPlaces.length ? (
+                    <>
+                      <p className="small">
+                        {earlyMunicipalVotingPlaces[0].election_date}
+                        執行の選挙における期日前投票所です。
+                        {earlyMunicipalVotingPlaces[0].source_publisher}による
+                        {earlyMunicipalVotingPlaces[0].source_checked_at
+                          ? `${earlyMunicipalVotingPlaces[0].source_checked_at}時点`
+                          : "登録情報"}を掲載しています。
+                        この選挙は終了しており、現在の投票所や施設の営業状況を示すものではありません。
+                      </p>
+                      <p className="small">
+                        地図リンクを開くと施設名でGoogle Mapsを検索します。
+                      </p>
                       <ul className="place-list">
-                        {earlyVotingPlacesByMunicipality[municipality].map(
-                          (place) => (
-                            <li key={place}>
-                              <span>{place}</span>
-                              <a
-                                className="button secondary"
-                                href={mapSearchUrl(municipality, place)}
-                                aria-label={`${municipality}の${place}をGoogle Mapsで検索（新しいタブで開く）`}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                地図で検索
-                              </a>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    ) : (
-                      <Empty title="掲載場所はありません">
-                        この市町村の期日前投票所は添付資料に記載されていません。
-                      </Empty>
-                    )}
-                    <p className="small place-source">
-                      出典: {earlyVotingPlacesSource.fileName} · 地図検索を選ぶと
-                      Google Mapsに検索語が送信されます。
-                    </p>
-                  </>
-                ) : electionDayVotingPlacesByMunicipality[municipality]
-                    ?.length ? (
-                  <>
-                    <p className="small">
-                      以下は提供された情報です。対象となる選挙・年度と最新性は未確認のため、投票前に市町村選挙管理委員会の公式情報をご確認ください。
-                    </p>
-                    <ul className="place-list">
-                      {electionDayVotingPlacesByMunicipality[municipality].map(
-                        (place) => (
-                          <li key={place.name}>
+                        {earlyMunicipalVotingPlaces.map((place) => (
+                          <li key={place.id}>
                             <span>
                               <strong>{place.name}</strong>
-                              <span className="place-address">
-                                所在地：{place.address}
-                              </span>
+                              {place.address && (
+                                <span className="place-address">
+                                  所在地：{place.address}
+                                </span>
+                              )}
                             </span>
                             <a
                               className="button secondary"
                               href={mapSearchUrl(
                                 municipality,
-                                `${place.name} ${place.address}`,
+                                `${place.name} ${place.address}`.trim(),
                               )}
-                              aria-label={`${municipality}の${place.name}（${place.address}）をGoogle Mapsで検索（新しいタブで開く）`}
+                              aria-label={`${municipality}の${place.name}をGoogle Mapsで検索（新しいタブで開く）`}
                               target="_blank"
                               rel="noreferrer"
                             >
                               地図で検索
                             </a>
                           </li>
-                        ),
-                      )}
+                        ))}
+                      </ul>
+                      <p className="small place-source">
+                        出典: {earlyMunicipalVotingPlaces[0].source_reference}
+                      </p>
+                    </>
+                  ) : (
+                    <Empty title="掲載場所はありません">
+                      この市町村の期日前投票所はデータベースに登録されていません。
+                    </Empty>
+                  )
+                ) : electionDayMunicipalVotingPlaces.length ? (
+                  <>
+                    <p className="small">
+                      {electionDayMunicipalVotingPlaces[0]
+                        .verification_status === "user_provided_unverified"
+                        ? "以下は提供された情報です。対象となる選挙・年度と最新性は未確認のため、投票前に市町村選挙管理委員会の公式情報をご確認ください。"
+                        : `${electionDayMunicipalVotingPlaces[0].election_date}執行の選挙における当日投票所です。現在の投票所情報ではありません。`}
+                    </p>
+                    <ul className="place-list">
+                      {electionDayMunicipalVotingPlaces.map((place) => (
+                        <li key={place.id}>
+                          <span>
+                            <strong>{place.name}</strong>
+                            {place.address && (
+                              <span className="place-address">
+                                所在地：{place.address}
+                              </span>
+                            )}
+                          </span>
+                          <a
+                            className="button secondary"
+                            href={mapSearchUrl(
+                              municipality,
+                              `${place.name} ${place.address}`.trim(),
+                            )}
+                            aria-label={`${municipality}の${place.name}をGoogle Mapsで検索（新しいタブで開く）`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            地図で検索
+                          </a>
+                        </li>
+                      ))}
                     </ul>
+                    <p className="small place-source">
+                      出典: {electionDayMunicipalVotingPlaces[0].source_reference}
+                    </p>
                   </>
                 ) : (
                   <Empty title="当日投票所は未収録です">
