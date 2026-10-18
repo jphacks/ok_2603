@@ -51,7 +51,9 @@ async function freePort() {
 async function startApi(port, db, fixture) {
   const env={...process.env,API_PORT:String(port),API_HOST:'127.0.0.1',DATABASE_PATH:db,ADMIN_API_TOKEN:'test-token-not-for-production',GEMINI_API_KEY:'',NODE_ENV:fixture?'test':'development'};
   if(fixture) env.COLLECTION_FIXTURE='okinawa-governor-2026'; else delete env.COLLECTION_FIXTURE;
-  const child=spawn(process.execPath,['server/index.mjs'],{cwd:process.cwd(),env,stdio:['ignore','ignore','pipe']});
+  // The failure-recovery test must not crawl a real website or depend on its latency.
+  const failureImport = 'data:text/javascript,' + encodeURIComponent("globalThis.fetch = async () => { throw new Error('test-only injected network failure'); };");
+  const child=spawn(process.execPath,[...(!fixture ? ['--import',failureImport] : []),'server/index.mjs'],{cwd:process.cwd(),env,stdio:['ignore','ignore','pipe']});
   let errors=''; child.stderr.on('data',chunk=>errors+=chunk);
   const base=`http://127.0.0.1:${port}`;
   for(let i=0;i<60;i++) {
