@@ -81,9 +81,6 @@ function App() {
       !item.municipality ||
       item.municipality === municipality),
   );
-  const latestElection = [...regionalElections].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  )[0];
   const visibleElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
@@ -491,34 +488,6 @@ function App() {
         )}
         {page === "region" && (
           <>
-            {municipality && (
-              <section className="panel" aria-labelledby="latest-election-title">
-                <h2 id="latest-election-title">直近の選挙</h2>
-                {latestElection ? (
-                  <article className="election-card">
-                    <span className="badge">
-                      {latestElection.level === "national"
-                        ? "国政選挙"
-                        : "地方選挙"}
-                    </span>
-                    <h3>{latestElection.name}</h3>
-                    <p>
-                      {latestElection.municipality || municipality} · 投票日{" "}
-                      {latestElection.date}
-                    </p>
-                    <Sources sources={latestElection.sources} />
-                    <p className="small">
-                      選挙情報を確認したうえで要約を掲載します。AIによる要約はまだ未実装です。
-                    </p>
-                  </article>
-                ) : (
-                  <Empty title="選挙情報は未収録です">
-                    {municipality}に関係する直近の選挙情報はまだ登録されていません。
-                    AI要約機能は未実装です。公式資料の登録後、出典を示して概要を掲載します。
-                  </Empty>
-                )}
-              </section>
-            )}
             <section className="panel">
               <div className="section-heading">
                 <h2>
@@ -590,59 +559,6 @@ function App() {
                   {municipality || region}の{period === "past" ? "過去" : "現在"}
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
-              )}
-            </section>
-            <section className="panel">
-              <h2>年代別投票率</h2>
-              <p className="small">
-                選挙ごとの公式集計を数値で表示します。推計や他の地域の数値による補完はしません。
-              </p>
-              {regionalElections.length ? (
-                regionalElections.map((item) => (
-                  <article key={item.id}>
-                    <h3>{item.name}</h3>
-                    {item.turnout.status === "recorded" ? (
-                      <>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>年代</th>
-                              <th>投票率</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.turnout.value.map((row) => (
-                              <tr key={row.age}>
-                                <td>{row.age}</td>
-                                <td>{row.rate}%</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <Sources sources={item.turnout.sources} />
-                      </>
-                    ) : (
-                      <RecordText entry={item.turnout} />
-                    )}
-                  </article>
-                ))
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>対象選挙</th>
-                      <th>年代</th>
-                      <th>投票率</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                    </tr>
-                  </tbody>
-                </table>
               )}
             </section>
           </>
