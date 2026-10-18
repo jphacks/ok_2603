@@ -82,6 +82,14 @@ test('APIは既存の管理者認証を再利用し、一般利用者からの�
     assert.equal(calls.length, before);
     assert.equal((await request('polling/configurations?election_id=test&municipality_id=test-b&voting_type=early')).status, 200);
     assert.equal(calls.at(-1).admin, false); assert.equal(calls.at(-1).query.municipality_id, 'eq.test-b');
+    assert.equal((await request('polling/municipality-places?municipality_id=那覇市')).status, 200);
+    assert.equal(calls.at(-1).table, 'municipality_voting_places');
+    assert.equal(calls.at(-1).admin, false);
+    assert.equal(calls.at(-1).query.municipality_id, 'eq.那覇市');
+    assert.equal(calls.at(-1).query.select.includes('source_reference'), true);
+    const beforeInvalidVotingType = calls.length;
+    assert.equal((await request('polling/municipality-places?municipality_id=那覇市&voting_type=invalid')).status, 400);
+    assert.equal(calls.length, beforeInvalidVotingType);
     assert.equal((await request('internal/polling/sync-catalog', 'POST', undefined, process.env.ADMIN_API_TOKEN)).status, 200);
     assert.equal(calls.at(-1).body[0].id, 'same-existing-id');
     assert.equal((await request('polling/configurations?municipality_id=test')).status, 400);

@@ -99,6 +99,24 @@ export function createPollingHandler({ requireAdmin, send, getElections, getMuni
       ]);
       send(res, 200, { elections, municipalities }); return true;
     }
+    if (req.method === 'GET' && resource === 'municipality-places') {
+      const municipality = catalogId(url.searchParams.get('municipality_id'));
+      const query = {
+        municipality_id: `eq.${municipality}`,
+        select: 'id,municipality_id,voting_type,name,address,election_date,source_title,source_publisher,source_checked_at,source_reference,verification_status',
+        order: 'voting_type.asc,name.asc',
+      };
+      const votingType = url.searchParams.get('voting_type');
+      if (votingType) {
+        if (!['early', 'election_day'].includes(votingType))
+          throw Object.assign(new Error('投票種別が不正です。'), { status: 400 });
+        query.voting_type = `eq.${votingType}`;
+      }
+      send(res, 200, {
+        data: await store.list('municipality_voting_places', { admin: false, query }),
+      });
+      return true;
+    }
     if (admin && req.method === 'POST' && resource === 'sync-catalog') {
       const municipalities = getMunicipalities().map(name => ({ id: name, name }));
       // Stable SQLite IDs; sync never deletes previous elections or polling history.

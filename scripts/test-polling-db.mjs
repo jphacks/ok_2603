@@ -29,6 +29,8 @@ try {
   const args = ['-X', '-h', '127.0.0.1', '-p', String(port), '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'];
   run('psql', [...args, '-c', 'CREATE ROLE anon NOLOGIN; CREATE ROLE authenticated NOLOGIN; CREATE ROLE service_role NOLOGIN BYPASSRLS;']);
   run('psql', [...args, '-f', 'supabase/migrations/202610180001_polling_places.sql']);
+  run('psql', [...args, '-f', 'supabase/migrations/202610180004_municipality_voting_places.sql']);
+  run('psql', [...args, '-f', 'supabase/migrations/202610180004_municipality_voting_places.sql']);
   run('psql', [...args, '-f', 'tests/polling-db.sql']);
   console.log('PASS: isolated PostgreSQL migration, CRUD, constraints, history and RLS tests');
 } catch (error) {
