@@ -162,6 +162,73 @@ svg {
   padding: 42px 28px 54px 14px;
   align-items: center;
 }
+.home-search {
+  margin-bottom: 24px;
+}
+.home-catchphrase {
+  margin: 24px 0 20px;
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+.governor-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: clamp(18px, 3vw, 26px);
+  border-radius: 12px;
+  background: #18345c;
+  color: white;
+  text-align: left;
+}
+.governor-entry:hover {
+  background: #264d7e;
+}
+.governor-entry-label {
+  display: block;
+}
+.governor-entry-label {
+  font-size: clamp(20px, 4.9vw, 26px);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.governor-entry-arrow {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.council-panel .small {
+  margin-top: 12px;
+}
+.council-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.council-list li {
+  padding: 20px 0;
+  border-top: 1px solid #dce4ed;
+}
+.council-list h3 {
+  margin-bottom: 12px;
+}
+.council-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.council-fields dt {
+  font-size: 13px;
+  color: #687587;
+}
+.council-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -377,8 +444,12 @@ svg {
   color: #18345c;
   text-align: left;
   font-size: 15px;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
 }
 .region-suggestions button:hover,
+.region-suggestions button[aria-selected="true"],
 .region-suggestions button:focus-visible {
   background: #eef3f8;
 }

@@ -2,7 +2,7 @@ import { pathToFileURL } from "node:url";
 import { loadTypescript } from "./load-typescript.mjs";
 
 export function validateData(
-  { elections, candidates, glossary },
+  { elections, candidates, glossary, councilMembers = [] },
   { prefectures, checkLabels, sourceIsValid },
 ) {
   const errors = [];
@@ -49,6 +49,14 @@ export function validateData(
   };
   uniqueIds(elections, "elections");
   uniqueIds(candidates, "candidates");
+  uniqueIds(councilMembers, "councilMembers");
+  for (const member of councilMembers) {
+    const path = `councilMember:${member.id}`;
+    expect(text(member.name), `${path}: 氏名が必要`);
+    expect(member.faction === null || text(member.faction), `${path}: 会派は文字列または未収録(null)`);
+    expect(member.district === null || text(member.district), `${path}: 選挙区は文字列または未収録(null)`);
+    sources(member.sources, path);
+  }
   for (const item of elections) {
     const path = `election:${item.id}`;
     expect(text(item.name), `${path}: 名称が必要`);
@@ -136,6 +144,6 @@ if (
     process.exitCode = 1;
   } else
     console.log(
-      `選挙データ検証成功: 選挙${data.elections.length}件 / 候補者${data.candidates.length}人 / 用語${data.glossary.length}件`,
+      `選挙データ検証成功: 選挙${data.elections.length}件 / 候補者${data.candidates.length}人 / 用語${data.glossary.length}件 / 現職県議${data.councilMembers.length}人`,
     );
 }

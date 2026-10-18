@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { candidates, elections, glossary } from "./election/data";
+import { CouncilPage } from "./election/CouncilPage";
+import { IslandDecoration, FlowerDecoration } from "./election/HomeDecor";
+import "./home.css";
 import {
   checkLabels,
+  districtSource,
+  electionAppliesToMunicipality,
+  isGovernorElection,
   missing,
   municipalities,
-  normalize,
-  prefectures,
+  municipalityReadings,
+  normalizeRegion,
+  prefecturalDistrictFor,
   searchCandidates,
+  searchMunicipalities,
   toggleSelection,
   type Candidate,
 } from "./election/model";
@@ -19,7 +27,7 @@ import {
   Sources,
 } from "./election/components";
 
-type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide";
+type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "council";
 const tutorialKey = "election-prototype:tutorial:v1";
 const tabs = [
   "公約",
@@ -31,7 +39,7 @@ const tabs = [
 const steps = [
   [
     "まずは、沖縄県内の地域を選びましょう",
-    "沖縄県または市町村を選ぶと、その地域の選挙情報を確認できます。",
+    "知事選挙のボタン、または市町村検索から選挙情報を確認できます。",
     "region-search",
   ],
   [
@@ -48,9 +56,15 @@ const steps = [
 
 function App() {
   const [page, setPage] = useState<Page>("home");
+  const [homeHeadlineVersion, setHomeHeadlineVersion] = useState(0);
+  const [homeMenuOpen, setHomeMenuOpen] = useState(false);
+  const [showAllMunicipalities, setShowAllMunicipalities] = useState(false);
   const [region, setRegion] = useState("");
   const [municipality, setMunicipality] = useState<string | null>(null);
+  const [governorOnly, setGovernorOnly] = useState(false);
   const [regionQuery, setRegionQuery] = useState("");
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [query, setQuery] = useState("");
   const [electionId, setElectionId] = useState<string | null>(null);
   const [level, setLevel] = useState("all");
@@ -77,9 +91,8 @@ function App() {
     .filter((item): item is Candidate => !!item);
   const regionalElections = elections.filter((item) =>
     item.prefectureIds.includes(region) &&
-    (!municipality ||
-      !item.municipality ||
-      item.municipality === municipality),
+    (governorOnly ? isGovernorElection(item) : !isGovernorElection(item)) &&
+    (!municipality || electionAppliesToMunicipality(item, municipality)),
   );
   const latestElection = [...regionalElections].sort((a, b) =>
     b.date.localeCompare(a.date),
@@ -94,31 +107,31 @@ function App() {
       (!electionId || item.electionId === electionId),
   );
   const results = searchCandidates(regionalCandidates, query);
-  const matches = prefectures.filter((name) =>
-    normalize(name).includes(normalize(regionQuery)),
-  );
-  const municipalMatches = regionQuery.trim()
-    ? municipalities.filter((name) =>
-        normalize(name).includes(normalize(regionQuery)),
-      )
-    : [];
-  const exactPrefecture = prefectures.find(
-    (name) => normalize(name) === normalize(regionQuery),
-  );
+  const municipalMatches = searchMunicipalities(regionQuery);
+  const regionSuggestions = municipalMatches;
   const exactMunicipality = municipalities.find(
-    (name) => normalize(name) === normalize(regionQuery),
+    (name) => [name, municipalityReadings[name]].some(term => normalizeRegion(term) === normalizeRegion(regionQuery)),
   );
-  const canSearchRegion = !!exactPrefecture || !!exactMunicipality;
+  const canSearchRegion = !!exactMunicipality;
   const hasRegionSuggestions =
-    !!regionQuery.trim() && !!(matches.length || municipalMatches.length);
+    !suggestionsDismissed && !!regionQuery.trim() && !!regionSuggestions.length;
   const invalidMunicipality =
     !!regionQuery.trim() &&
-    !matches.length &&
-    !municipalMatches.length &&
-    !exactPrefecture;
+    !municipalMatches.length;
   useEffect(() => {
-    heading.current?.focus();
+    heading.current?.focus({ preventScroll: page === "home" });
   }, [page, region, candidateId]);
+  useEffect(() => {
+    if (page !== "home" || !hasRegionSuggestions || !window.matchMedia("(max-width: 600px)").matches) return;
+    const frame = requestAnimationFrame(() => {
+      const input = document.getElementById("region-query");
+      const section = document.getElementById("region-search");
+      if (!input || !section) return;
+      const available = window.innerHeight - 78 - input.getBoundingClientRect().bottom;
+      if (available < 180) window.scrollBy(0, Math.min(180 - available, Math.max(0, section.getBoundingClientRect().top - 12)));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [page, regionQuery, hasRegionSuggestions]);
   useEffect(() => {
     if (tour !== null) {
       document
@@ -128,6 +141,8 @@ function App() {
     }
   }, [tour]);
   function navigate(next: Page) {
+    if (next === "home") setHomeHeadlineVersion(version => version + 1);
+    setHomeMenuOpen(false);
     setPage(next);
     setPreview(false);
     window.scrollTo(0, 0);
@@ -150,6 +165,7 @@ function App() {
   }
   function chooseRegion(name: string) {
     setRegion(name);
+    setGovernorOnly(true);
     setMunicipality(null);
     setElectionId(null);
     setCandidateId(null);
@@ -161,6 +177,7 @@ function App() {
   }
   function chooseMunicipality(name: string) {
     setRegion("沖縄県");
+    setGovernorOnly(false);
     setMunicipality(name);
     setElectionId(null);
     setCandidateId(null);
@@ -177,6 +194,7 @@ function App() {
       setStorageWarning(true);
     }
     setTour(null);
+    if (page === "home") window.scrollTo(0, 0);
   }
   function openCandidate(id: string) {
     setCandidateId(id);
@@ -209,17 +227,19 @@ function App() {
   }
   const title =
     page === "region"
-      ? municipality || region
+      ? governorOnly ? "沖縄県知事選挙" : municipality || region
       : page === "candidates"
         ? "候補者と公約"
         : page === "detail"
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
             ? "公約を比較する"
-            : "データについて";
+            : page === "council"
+              ? "沖縄県議会議員"
+              : "データについて";
 
   return (
-    <>
+    <div className={page === "home" ? "app-shell home-shell" : "app-shell"}>
       <a className="skip-link" href="#main">
         本文へ移動
       </a>
@@ -227,10 +247,10 @@ function App() {
         <div className="header-inner">
           <button className="brand" onClick={() => navigate("home")}>
             <span className="brand-mark" aria-hidden="true">
-              選
+              {page === "home" ? <img className="home-brand-logo" src="/images/logo.png" alt="" width="54" height="54" /> : "選"}
             </span>
             <span>
-              選挙情報<span className="brand-sub">アプリ名称未定 · 試作品</span>
+              選挙情報{page !== "home" && <span className="brand-sub">アプリ名称未定 · 試作品</span>}
             </span>
           </button>
           <nav className="navigation" aria-label="メインナビゲーション">
@@ -242,7 +262,7 @@ function App() {
                 ["guide", "book", "データについて"],
               ] as const
             )
-              .filter(([target]) => target !== "compare" || !!electionId)
+              .filter(([target]) => page === "home" ? target === "home" || target === "guide" : target !== "compare" || !!electionId)
               .map(([target, icon, label]) => {
                 const classes = [
                   target === "region" ? "nav-region" : "",
@@ -273,6 +293,18 @@ function App() {
                 );
               })}
           </nav>
+          {page === "home" && (
+            <div className="home-menu">
+              <button className="home-menu-toggle" aria-label={homeMenuOpen ? "メニューを閉じる" : "メニューを開く"} aria-expanded={homeMenuOpen} aria-controls="home-menu-links" onClick={() => setHomeMenuOpen(!homeMenuOpen)}>
+                <span /><span /><span />
+              </button>
+              {homeMenuOpen && <nav id="home-menu-links" className="home-menu-links" aria-label="ホームメニュー">
+                <button onClick={() => chooseRegion("沖縄県")}>沖縄県知事選挙</button>
+                <button onClick={() => { setHomeMenuOpen(false); openRegionSearch(); }}>市町村別の選挙</button>
+                <button onClick={() => navigate("guide")}>データについて</button>
+              </nav>}
+            </div>
+          )}
         </div>
       </header>
       <main id="main" className="main">
@@ -286,7 +318,7 @@ function App() {
             <div className="breadcrumb">
               <button onClick={() => navigate("home")}>ホーム</button>
               <span>/</span>
-              {!["guide", "compare"].includes(page) && (
+              {!["guide", "compare", "council"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
                   {!(page === "region" && !municipality) && <span>/</span>}
@@ -299,21 +331,25 @@ function App() {
                 <p className="eyebrow">
                   {page === "region"
                     ? "REGIONAL DASHBOARD"
-                    : page === "compare"
-                      ? "PLEDGE COMPARISON"
-                      : "ELECTION INFORMATION"}
+                    : page === "council"
+                      ? "OKINAWA PREFECTURAL ASSEMBLY"
+                      : page === "compare"
+                        ? "PLEDGE COMPARISON"
+                        : "ELECTION INFORMATION"}
                 </p>
                 <h1 ref={heading} tabIndex={-1}>
                   {title}
                 </h1>
                 <p>
-                  {page === "compare"
-                    ? "同じ項目を横並びに。自分の視点で、読み比べる。"
-                    : ["candidates", "detail"].includes(page)
-                      ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
-                      : page === "region" && municipality
-                        ? `${municipality}に関係する選挙と公式情報を確認できます。`
-                      : "公式資料を確かめながら、必要な情報を。"}
+                  {page === "council"
+                    ? "現職の県議会議員を、氏名・選挙区から探せます。"
+                    : page === "compare"
+                      ? "同じ項目を横並びに。自分の視点で、読み比べる。"
+                      : ["candidates", "detail"].includes(page)
+                        ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
+                        : page === "region" && municipality
+                          ? `${municipality}に関係する選挙と公式情報を確認できます。`
+                          : "公式資料を確かめながら、必要な情報を。"}
                 </p>
               </div>
               {page === "region" && (
@@ -330,65 +366,47 @@ function App() {
         )}
         {page === "home" && (
           <>
-            <section className="hero">
-              <div className="hero-copy">
-                <p className="eyebrow">YOUR REGION. YOUR CHOICE.</p>
-                <h1 ref={heading} tabIndex={-1}>
-                  知ることから、
-                  <br />
-                  わたしの一票へ。
-                </h1>
-                <p className="hero-description">
-                  地域の選挙と候補者の公約を、公式資料から。
-                  <br className="desktop-break" />
-                  必要な情報を見つけて、自分の視点で比較できます。
-                </p>
-                <div className="hero-tags">
-                  <span>沖縄県内が対象</span>
-                  <span>国政・地方選挙</span>
-                  <span>公式資料を確認</span>
-                </div>
-              </div>
-              <div className="hero-art" aria-hidden="true">
-                <div className="orbit orbit-one" />
-                <div className="orbit orbit-two" />
-                <div className="art-label">INFORMATION → UNDERSTANDING</div>
-                <div className="paper">
-                  <span />
-                  <span />
-                  <span />
-                  <b>✓</b>
-                </div>
-                <div className="ballot-box">
-                  <div className="slot" />
-                  <span>一票の、その前に。</span>
-                </div>
-                <div className="art-dot dot-one" />
-                <div className="art-dot dot-two" />
-              </div>
+            <section className="home-visual" aria-label="沖縄の選挙情報">
+            <h1 key={homeHeadlineVersion} className="home-catchphrase" ref={heading} tabIndex={-1}>
+              知ることから、
+              <br />
+              わたしの一票へ。
+            </h1>
             </section>
+            <div className="home-content">
+            <button className="governor-entry" onClick={() => chooseRegion("沖縄県")}>
+              <span className="governor-entry-copy">
+                <span className="governor-entry-eyebrow">沖縄県全体で選ぶ選挙</span>
+                <span className="governor-entry-label">沖縄県知事選挙</span>
+                <span className="governor-entry-caption">候補者・公約を確認する</span>
+              </span>
+              <IslandDecoration />
+              <img className="governor-flower" src="/images/hibiscus.webp" alt="" aria-hidden="true" />
+              <span className="governor-entry-arrow" aria-hidden="true">→</span>
+            </button>
             <section
               id="region-search"
-              className={`search-panel ${tour === 0 ? "tour-highlight" : ""}`}
+              className={`search-panel home-search ${tour === 0 ? "tour-highlight" : ""}`}
             >
-              <div>
-                <p className="eyebrow">FIND YOUR REGION</p>
-                <h2>沖縄県内の地域を探す</h2>
+              <FlowerDecoration />
+              <div className="home-search-heading">
+                <span className="home-pin"><Icon name="region" /></span>
+                <div><h2>市町村別の選挙を探す</h2>
+                <p>お住まいの地域の選挙情報を確認できます。</p></div>
               </div>
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (exactPrefecture) chooseRegion(exactPrefecture);
-                  else if (exactMunicipality)
+                  if (exactMunicipality)
                     chooseMunicipality(exactMunicipality);
                 }}
               >
                 <label className="sr-only" htmlFor="region-query">
-                  沖縄県または市町村名で検索
+                  沖縄県内の市町村名で検索
                 </label>
                 <div className="region-search-control">
                   <div className="search-input">
-                    <Icon name="region" />
+                    <svg className="home-search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 6 6" /></svg>
                     <input
                       id="region-query"
                       type="search"
@@ -396,15 +414,41 @@ function App() {
                       aria-autocomplete="list"
                       aria-controls="region-suggestions"
                       aria-expanded={hasRegionSuggestions}
+                      aria-activedescendant={hasRegionSuggestions && activeSuggestion >= 0 ? `region-option-${activeSuggestion}` : undefined}
                       aria-invalid={invalidMunicipality}
                       aria-describedby={
                         regionQuery.trim() && !canSearchRegion
                           ? "region-query-error"
                           : undefined
                       }
-                      placeholder="沖縄県または市町村名（例：那覇市）"
+                      placeholder="市町村名・よみがなで検索"
                       value={regionQuery}
-                      onChange={(event) => setRegionQuery(event.target.value)}
+                      autoComplete="off"
+                      onChange={(event) => {
+                        setRegionQuery(event.target.value);
+                        setActiveSuggestion(-1);
+                        setSuggestionsDismissed(false);
+                      }}
+                      onFocus={() => setSuggestionsDismissed(false)}
+                      onKeyDown={(event) => {
+                        if (event.nativeEvent.isComposing) return;
+                        if (event.key === "Escape") {
+                          setSuggestionsDismissed(true);
+                          setActiveSuggestion(-1);
+                        } else if ((event.key === "ArrowDown" || event.key === "ArrowUp") && regionSuggestions.length && regionQuery.trim()) {
+                          event.preventDefault();
+                          setSuggestionsDismissed(false);
+                          const next = event.key === "ArrowDown"
+                            ? (activeSuggestion + 1) % regionSuggestions.length
+                            : (activeSuggestion <= 0 ? regionSuggestions.length : activeSuggestion) - 1;
+                          setActiveSuggestion(next);
+                          document.getElementById(`region-option-${next}`)?.scrollIntoView({ block: "nearest" });
+                        } else if (event.key === "Enter" && hasRegionSuggestions && activeSuggestion >= 0) {
+                          event.preventDefault();
+                          const name = regionSuggestions[activeSuggestion];
+                          chooseMunicipality(name);
+                        }
+                      }}
                     />
                     <button
                       className="button primary"
@@ -421,32 +465,26 @@ function App() {
                       role="listbox"
                       aria-label="検索候補"
                     >
-                      {matches.map((name) => (
+                      {municipalMatches.map((name, index) => (
                         <button
                           type="button"
                           role="option"
-                          aria-selected="false"
-                          key={name}
-                          onClick={() => chooseRegion(name)}
-                        >
-                          {name} <span>都道府県</span>
-                        </button>
-                      ))}
-                      {municipalMatches.map((name) => (
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected="false"
+                          id={`region-option-${index}`}
+                          aria-selected={activeSuggestion === index}
                           key={name}
                           onClick={() => chooseMunicipality(name)}
                         >
-                          {name} <span>市町村</span>
+                          {name} <span>{municipalityReadings[name]}</span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
               </form>
+              <div className="home-city-shortcuts" aria-label="市町村を選択">
+                {(showAllMunicipalities ? municipalities : ["那覇市", "名護市", "沖縄市", "うるま市", "宮古島市"]).map(name => <button key={name} onClick={() => chooseMunicipality(name)}>{name}</button>)}
+                <button aria-label={showAllMunicipalities ? "市町村一覧を閉じる" : "すべての市町村を表示"} aria-expanded={showAllMunicipalities} onClick={() => setShowAllMunicipalities(!showAllMunicipalities)}>{showAllMunicipalities ? "閉じる" : "•••"}</button>
+              </div>
               {!!regionQuery.trim() && !canSearchRegion && (
                 <p
                   id="region-query-error"
@@ -459,38 +497,20 @@ function App() {
                 </p>
               )}
               <p className="small">
-                対象は沖縄県内です。市町村ページへ進めます。選挙情報は公式資料を確認・登録後に掲載します。
+                公式資料を確認後に掲載。未登録の情報は「未収録」と表示。
               </p>
             </section>
-            <section className="principles">
-              {[
-                [
-                  "01",
-                  "公式資料を出発点に",
-                  "出典・発行元・確認日を添えて、根拠へたどれる情報に。",
-                ],
-                [
-                  "02",
-                  "公約を、同じ目線で",
-                  "横並びに読んで比較。候補者の推薦や順位付けはしません。",
-                ],
-                [
-                  "03",
-                  "わからないことも明確に",
-                  "未収録と確認できなかった情報を区別して表示します。",
-                ],
-              ].map(([n, label, text]) => (
-                <div key={n}>
-                  <span>{n}</span>
-                  <h3>{label}</h3>
-                  <p>{text}</p>
-                </div>
-              ))}
-            </section>
+              <p className="home-image-note">風景・花・地図は装飾イメージです。</p>
+            </div>
           </>
         )}
+        {page === "council" && <CouncilPage />}
         {page === "region" && (
           <>
+            {municipality && prefecturalDistrictFor(municipality) && <div className="notice">
+              <p>県議会議員選挙区：{prefecturalDistrictFor(municipality)!.name}</p>
+              <Sources sources={[districtSource]} />
+            </div>}
             {municipality && (
               <section className="panel" aria-labelledby="latest-election-title">
                 <h2 id="latest-election-title">直近の選挙</h2>
@@ -524,7 +544,7 @@ function App() {
                 <h2>
                   {municipality
                     ? `${municipality}に関連する選挙`
-                    : "関連する選挙"}
+                    : governorOnly ? "沖縄県知事選挙" : "関連する選挙"}
                 </h2>
                 <span className="badge">
                   {regionalElections.length
@@ -547,7 +567,7 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <label>
+                {!governorOnly && <label>
                   種類{" "}
                   <select
                     value={level}
@@ -557,7 +577,7 @@ function App() {
                     <option value="national">国政選挙</option>
                     <option value="local">地方選挙</option>
                   </select>
-                </label>
+                </label>}
               </div>
               <div className="election-list">
                 {visibleElections.map((item) => (
@@ -587,7 +607,7 @@ function App() {
               </div>
               {!visibleElections.length && (
                 <Empty title="選挙情報は未収録です">
-                  {municipality || region}の{period === "past" ? "過去" : "現在"}
+                  {governorOnly ? "沖縄県知事選挙" : municipality || region}の{period === "past" ? "過去" : "現在"}
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
               )}
@@ -1169,7 +1189,7 @@ function App() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 export default App;
