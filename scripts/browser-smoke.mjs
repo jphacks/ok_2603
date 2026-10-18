@@ -196,7 +196,8 @@ try {
   );
   await click("検索");
   await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
-  assert.ok((await text()).includes("那覇市に関係する直近の選挙情報はまだ登録されていません。"));
+  assert.equal((await text()).includes("直近の選挙"), false);
+  assert.equal((await text()).includes("年代別投票率"), false);
   assert.ok((await text()).includes("投票場所"));
   assert.equal(await evaluate('document.querySelectorAll(".place-list li").length'), 5);
   assert.ok((await text()).includes("首里支所1階会議室"));
@@ -255,7 +256,7 @@ try {
   await click("ホーム");
   await input("region-query", "沖縄");
   await click("沖縄県 都道府県");
-  assert.ok((await text()).includes("50%"));
+  assert.equal((await text()).includes("年代別投票率"), false);
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("この選挙の候補者・公約を見る →");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), true);
@@ -349,9 +350,23 @@ try {
     true,
   );
   await screenshot("election-mobile-detail.png");
+  await click("用語");
+  const glossaryText = await text();
+  assert.ok(glossaryText.includes("政治・選挙の用語"));
+  assert.ok(glossaryText.includes("最終確認 2026-10-18"));
+  assert.equal(await evaluate('document.querySelectorAll(".glossary-entry").length'), 30);
+  await input("glossary-search", "議員1人");
+  assert.ok((await text()).includes("小選挙区選挙"));
+  assert.ok((await text()).includes("1件の用語"));
+  await input("glossary-search", "該当しない検索語");
+  assert.ok((await text()).includes("該当する用語はありません"));
+  assert.equal(
+    await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
+    true,
+  );
   assert.deepEqual(errors, []);
   console.log(
-    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, empty detail tabs, comparison, registered-data search/detail/selection/glossary, mobile overflow, no JS exceptions",
+    "UI PASS: tutorial persistence, Okinawa-only region selection, search, filters, comparison, detail and glossary source/search states, mobile overflow, no JS exceptions",
   );
 } finally {
   socket?.close();
