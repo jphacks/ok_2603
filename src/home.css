@@ -1,0 +1,213 @@
+/* Home-only styles: other screens retain their existing layout and palette. */
+.home-shell {
+  --home-navy: #0d2f53;
+  --home-cream: #faf7f1;
+  min-height: 100dvh;
+  background: var(--home-cream);
+  color: var(--home-navy);
+  padding-bottom: calc(86px + env(safe-area-inset-bottom));
+}
+.home-shell .header {
+  position: relative;
+  z-index: 10;
+  background: #fdfbf8;
+  border: 0;
+}
+.home-shell .header-inner {
+  height: 84px;
+  max-width: 1200px;
+  padding: 0 30px;
+}
+.home-shell .brand { gap: 16px; font-size: 26px; color: var(--home-navy); }
+.home-shell .brand-mark {
+  width: 52px;
+  height: 54px;
+  border-radius: 12px;
+  background: transparent;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: 37px;
+  font-weight: 800;
+  overflow: hidden;
+}
+.home-brand-logo { display: block; width: 100%; height: 100%; object-fit: cover; }
+.home-shell .main { max-width: none; padding: 0; }
+.home-menu { position: relative; }
+.home-menu-toggle { display: grid; gap: 6px; align-content: center; padding: 12px; width: 48px; height: 48px; }
+.home-menu-toggle span { display: block; height: 2px; border-radius: 2px; background: var(--home-navy); }
+.home-menu-links {
+  position: absolute;
+  right: 0;
+  top: 55px;
+  width: 220px;
+  padding: 8px;
+  background: #fffdf9;
+  border: 1px solid #e5dfd5;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px #102f5320;
+}
+.home-menu-links button { display: block; width: 100%; padding: 12px; text-align: left; border-radius: 6px; }
+.home-menu-links button:hover { background: #f1ece3; }
+.home-visual {
+  position: relative;
+  min-height: 420px;
+  padding: 48px max(36px, calc((100vw - 1080px) / 2));
+  background-image: linear-gradient(90deg, #f4fbffb3, #ffffff18 62%, transparent), url('/images/okinawa-coast.webp');
+  background-size: cover;
+  background-position: center 56%;
+}
+.home-shell .home-catchphrase {
+  position: relative;
+  opacity: 0;
+  /* This explicitly requested headline effect is scoped to these two lines. */
+  animation: home-headline-enter 1.1s ease-out 0.12s both !important;
+  margin: 0 0 16px;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "MS PMincho", serif;
+  font-size: clamp(36px, 7.8vw, 80px);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.045em;
+  color: #082b4b;
+  text-shadow: 0 1px 0 #ffffff70;
+}
+@keyframes home-headline-enter {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.home-content { position: relative; max-width: 1120px; margin: -96px auto 0; padding: 0 24px; }
+.home-shell .governor-entry {
+  position: relative;
+  isolation: isolate;
+  min-height: 218px;
+  padding: 28px 34px;
+  border: 1.5px solid #fffaf0;
+  border-radius: 22px;
+  background: linear-gradient(110deg, #0b304f, #1d4667);
+  box-shadow: 0 2px 4px #203a4a14;
+  overflow: hidden;
+  margin: 0 0 24px;
+  text-align: left;
+}
+.home-shell .governor-entry:hover { background: linear-gradient(110deg, #123d5d, #285475); }
+.governor-entry-copy { position: relative; z-index: 3; }
+.governor-entry-eyebrow { display: flex; gap: 12px; align-items: center; font-size: 16px; font-weight: 400; margin-bottom: 10px; letter-spacing: 0.03em; }
+.governor-entry-eyebrow::before { content: ''; width: 36px; height: 1px; background: #fff; }
+.home-shell .governor-entry-label {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "MS PMincho", serif;
+  font-weight: 600;
+  font-size: clamp(28px, 4.9vw, 51px);
+  letter-spacing: 0.045em;
+  line-height: 1.5;
+}
+.governor-entry-caption { display: block; margin-top: 6px; font-size: 21px; font-weight: 400; letter-spacing: 0.04em; }
+.home-shell .governor-entry-arrow {
+  position: absolute;
+  z-index: 4;
+  right: 36px;
+  bottom: 23px;
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fffefb;
+  color: #10375b;
+  font-size: 37px;
+  line-height: 1;
+}
+.governor-flower { position: absolute; z-index: 2; right: -16px; bottom: -52px; width: 240px; height: 310px; object-fit: contain; pointer-events: none; }
+.home-island { position: absolute; z-index: 1; width: 180px; height: 220px; right: 140px; top: 0; color: #a6c2d06b; transform: rotate(3deg); }
+.home-shell .home-search {
+  position: relative;
+  padding: 28px;
+  border: 1px solid #eee4d8;
+  border-radius: 22px;
+  background: linear-gradient(110deg, #fcf9f3, #fffaf4ed);
+  box-shadow: 0 4px 24px #74634d06;
+  margin: 0;
+}
+.home-search-heading { display: flex; align-items: flex-start; gap: 16px; position: relative; }
+.home-pin { display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 auto; border-radius: 50%; background: #efe5d5; }
+.home-pin svg { width: 29px; height: 29px; fill: #103653; stroke: #fffaf0; stroke-width: 1; }
+.home-shell .home-search h2 { font-size: clamp(20px, 3.3vw, 34px); margin: 0 0 4px; color: #103553; line-height: 1.5; }
+.home-search-heading p { margin: 0 0 24px; font-size: 16px; color: #3d5c79; }
+.home-shell .home-search form { position: relative; }
+.home-shell .search-input {
+  padding: 7px 10px 7px 20px;
+  gap: 14px;
+  border: 1px solid #ccd3d8;
+  border-radius: 18px;
+  background: #ffffffec;
+  min-height: 60px;
+  box-shadow: 0 0 0 1px #eef0f1;
+}
+.home-shell .search-input input { padding: 6px 0; font-size: 18px; color: #18345c; width: 100%; }
+.home-shell .search-input input::placeholder { color: #8996a4; }
+.home-shell .home-search-icon { color: #123858; width: 25px; height: 25px; }
+.home-shell .search-input .button { min-height: 40px; padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+.home-shell .search-input .button:disabled { display: none; }
+.home-shell .region-suggestions { border-color: #ded7cb; background: #fffdf9; border-radius: 14px; top: calc(100% + 8px); max-height: min(250px, 35dvh); }
+.home-shell .region-suggestions button { border-radius: 8px; }
+.home-shell .region-suggestions button:hover, .home-shell .region-suggestions button[aria-selected=true] { background: #f2ede4; }
+.home-city-shortcuts { display: flex; flex-wrap: wrap; gap: 9px; position: relative; margin-top: 18px; }
+.home-city-shortcuts button { border: 1px solid #e4dfd6; border-radius: 999px; padding: 7px 16px; min-height: 44px; color: #16375a; font-size: 16px; background: #faf7f1a6; }
+.home-city-shortcuts button:hover { background: #ede5d6; border-color: #c9bda7; }
+.home-shell .home-search > .small { position: relative; margin-top: 16px; color: #687d8c; font-size: 12px; }
+.home-flower-outline { position: absolute; right: -1px; top: 0; width: 240px; height: 190px; color: #e8a98c; opacity: 0.38; pointer-events: none; }
+.home-image-note { margin: 12px 0 0; color: #7b858b; font-size: 11px; text-align: right; }
+.home-shell .footer { display: none; }
+.home-shell .navigation {
+  position: fixed;
+  z-index: 20;
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(82px + env(safe-area-inset-bottom));
+  padding: 0 max(16px, calc((100vw - 1120px) / 2)) env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid #dedfdc;
+  background: #fffefbed;
+  backdrop-filter: blur(12px);
+}
+.home-shell .navigation button { display: flex; flex-direction: column; justify-content: center; gap: 3px; border: 0; border-top: 3px solid transparent; padding: 8px 0; font-size: 15px; color: #7d8a99; }
+.home-shell .navigation svg { display: block; width: 27px; height: 27px; }
+.home-shell .navigation .nav-active { color: #103555; border-top-color: #103555; font-weight: 700; }
+.home-shell .navigation .nav-active svg { fill: #103555; stroke: #103555; }
+@media (max-width: 600px) {
+  .home-shell { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+  .home-shell .header-inner { height: 74px; padding: 0 19px; gap: 8px; }
+  .home-shell .brand { font-size: 22px; gap: 12px; }
+  .home-shell .brand-mark { width: 43px; height: 46px; font-size: 31px; border-radius: 10px; }
+  .home-menu-toggle { width: 43px; height: 44px; padding: 10px; }
+  .home-visual { min-height: 230px; padding: 28px 25px; background-position: 56% center; }
+  .home-shell .home-catchphrase { font-size: clamp(29px, 8.7vw, 52px); line-height: 1.42; margin-bottom: 10px; letter-spacing: 0.035em; }
+  .home-content { margin-top: -57px; padding: 0 14px; }
+  .home-shell .governor-entry { min-height: 132px; padding: 16px 17px; border-radius: 16px; margin-bottom: 16px; }
+  .governor-entry-eyebrow { font-size: 11px; gap: 8px; margin-bottom: 6px; }
+  .governor-entry-eyebrow::before { width: 22px; }
+  .home-shell .governor-entry-label { font-size: clamp(26px, 6.9vw, 39px); letter-spacing: 0.025em; }
+  .governor-entry-caption { font-size: 14px; margin-top: 5px; }
+  .home-shell .governor-entry-arrow { width: 40px; height: 40px; right: 17px; bottom: 13px; font-size: 27px; }
+  .governor-flower { width: 130px; height: 190px; right: -12px; bottom: -34px; }
+  .home-island { width: 108px; height: 125px; top: 4px; right: 68px; opacity: 0.9; }
+  .home-shell .home-search { padding: 19px 13px 14px; border-radius: 16px; }
+  .home-search-heading { gap: 10px; }
+  .home-pin { width: 35px; height: 35px; }
+  .home-pin svg { width: 22px; height: 22px; }
+  .home-shell .home-search h2 { font-size: clamp(18px, 4.8vw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
+  .home-search-heading p { font-size: 11px; margin-bottom: 15px; line-height: 1.6; }
+  .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
+  .home-shell .search-input input { font-size: 14px; line-height: 1.5; }
+  .home-shell .home-search-icon { width: 22px; height: 22px; }
+  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 12px; }
+  .home-city-shortcuts { gap: 6px; margin-top: 11px; }
+  .home-city-shortcuts button { font-size: 11px; min-height: 44px; padding: 6px 7px; }
+  .home-shell .home-search > .small { font-size: 10px; margin-top: 11px; line-height: 1.7; }
+  .home-flower-outline { width: 130px; height: 120px; }
+  .home-image-note { font-size: 9px; margin-top: 8px; }
+  .home-shell .navigation { height: calc(70px + env(safe-area-inset-bottom)); padding-left: 14px; padding-right: 14px; }
+  .home-shell .navigation button { font-size: 13px; gap: 2px; padding: 6px 0; }
+  .home-shell .navigation svg { width: 25px; height: 25px; }
+}

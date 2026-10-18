@@ -121,7 +121,31 @@ try {
     await pause(70);
   };
   const text = () => evaluate("document.body.innerText");
+  const verifyHeadlineMotion = async () => {
+    const frames = await evaluate(`(async () => {
+      const title = document.querySelector('.home-catchphrase');
+      const animation = title.getAnimations().find(a => a.animationName === 'home-headline-enter');
+      if (!animation) throw new Error('Headline animation is missing');
+      animation.pause();
+      const frames = [];
+      for (const time of [0, 620, 1300]) {
+        animation.currentTime = time;
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const style = getComputedStyle(title);
+        frames.push({opacity:Number(style.opacity), y:new DOMMatrixReadOnly(style.transform).m42});
+      }
+      animation.play();
+      return frames;
+    })()`);
+    assert.equal(frames[0].opacity, 0);
+    assert.equal(frames[0].y, -24);
+    assert.ok(frames[1].opacity > 0 && frames[1].opacity < 1);
+    assert.ok(frames[1].y > -24 && frames[1].y < 0);
+    assert.equal(frames[2].opacity, 1);
+    assert.equal(frames[2].y, 0);
+  };
   const screenshot = async (name) => {
+    await evaluate(`Promise.all([...document.querySelectorAll('.home-catchphrase')].flatMap(title => title.getAnimations().map(animation => animation.finished.catch(() => {}))))`);
     const { data } = await send("Page.captureScreenshot", {
       format: "png",
       captureBeyondViewport: false,
@@ -149,6 +173,7 @@ try {
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
   await waitFor('!document.documentElement.dataset.testReload && document.querySelector("#region-search") !== null');
+  await verifyHeadlineMotion();
   assert.equal(await evaluate('document.querySelector(".prototype-note")'), null);
   assert.equal(await evaluate('document.querySelector("#prefecture-list")'), null);
   assert.equal(await evaluate('document.querySelector(".mobile-start")'), null);
@@ -157,7 +182,7 @@ try {
     true,
   );
   assert.equal(
-    await evaluate('!![...document.querySelectorAll(".navigation button")].find(button => button.textContent.includes("地域を探す"))'),
+    await evaluate('document.querySelector(".navigation .nav-region") !== null'),
     false,
   );
   assert.equal(
@@ -165,6 +190,47 @@ try {
     0,
   );
   await screenshot("election-desktop.png");
+  assert.equal(await evaluate('window.scrollY'), 0);
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".home-visual")).backgroundImage.includes("okinawa-coast.webp")'), true);
+  await evaluate('document.querySelector(".home-menu-toggle").click()');
+  await waitFor('document.querySelector("#home-menu-links") !== null');
+  await evaluate('document.querySelector(".home-menu-toggle").click()');
+  assert.equal(await evaluate('document.querySelector("#home-menu-links")'), null);
+  await evaluate(`document.querySelector('[aria-label="すべての市町村を表示"]').click()`);
+  await waitFor('document.querySelectorAll(".home-city-shortcuts button").length === 42');
+  await evaluate(`document.querySelector('[aria-label="市町村一覧を閉じる"]').click()`);
+  assert.ok(!(await text()).includes("沖縄の選挙を探す"));
+  assert.equal(await evaluate('document.querySelector(".hero-art, .hero-description, .principles")'), null);
+  await evaluate('document.querySelector(".governor-entry").click()');
+  await waitFor('document.querySelector("h1")?.textContent === "沖縄県知事選挙"');
+  assert.ok((await text()).includes("選挙情報は未収録です"));
+  await click("ホーム");
+  await verifyHeadlineMotion();
+  await evaluate('void (window.__previousHeadline = document.querySelector(".home-catchphrase"))');
+  await click("ホーム");
+  assert.equal(await evaluate('window.__previousHeadline === document.querySelector(".home-catchphrase")'), false);
+  await verifyHeadlineMotion();
+  for (const query of ["な", "ナ", "ﾅ"]) {
+    await input("region-query", query);
+    const options = await evaluate('document.querySelector("#region-suggestions").innerText');
+    assert.ok(options.includes("那覇市") && options.includes("名護市"));
+  }
+  for (const query of ["なは", "ナハ", "ﾅﾊ", "はし"]) {
+    await input("region-query", query);
+    assert.equal(await evaluate('document.querySelectorAll("#region-suggestions button").length'), 1);
+    assert.ok((await text()).includes("那覇市"));
+  }
+  await input("region-query", "なご");
+  await click("名護市 なごし");
+  await waitFor('document.querySelector("h1")?.textContent === "名護市"');
+  assert.ok((await text()).includes("県議会議員選挙区：名護市選挙区"));
+  await click("ホーム");
+  await input("region-query", "なは");
+  await evaluate(`(() => { const input = document.getElementById('region-query'); input.focus(); input.dispatchEvent(new KeyboardEvent('keydown', {key:'ArrowDown',bubbles:true})); })()`);
+  await waitFor('document.getElementById("region-query").getAttribute("aria-activedescendant") === "region-option-0"');
+  await evaluate(`document.getElementById('region-query').dispatchEvent(new KeyboardEvent('keydown', {key:'Enter',bubbles:true}))`);
+  await waitFor('document.querySelector("h1")?.textContent === "那覇市"');
+  await click("ホーム");
   await input("region-query", "存在しない市町村");
   assert.equal(
     await evaluate('document.querySelector("#region-query").getAttribute("aria-invalid")'),
@@ -234,10 +300,10 @@ try {
   await input("region-query", "沖縄");
   assert.equal(
     await evaluate('document.querySelectorAll("#region-suggestions button").length'),
-    2,
+    1,
   );
-  await click("沖縄県 都道府県");
-  await waitFor('document.querySelector("h1")?.textContent === "沖縄県"');
+  await click("沖縄市 おきなわし");
+  await waitFor('document.querySelector("h1")?.textContent === "沖縄市"');
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("過去の選挙");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
@@ -251,11 +317,18 @@ try {
     const recorded = value => ({status:'recorded', value, sources:[source]});
     d.elections.push({id:'ui-election',name:'UI処理検証専用',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:recorded([{age:'テスト年代',rate:50}])});
     d.glossary.push({term:'テスト用語',definition:'UI動作の確認専用です。政治用語の解説ではありません。',sources:[source]});
+    d.elections.push({id:'ui-governor',name:'UIテスト専用知事選挙',kind:'governor',prefectureIds:['沖縄県'],level:'local',period:'current',date:'2026-10-17',sources:[source],turnout:m.missing()});
   })()`);
   await click("ホーム");
+  await evaluate('document.querySelector(".governor-entry").click()');
+  await waitFor('document.querySelector("h1")?.textContent === "沖縄県知事選挙"');
+  assert.ok((await text()).includes("UIテスト専用知事選挙"));
+  assert.ok(!(await text()).includes("UI処理検証専用"));
+  await click("ホーム");
   await input("region-query", "沖縄");
-  await click("沖縄県 都道府県");
+  await click("沖縄市 おきなわし");
   assert.equal((await text()).includes("年代別投票率"), false);
+  assert.ok(!(await text()).includes("UIテスト専用知事選挙"));
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await click("この選挙の公約を比較する →");
   assert.equal(
@@ -401,24 +474,44 @@ try {
     mobile: true,
   });
   assert.equal(
-    await evaluate('!![...document.querySelectorAll(".navigation button")].find(button => button.textContent.includes("地域を探す"))'),
-    false,
+    await evaluate('document.querySelectorAll(".navigation button").length'),
+    2,
   );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
   );
   await screenshot("election-mobile.png");
+  assert.ok(await evaluate('document.querySelector(".governor-entry").getBoundingClientRect().bottom < window.innerHeight - 84'));
+  assert.ok(await evaluate('document.querySelector("#region-query").getBoundingClientRect().bottom < window.innerHeight - 84'));
+  await evaluate('document.querySelector(".governor-entry").click()');
+  await waitFor('document.querySelector("h1")?.textContent === "沖縄県知事選挙"');
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true);
+  assert.ok((await text()).includes("選挙情報は未収録です"));
+  await screenshot("election-mobile-governor.png");
+  await click("ホーム");
+  await input("region-query", "な");
+  assert.ok(await evaluate('[...document.querySelectorAll("#region-suggestions button")].every(button => button.getBoundingClientRect().height >= 44)'));
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true);
+  await click("名護市 なごし");
+  await waitFor('document.querySelector("h1")?.textContent === "名護市"');
+  await click("ホーム");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   await input("region-query", "沖縄");
-  await click("沖縄県 都道府県");
+  await click("沖縄市 おきなわし");
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
   );
   await screenshot("election-mobile-detail.png");
-  await click("用語");
+  await click("ホーム");
+  await send("Emulation.setDeviceMetricsOverride", {width:320,height:740,deviceScaleFactor:1,mobile:true});
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true);
+  await input("region-query", "な");
+  assert.ok((await text()).includes("那覇市") && (await text()).includes("名護市"));
+  await screenshot("election-mobile-search-320.png");
+  await click("データについて");
   const glossaryText = await text();
   assert.ok(glossaryText.includes("政治・選挙の用語"));
   assert.equal(glossaryText.includes("用語一覧"), false);
