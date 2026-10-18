@@ -108,6 +108,8 @@ export function validateData(
     uniqueIds(item.pledges || [], `${path}.pledges`);
     for (const pledge of item.pledges || []) {
       entry(pledge.text, `${path}.pledge:${pledge.id}`, text);
+      if (pledge.summary !== undefined)
+        expect(text(pledge.summary), `${path}.pledge:${pledge.id}.summary: 要約が必要`);
       for (const label of checkLabels)
         entry(
           pledge.checks?.[label],

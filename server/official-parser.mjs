@@ -56,10 +56,11 @@ export function parseJapaneseDateNear(text,label) {
 }
 
 export function electionKindFromLabel(label) {
+  if(/衆議院|参議院/u.test(label)) return 'national';
   if(/知事選挙/u.test(label)) return 'governor';
   if(/県議会議員.*(?:一般|補欠)選挙|県議会議員選挙/u.test(label)) return 'prefectural-assembly';
   if(/市長選挙|町長選挙|村長選挙/u.test(label)) return 'municipal-mayor';
-  if(/市議会議員選挙|町議会議員選挙|村議会議員選挙/u.test(label)) return 'municipal-assembly';
+  if(/市議会議員.*選挙|町議会議員.*選挙|村議会議員.*選挙/u.test(label)) return 'municipal-assembly';
   return null;
 }
 

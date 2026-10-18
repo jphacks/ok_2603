@@ -35,7 +35,8 @@ test('official discovery roots and parser support present and future election ty
   assert.deepEqual(rows,[{number:1,name:'古謝 げんた',party:'無所属'},{number:2,name:'屋良 朝助',party:'琉球独立党'}]);
   assert.equal(electionKindFromLabel('沖縄県知事選挙'),'governor');
   assert.equal(electionKindFromLabel('那覇市長選挙'),'municipal-mayor');
-  assert.equal(electionKindFromLabel('市議会議員選挙'),'municipal-assembly');
+  assert.equal(electionKindFromLabel('第22回那覇市議会議員一般選挙'),'municipal-assembly');
+  assert.equal(electionKindFromLabel('第50回衆議院議員総選挙'),'national');
   assert.notEqual(electionIdFromSource('沖縄県議会議員補欠選挙（うるま市選挙区）','https://www.pref.okinawa.lg.jp/a.pdf',2026,'prefectural-assembly').id,electionIdFromSource('沖縄県議会議員補欠選挙（島尻・南城市選挙区）','https://www.pref.okinawa.lg.jp/b.pdf',2026,'prefectural-assembly').id);
   const links=parseOfficialLinks('<a href="/kensei/senkyo/feature.html">特設ページ</a><a href="https://example.com">外部</a>','https://www.pref.okinawa.lg.jp/index.html');
   assert.equal(links.length,1);
@@ -171,6 +172,11 @@ test('official Okinawa fixture is idempotent, verified-only, authenticated, and 
     assert.ok(listing.data.some(candidate=>candidate.name.includes('カネシマ')&&candidate.party==='無所属'));
     assert.ok(listing.data.every(candidate=>candidate.age===null));
     assert.ok(listing.data.every(candidate=>candidate.x_url===null&&candidate.x_source_url===null));
+    assert.ok(listing.data.every(candidate=>Array.isArray(candidate.sources)&&Array.isArray(candidate.pledges)));
+    assert.ok(listing.data.every(candidate=>candidate.pledges.every(pledge=>
+      typeof pledge.summary==='string'&&typeof pledge.originalText==='string'&&
+      pledge.source.url.startsWith('https://')&&typeof pledge.source.publisher==='string',
+    )));
     const candidate=listing.data[0];
     const sourceResponse=await fetch(`${api.base}/api/candidates/${candidate.id}/sources`);
     assert.equal(sourceResponse.status,200);

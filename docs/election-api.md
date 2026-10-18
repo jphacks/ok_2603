@@ -37,6 +37,7 @@ Googleキーと管理者トークンはサーバー専用です。`VITE_` 接頭
 - `GET /api/elections?municipality=那覇市`（那覇市の選挙と沖縄県全域の選挙）
 - `GET /api/elections/:id`
 - `GET /api/elections/:id/candidates`
+  - 候補者ごとの確認済み出典と公約の原文・AI要約を含む。未確認・未収録の公約は返さない。
 - `GET /api/candidates/:id`
 - `GET /api/candidates/:id/photo`（再掲載承認済み、またはローカルプレビュー中の確認済み顔写真）
 - `GET /api/candidates/:id/pledges`

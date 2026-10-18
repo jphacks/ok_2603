@@ -3,6 +3,7 @@ import { PollingSearch } from "./polling/PollingSearch";
 import { PollingAdmin } from "./polling/PollingAdmin";
 import {
   candidates,
+  elections as knownElections,
   glossary,
   glossaryReadings,
 } from "./election/data";
@@ -14,17 +15,21 @@ import {
   districtSource,
   electionAppliesToMunicipality,
   isGovernorElection,
+  matchingElectionId,
   missing,
   municipalities,
   municipalityReadings,
   normalizeRegion,
   prefecturalDistrictFor,
+  recentUniqueElections,
   searchCandidates,
   searchMunicipalities,
   searchGlossary,
   toggleSelection,
   type Candidate,
   type Election,
+  type Pledge,
+  type Source,
 } from "./election/model";
 import {
   mapSearchUrl,
@@ -65,18 +70,152 @@ type MunicipalVotingPlace = {
   verification_status: "official_historical" | "user_provided_unverified";
 };
 type MunicipalVotingPlaceResponse = { data: MunicipalVotingPlace[] };
+type ApiElectionCandidate = {
+  id: string;
+  name: string;
+  party: string | null;
+  ballot_number: number | null;
+  age: number | null;
+  affiliation: string | null;
+  photo_available: boolean;
+  sources: Source[];
+  pledges: {
+    id: string;
+    title: string | null;
+    summary: string;
+    originalText: string;
+    sourcePage: number | null;
+    source: Source;
+  }[];
+};
+type ApiElectionCandidatesResponse = {
+  data: ApiElectionCandidate[];
+  complete: boolean;
+};
+function isSource(value: unknown): value is Source {
+  if (!value || typeof value !== "object") return false;
+  const source = value as Record<string, unknown>;
+  return (
+    typeof source.url === "string" &&
+    typeof source.publisher === "string" &&
+    typeof source.checkedAt === "string"
+  );
+}
+function isApiElectionCandidatesResponse(
+  value: unknown,
+): value is ApiElectionCandidatesResponse {
+  if (!value || typeof value !== "object") return false;
+  const response = value as Record<string, unknown>;
+  return (
+    typeof response.complete === "boolean" &&
+    Array.isArray(response.data) &&
+    response.data.every((entry: unknown) => {
+      if (!entry || typeof entry !== "object") return false;
+      const candidate = entry as Record<string, unknown>;
+      return (
+        typeof candidate.id === "string" &&
+        typeof candidate.name === "string" &&
+        (candidate.party === null || typeof candidate.party === "string") &&
+        (candidate.age === null || typeof candidate.age === "number") &&
+        (candidate.affiliation === null ||
+          typeof candidate.affiliation === "string") &&
+        typeof candidate.photo_available === "boolean" &&
+        Array.isArray(candidate.sources) &&
+        candidate.sources.every(isSource) &&
+        Array.isArray(candidate.pledges) &&
+        candidate.pledges.every((pledge: unknown) => {
+          if (!pledge || typeof pledge !== "object") return false;
+          const item = pledge as Record<string, unknown>;
+          return (
+            typeof item.id === "string" &&
+            (item.title === null || typeof item.title === "string") &&
+            typeof item.summary === "string" &&
+            typeof item.originalText === "string" &&
+            (item.sourcePage === null || typeof item.sourcePage === "number") &&
+            isSource(item.source)
+          );
+        })
+      );
+    })
+  );
+}
+function mapApiCandidate(
+  item: ApiElectionCandidate,
+  electionId: string,
+): Candidate {
+  const sources = [
+    ...new Map<string, Source>(
+      [
+        ...item.sources,
+        ...item.pledges.map((pledge) => pledge.source),
+      ].map((source) => [source.url, source]),
+    ).values(),
+  ];
+  return {
+    id: item.id,
+    electionId,
+    name: item.name,
+    party:
+      item.party && sources.length
+        ? { status: "recorded", value: item.party, sources }
+        : missing<string>(),
+    photo: item.photo_available
+      ? {
+          status: "recorded",
+          value: `/api/candidates/${encodeURIComponent(item.id)}/photo`,
+          sources,
+        }
+      : missing<string>(),
+    pledges: item.pledges.map((pledge) => ({
+      id: pledge.id,
+      text: {
+        status: "recorded",
+        value: pledge.originalText,
+        sources: [pledge.source],
+      },
+      summary: pledge.summary,
+      checks: {
+        "何をするか": missing<string>(),
+        "誰を対象にするか": missing<string>(),
+        "いつまでに行うか": missing<string>(),
+        "財源・実施方法": missing<string>(),
+        "成果の確認方法": missing<string>(),
+      },
+    })),
+    profile:
+      item.age || item.affiliation
+        ? {
+            status: "recorded",
+            value: [
+              ...(item.age ? [`${item.age}歳`] : []),
+              ...(item.affiliation ? [item.affiliation] : []),
+            ],
+            sources,
+          }
+        : missing<string[]>(),
+    speeches: missing<string[]>(),
+    votes: missing<string[]>(),
+    history: missing<string[]>(),
+    sources,
+  };
+}
 function mapApiElection(item: ApiElection): Election {
   const today = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Tokyo",
   }).format(new Date());
   return {
-    id: item.id,
+    id:
+      matchingElectionId(knownElections, {
+        name: item.name,
+        date: item.voting_on ?? "未確認",
+        municipality: item.municipality ?? undefined,
+      }) ?? item.id,
     name: item.name,
     kind: item.kind,
     district: item.district ?? undefined,
     prefectureIds: ["沖縄県"],
     municipality: item.municipality ?? undefined,
-    level: "local",
+    level: item.kind === "national" ? "national" : "local",
     period: item.voting_on && item.voting_on < today ? "past" : "current",
     date: item.voting_on ?? "未確認",
     sources: item.sources,
@@ -126,6 +265,18 @@ function App() {
   const [query, setQuery] = useState("");
   const [electionId, setElectionId] = useState<string | null>(null);
   const [elections, setElections] = useState<Election[]>([]);
+  const [apiElectionCandidates, setApiElectionCandidates] = useState<
+    ApiElectionCandidate[]
+  >([]);
+  const [apiElectionCandidatesElectionId, setApiElectionCandidatesElectionId] =
+    useState<string | null>(null);
+  const [apiElectionCandidatesLoading, setApiElectionCandidatesLoading] =
+    useState(false);
+  const [apiElectionCandidatesError, setApiElectionCandidatesError] = useState<
+    string | null
+  >(null);
+  const [apiElectionCandidatesComplete, setApiElectionCandidatesComplete] =
+    useState(false);
   const [electionLoading, setElectionLoading] = useState(false);
   const [electionError, setElectionError] = useState<string | null>(null);
   const [collectionStatus, setCollectionStatus] = useState("idle");
@@ -169,12 +320,16 @@ function App() {
   const tourRef = useRef<HTMLDivElement>(null);
   const allElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id))];
   const activeElection = allElections.find((item) => item.id === electionId);
-
-  const candidate = candidates.find((item) => item.id === candidateId);
+  const loadedApiCandidates =
+    apiElectionCandidatesElectionId === electionId && electionId
+      ? apiElectionCandidates.map((item) => mapApiCandidate(item, electionId))
+      : [];
+  const allCandidates = [...candidates, ...loadedApiCandidates];
+  const candidate = allCandidates.find((item) => item.id === candidateId);
   const compared = selected
-    .map((id) => candidates.find((item) => item.id === id))
+    .map((id) => allCandidates.find((item) => item.id === id))
     .filter((item): item is Candidate => !!item);
-  const electionCandidates = candidates.filter(
+  const electionCandidates = allCandidates.filter(
     (item) => item.electionId === electionId,
   );
   const pledgesAwaitingOfficialBulletin =
@@ -196,6 +351,12 @@ function App() {
       </a>
     </aside>
   ) : null;
+  const historicalPledgeNotice =
+    activeElection?.id === "naha-mayor-2022" ? (
+      <p className="notice">
+        2022年の報道で確認できる重点政策を短く言い換えています。公約全体や実現状況を示すものではありません。
+      </p>
+    ) : null;
   useEffect(() => {
     if (page !== "region") return;
     let cancelled = false;
@@ -230,6 +391,61 @@ function App() {
       if (timer) clearTimeout(timer);
     };
   }, [page, region, municipality]);
+  useEffect(() => {
+    if (page === "compare") return;
+    if (
+      page !== "candidates" ||
+      !electionId ||
+      candidates.some((item) => item.electionId === electionId)
+    ) {
+      setApiElectionCandidates([]);
+      setApiElectionCandidatesElectionId(null);
+      setApiElectionCandidatesLoading(false);
+      setApiElectionCandidatesError(null);
+      setApiElectionCandidatesComplete(false);
+      return;
+    }
+    let cancelled = false;
+    const loadCandidates = async () => {
+      setApiElectionCandidates([]);
+      setApiElectionCandidatesElectionId(electionId);
+      setApiElectionCandidatesLoading(true);
+      setApiElectionCandidatesError(null);
+      try {
+        const response = await fetch(
+          `/api/elections/${encodeURIComponent(electionId)}/candidates`,
+        );
+        if (response.status === 404) {
+          if (cancelled) return;
+          setApiElectionCandidates([]);
+          setApiElectionCandidatesComplete(false);
+          setApiElectionCandidatesLoading(false);
+          return;
+        }
+        if (!response.ok)
+          throw new Error(`候補者一覧を取得できませんでした（${response.status}）。`);
+        const result: unknown = await response.json();
+        if (!isApiElectionCandidatesResponse(result))
+          throw new Error("候補者一覧データの形式が正しくありません。");
+        if (cancelled) return;
+        setApiElectionCandidates(result.data);
+        setApiElectionCandidatesComplete(result.complete);
+        setApiElectionCandidatesLoading(false);
+      } catch (error) {
+        if (cancelled) return;
+        setApiElectionCandidatesError(
+          error instanceof Error
+            ? error.message
+            : "候補者一覧を取得できませんでした。",
+        );
+        setApiElectionCandidatesLoading(false);
+      }
+    };
+    void loadCandidates();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, electionId]);
   useEffect(() => {
     if (page !== "region" || !municipality) {
       setMunicipalVotingPlaces([]);
@@ -279,20 +495,26 @@ function App() {
   );
   const regionalElections = allElections.filter((item) =>
     item.prefectureIds.includes(region) &&
-    (governorOnly ? isGovernorElection(item) : !isGovernorElection(item)) &&
+    (governorOnly
+      ? isGovernorElection(item)
+      : !!municipality || !isGovernorElection(item)) &&
     (!municipality || electionAppliesToMunicipality(item, municipality)),
   );
-  const visibleElections = regionalElections.filter(
+  const filteredElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
   );
+  const visibleElections =
+    period === "past"
+      ? recentUniqueElections(filteredElections)
+      : filteredElections;
   const earlyMunicipalVotingPlaces = municipalVotingPlaces.filter(
     (place) => place.voting_type === "early",
   );
   const electionDayMunicipalVotingPlaces = municipalVotingPlaces.filter(
     (place) => place.voting_type === "election_day",
   );
-  const regionalCandidates = candidates.filter(
+  const regionalCandidates = allCandidates.filter(
     (item) =>
       regionalElections.some((election) => election.id === item.electionId) &&
       (!electionId || item.electionId === electionId),
@@ -409,12 +631,27 @@ function App() {
     navigate("compare");
     setPreview(true);
   }
+  function pledgeSummary(pledge: Pledge) {
+    return (
+      <div className="comparison-pledge">
+        {pledge.summary ? (
+          <>
+            <strong>かんたん要約</strong>
+            <p>{pledge.summary}</p>
+            {pledge.text.status === "recorded" && (
+              <Sources sources={pledge.text.sources} />
+            )}
+          </>
+        ) : (
+          <RecordText entry={pledge.text} />
+        )}
+      </div>
+    );
+  }
   function pledgeText(item?: Candidate) {
     return item?.pledges.length ? (
       item.pledges.map((pledge) => (
-        <div key={pledge.id}>
-          <RecordText entry={pledge.text} />
-        </div>
+        <div key={pledge.id}>{pledgeSummary(pledge)}</div>
       ))
     ) : (
       <RecordText entry={missing<string>()} />
@@ -425,9 +662,7 @@ function App() {
     if (label === "公約") {
       return item.pledges.length ? (
         item.pledges.map((pledge) => (
-          <div className="comparison-pledge" key={pledge.id}>
-            <RecordText entry={pledge.text} />
-          </div>
+          <div key={pledge.id}>{pledgeSummary(pledge)}</div>
         ))
       ) : (
         <RecordText entry={missing<string>()} />
@@ -448,7 +683,9 @@ function App() {
     page === "region"
       ? governorOnly ? "沖縄県知事選挙" : municipality || region
       : page === "candidates"
-        ? "候補者と公約"
+        ? activeElection?.period === "past"
+          ? "候補者一覧"
+          : "候補者と公約"
         : page === "detail"
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
@@ -758,7 +995,9 @@ function App() {
                 <span className="badge">
                   {electionLoading || collectionStatus === "running"
                     ? "取得中"
-                    : regionalElections.length
+                    : period === "past" && visibleElections.length > 0
+                      ? `${visibleElections.length}件表示（最新6件）`
+                      : regionalElections.length > 0
                       ? `${regionalElections.length}件収録`
                       : "未収録"}
                 </span>
@@ -790,6 +1029,9 @@ function App() {
                   </select>
                 </label>}
               </div>
+              {period === "past" && (
+                <p className="small">過去の選挙は新しいものから最大6件を表示します。</p>
+              )}
               <div className="election-list">
                 {visibleElections.map((item) => {
                   const hasCandidateData = candidates.some(
@@ -810,6 +1052,13 @@ function App() {
                         onClick={() => {
                           setCandidateId(null);
                           setQuery("");
+                          if (item.period === "past") {
+                            setElectionId(item.id);
+                            setSelected([]);
+                            setPreview(false);
+                            navigate("candidates");
+                            return;
+                          }
                           if (hasCandidateData) {
                             setElectionId(item.id);
                             setSelected([]);
@@ -820,7 +1069,9 @@ function App() {
                           }
                         }}
                       >
-                        {hasCandidateData
+                        {item.period === "past"
+                          ? "候補者一覧を見る →"
+                          : hasCandidateData
                           ? "この選挙の公約を比較する →"
                           : "未収録の比較画面を見る →"}
                       </button>
@@ -1014,6 +1265,68 @@ function App() {
           <>
             {activeElection && <Sources sources={activeElection.sources} />}
             {pledgePublicationNotice}
+            {historicalPledgeNotice}
+            {electionCandidates.length === 0 ? (
+              <section className="panel">
+                <div className="section-heading">
+                  <h2>公式資料で確認した候補者一覧</h2>
+                  <span className="badge">
+                    {apiElectionCandidatesLoading
+                      ? "取得中"
+                      : `${apiElectionCandidates.length}人`}
+                  </span>
+                </div>
+                {apiElectionCandidatesLoading ? (
+                  <Empty title="候補者一覧を読み込んでいます">
+                    公式資料で確認した候補者情報を取得しています。
+                  </Empty>
+                ) : apiElectionCandidatesError ? (
+                  <Empty title="候補者一覧を取得できません">
+                    {apiElectionCandidatesError}
+                  </Empty>
+                ) : apiElectionCandidates.length ? (
+                  <>
+                    <p className="small">
+                      {apiElectionCandidatesComplete
+                        ? "公式資料で確認した候補者一覧です。"
+                        : "公式資料から確認できた候補者を表示しています。"}
+                    </p>
+                    <ol className="candidate-grid">
+                      {apiElectionCandidates.map((item) => (
+                        <li className="candidate-card" key={item.id}>
+                          <h3>
+                            {item.ballot_number
+                              ? `${item.ballot_number}. `
+                              : ""}
+                            {item.name}
+                          </h3>
+                          <p>
+                            {item.party || "所属政党：未収録"}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </>
+                ) : (
+                  <Empty title="候補者一覧は未収録です">
+                    候補者名は推測せず、公式資料で確認できた後に掲載します。
+                    {activeElection?.sources[0] && (
+                      <>
+                        {" "}
+                        <a
+                          href={activeElection.sources[0].url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          公式資料を確認 ↗
+                        </a>
+                      </>
+                    )}
+                  </Empty>
+                )}
+              </section>
+            ) : (
+              <>
             <section className="panel">
               <label className="input-label" htmlFor="candidate-query">
                 公約・候補者名・政党名で検索
@@ -1051,7 +1364,7 @@ function App() {
                       </div>
                     </div>
                     <RecordText entry={item.profile} />
-                    <h3>公約</h3>
+                    <h3>公約のかんたん要約</h3>
                     {pledgeText(item)}
                     <Sources sources={item.sources} />
                     <div className="card-actions">
@@ -1103,6 +1416,8 @@ function App() {
                 詳細・具体性チェックを見る →
               </button>
             </section>
+              </>
+            )}
           </>
         )}
         {page === "detail" && (
@@ -1247,6 +1562,7 @@ function App() {
                   </p>
                   <Sources sources={activeElection.sources} />
                   {pledgePublicationNotice}
+                  {historicalPledgeNotice}
                 </section>
                 {electionCandidates.length > 0 && (
                   <section
@@ -1405,52 +1721,52 @@ function App() {
                       </article>
                     ))
                     : comparisonCandidates.map((item) => (
-                      <article className="comparison-mobile-card" key={item.id}>
-                        <header>
-                          <h2>
-                            <button
-                              className="candidate-name"
-                              onClick={() => openCandidate(item.id)}
-                            >
-                              {item.name}
-                            </button>
-                          </h2>
-                          <p className="small">
-                            {
-                              elections.find(
-                                (election) => election.id === item.electionId,
-                              )?.name
-                            }
-                          </p>
-                          {compareButton(item)}
-                        </header>
-                        <div className="comparison-mobile-fields">
-                          <section>
-                            <h3>所属政党</h3>
-                            <RecordText entry={item.party} />
-                          </section>
-                          <section>
-                            <h3>公約の要約</h3>
-                            {item.pledges.length ? (
-                              item.pledges.map((pledge) => (
-                                <article
-                                  className="comparison-mobile-pledge"
-                                  key={pledge.id}
-                                >
-                                  <RecordText entry={pledge.text} />
-                                </article>
-                              ))
-                            ) : pledgesAwaitingOfficialBulletin ? (
-                              <p className="pledge-not-published">
-                                公式の選挙公報が公開される前です。公約はまだ比較できません。
-                              </p>
-                            ) : (
-                              <RecordText entry={missing<string>()} />
-                            )}
-                          </section>
-                        </div>
-                      </article>
-                    ))}
+                        <article className="comparison-mobile-card" key={item.id}>
+                          <header>
+                            <h2>
+                              <button
+                                className="candidate-name"
+                                onClick={() => openCandidate(item.id)}
+                              >
+                                {item.name}
+                              </button>
+                            </h2>
+                            <p className="small">
+                              {
+                                allElections.find(
+                                  (election) => election.id === item.electionId,
+                                )?.name
+                              }
+                            </p>
+                            {compareButton(item)}
+                          </header>
+                          <div className="comparison-mobile-fields">
+                            <section>
+                              <h3>所属政党</h3>
+                              <RecordText entry={item.party} />
+                            </section>
+                            <section>
+                              <h3>公約の要約</h3>
+                              {item.pledges.length ? (
+                                item.pledges.map((pledge) => (
+                                  <article
+                                    className="comparison-mobile-pledge"
+                                    key={pledge.id}
+                                  >
+                                    {pledgeSummary(pledge)}
+                                  </article>
+                                ))
+                              ) : pledgesAwaitingOfficialBulletin ? (
+                                <p className="pledge-not-published">
+                                  公式の選挙公報が公開される前です。公約はまだ比較できません。
+                                </p>
+                              ) : (
+                                <RecordText entry={missing<string>()} />
+                              )}
+                            </section>
+                          </div>
+                        </article>
+                      ))}
                 </div>
                 <p className="small comparison-desktop-instruction">
                   左右にスクロールして、すべての列を確認できます。
