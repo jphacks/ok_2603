@@ -71,6 +71,26 @@ test("知事選挙は種別で判別し、既存の名称のみのデータに�
   assert.equal(model.isGovernorElection({...election, kind:"municipal-mayor"}), false);
   assert.equal(model.isGovernorElection(election), false);
 });
+test("過去選挙は重複を除き、投票日の新しい順に最大6件を返す", () => {
+  const elections = Array.from({ length: 8 }, (_, index) => ({
+    ...election,
+    id: `past-election-${index}`,
+    name: `テスト専用選挙${index}`,
+    municipality: "那覇市",
+    date: `202${index}-01-01`,
+  }));
+  elections.push({
+    ...elections[7],
+    id: "duplicate-past-election",
+  });
+  const result = model.recentUniqueElections(elections);
+  assert.equal(result.length, 6);
+  assert.deepEqual(
+    result.map((item) => item.date),
+    ["2027-01-01", "2026-01-01", "2025-01-01", "2024-01-01", "2023-01-01", "2022-01-01"],
+  );
+  assert.equal(result.filter((item) => item.date === "2027-01-01").length, 1);
+});
 test("41市町村は公式の県議13選挙区に重複なく対応する", () => {
   assert.equal(model.prefecturalDistricts.length, 13);
   const districtCities = model.prefecturalDistricts.flatMap(d => d.municipalities);

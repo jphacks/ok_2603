@@ -53,6 +53,18 @@ export type Election = {
 export function isGovernorElection(election: Election) {
   return election.kind ? election.kind === "governor" : election.name.includes("知事選挙");
 }
+export function recentUniqueElections(elections: Election[], limit = 6) {
+  const seen = new Set<string>();
+  return [...elections]
+    .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id))
+    .filter((election) => {
+      const key = `${election.name}\u0000${election.municipality ?? ""}\u0000${election.date}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit);
+}
 // 沖縄県議会「県議会の組織」各選挙区の区域（2026-10-18確認）。
 export const districtSource: Source = {
   url: "https://www.pref.okinawa.lg.jp/kensei/gikai/1016969/1016972.html",

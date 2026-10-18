@@ -19,6 +19,7 @@ import {
   municipalityReadings,
   normalizeRegion,
   prefecturalDistrictFor,
+  recentUniqueElections,
   searchCandidates,
   searchMunicipalities,
   searchGlossary,
@@ -76,7 +77,7 @@ function mapApiElection(item: ApiElection): Election {
     district: item.district ?? undefined,
     prefectureIds: ["沖縄県"],
     municipality: item.municipality ?? undefined,
-    level: "local",
+    level: item.kind === "national" ? "national" : "local",
     period: item.voting_on && item.voting_on < today ? "past" : "current",
     date: item.voting_on ?? "未確認",
     sources: item.sources,
@@ -267,13 +268,19 @@ function App() {
   );
   const regionalElections = elections.filter((item) =>
     item.prefectureIds.includes(region) &&
-    (governorOnly ? isGovernorElection(item) : !isGovernorElection(item)) &&
+    (governorOnly
+      ? isGovernorElection(item)
+      : !!municipality || !isGovernorElection(item)) &&
     (!municipality || electionAppliesToMunicipality(item, municipality)),
   );
-  const visibleElections = regionalElections.filter(
+  const filteredElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
   );
+  const visibleElections =
+    period === "past"
+      ? recentUniqueElections(filteredElections)
+      : filteredElections;
   const earlyMunicipalVotingPlaces = municipalVotingPlaces.filter(
     (place) => place.voting_type === "early",
   );
@@ -741,7 +748,9 @@ function App() {
                 <span className="badge">
                   {electionLoading || collectionStatus === "running"
                     ? "取得中"
-                    : regionalElections.length
+                    : period === "past" && visibleElections.length
+                      ? `${visibleElections.length}件表示（最新6件）`
+                      : regionalElections.length
                     ? `${regionalElections.length}件収録`
                     : "未収録"}
                 </span>
@@ -773,6 +782,9 @@ function App() {
                   </select>
                 </label>}
               </div>
+              {period === "past" && (
+                <p className="small">過去の選挙は新しいものから最大6件を表示します。</p>
+              )}
               <div className="election-list">
                 {visibleElections.map((item) => {
                   const hasCandidateData = candidates.some(
