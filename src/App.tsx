@@ -320,7 +320,9 @@ function App() {
               )}
               <span>{title}</span>
             </div>
-            <div className="page-heading">
+            <div
+              className={`page-heading${page === "guide" ? " glossary-page-heading" : ""}`}
+            >
               <div>
                 <p className="eyebrow">
                   {page === "region"
@@ -331,7 +333,11 @@ function App() {
                         ? "POLITICAL & ELECTION TERMS"
                         : "ELECTION INFORMATION"}
                 </p>
-                <h1 ref={heading} tabIndex={-1}>
+                <h1
+                  id={page === "guide" ? "glossary-title" : undefined}
+                  ref={heading}
+                  tabIndex={-1}
+                >
                   {title}
                 </h1>
                 <p>
@@ -1233,22 +1239,28 @@ function App() {
           </>
         )}
         {page === "guide" && (
-          <section className="glossary-page" aria-labelledby="glossary-heading">
-            <h2 id="glossary-heading">用語一覧</h2>
-            <p className="glossary-intro">
-              制度や選挙のしくみを、簡潔に説明します。各項目から公式資料と確認日を確認できます。
-            </p>
-            <label className="glossary-search-label" htmlFor="glossary-search">
-              用語を検索
-            </label>
-            <input
-              id="glossary-search"
-              className="glossary-search"
-              type="search"
-              value={glossaryQuery}
-              onChange={(event) => setGlossaryQuery(event.target.value)}
-              placeholder="用語や説明で検索"
-            />
+          <section className="glossary-page" aria-labelledby="glossary-title">
+            <div className="glossary-search">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="10.8" cy="10.8" r="6.8" />
+                <path d="m16 16 4.5 4.5" />
+              </svg>
+              <input
+                id="glossary-search"
+                type="search"
+                aria-label="用語を検索"
+                value={glossaryQuery}
+                onChange={(event) => setGlossaryQuery(event.target.value)}
+                placeholder="用語を検索"
+              />
+            </div>
             <p className="glossary-results" role="status">
               {visibleGlossary.length}件の用語
             </p>

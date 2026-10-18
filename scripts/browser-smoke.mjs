@@ -421,6 +421,11 @@ try {
   await click("用語");
   const glossaryText = await text();
   assert.ok(glossaryText.includes("政治・選挙の用語"));
+  assert.equal(glossaryText.includes("用語一覧"), false);
+  assert.equal(
+    await evaluate('getComputedStyle(document.querySelector(".glossary-page-heading")).textAlign'),
+    "center",
+  );
   assert.ok(glossaryText.includes("最終確認 2026-10-18"));
   assert.equal(await evaluate('document.querySelectorAll(".glossary-entry").length'), 81);
   assert.equal(

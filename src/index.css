@@ -526,6 +526,16 @@ svg {
   gap: 20px;
   margin: 30px 0;
 }
+.glossary-page-heading {
+  justify-content: center;
+  text-align: center;
+}
+.glossary-page-heading > div {
+  width: 100%;
+}
+.glossary-page-heading p:last-child {
+  font-size: 14px;
+}
 .page-heading p:last-child {
   margin-bottom: 0;
 }
@@ -970,22 +980,34 @@ tbody tr:last-child > * {
 .glossary-page {
   margin-top: 24px;
 }
-.glossary-page > h2 {
-  margin-bottom: 8px;
-}
-.glossary-intro {
-  max-width: 720px;
-  line-height: 1.8;
-  margin: 0 0 20px;
-}
-.glossary-search-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
 .glossary-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: min(100%, 480px);
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid #d5dfe9;
+  border-radius: 7px;
+}
+.glossary-search:focus-within {
+  outline: 2px solid #337aab;
+  outline-offset: 2px;
+}
+.glossary-search svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: #788b9f;
+}
+.glossary-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 15px;
 }
 .glossary-results {
   color: #66758a;
