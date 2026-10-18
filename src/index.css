@@ -1227,9 +1227,6 @@ tbody tr:last-child > * {
     min-width: 15px;
     height: 15px;
   }
-  .navigation .nav-region {
-    display: none;
-  }
   .main {
     padding: 0 20px 66px;
   }
