@@ -402,7 +402,7 @@ try {
   });
   assert.equal(
     await evaluate('getComputedStyle(document.querySelector(".navigation .nav-region")).display'),
-    "flex",
+    "none",
   );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
