@@ -37,18 +37,18 @@ const tabs = [
 const steps = [
   [
     "まずは、沖縄県内の地域を選びましょう",
-    "このアプリは沖縄県内を対象にしています。市町村別の情報は確認・登録後に掲載します。",
+    "沖縄県または市町村を選ぶと、その地域の選挙情報を確認できます。",
     "region-search",
   ],
   [
-    "選挙と候補者を確認",
-    "沖縄県を選ぶと、登録済みの選挙と候補者を確認できます。未登録の情報は「未収録」と表示します。",
+    "地域の選挙を選ぶ",
+    "地域ページに表示される選挙から見たい選挙を選ぶと、その選挙の候補者と公約に進めます。未登録の情報は「未収録」と表示します。",
     "region-search",
   ],
   [
-    "自分で読んで、比べる",
-    "候補者の「比較に追加」で横並びに比較できます。推薦や順位付けは行いません。「公約比較」から開けます。",
-    "comparison-link",
+    "公約を読み比べる",
+    "選挙を選んだあと、候補者の「比較に追加」で公約を横並びに比べられます。推薦や順位付けは行いません。",
+    "region-search",
   ],
 ];
 
@@ -161,6 +161,8 @@ function App() {
     setRegion(name);
     setMunicipality(null);
     setElectionId(null);
+    setCandidateId(null);
+    setSelected([]);
     setQuery("");
     setLevel("all");
     setPeriod("current");
@@ -170,6 +172,8 @@ function App() {
     setRegion("沖縄県");
     setMunicipality(name);
     setElectionId(null);
+    setCandidateId(null);
+    setSelected([]);
     setQuery("");
     setLevel("all");
     setPeriod("current");
@@ -246,29 +250,37 @@ function App() {
                 ["compare", "compare", "公約比較"],
                 ["guide", "book", "データについて"],
               ] as const
-            ).map(([target, icon, label]) => (
-              <button
-                id={target === "compare" ? "comparison-link" : undefined}
-                key={target}
-                className={
+            )
+              .filter(([target]) => target !== "compare" || !!electionId)
+              .map(([target, icon, label]) => {
+                const classes = [
+                  target === "region" ? "nav-region" : "",
                   page === target ||
                   (target === "region" &&
                     ["candidates", "detail"].includes(page))
                     ? "nav-active"
-                    : ""
-                }
-                aria-current={page === target ? "page" : undefined}
-                onClick={() =>
-                  target === "region" ? openRegionSearch() : navigate(target)
-                }
-              >
-                <Icon name={icon} />
-                <span>{label}</span>
-                {target === "compare" && (
-                  <span className="count">{selected.length}</span>
-                )}
-              </button>
-            ))}
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <button
+                    id={target === "compare" ? "comparison-link" : undefined}
+                    key={target}
+                    className={classes}
+                    aria-current={page === target ? "page" : undefined}
+                    onClick={() =>
+                      target === "region" ? openRegionSearch() : navigate(target)
+                    }
+                  >
+                    <Icon name={icon} />
+                    <span>{label}</span>
+                    {target === "compare" && (
+                      <span className="count">{selected.length}</span>
+                    )}
+                  </button>
+                );
+              })}
           </nav>
         </div>
       </header>
@@ -340,9 +352,6 @@ function App() {
                   <br className="desktop-break" />
                   必要な情報を見つけて、自分の視点で比較できます。
                 </p>
-                <a className="button primary mobile-start" href="#region-search">
-                  地域から探す <span aria-hidden="true">↓</span>
-                </a>
                 <div className="hero-tags">
                   <span>沖縄県内が対象</span>
                   <span>国政・地方選挙</span>
@@ -680,11 +689,13 @@ function App() {
                       className="text-button"
                       onClick={() => {
                         setElectionId(item.id);
+                        setSelected([]);
+                        setCandidateId(null);
                         setQuery("");
                         navigate("candidates");
                       }}
                     >
-                      候補者を見る →
+                      この選挙の候補者・公約を見る →
                     </button>
                   </article>
                 ))}
@@ -695,16 +706,6 @@ function App() {
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
               )}
-              <button
-                className="text-button"
-                onClick={() => {
-                  setElectionId(null);
-                  setQuery("");
-                  navigate("candidates");
-                }}
-              >
-                候補者一覧の収録状況を見る →
-              </button>
             </section>
             <section className="panel">
               <h2>年代別投票率</h2>
