@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { countOfficialCandidateRows, parseOfficialCandidateRows, parseOfficialLinks, OFFICIAL_EXPLORATION_ROOTS, electionKindFromLabel, electionIdFromSource } from '../server/official-parser.mjs';
 import { normalizeXUrl, candidateSiteIdentity, verifiedXLinksOnPage, relevantSameSitePages } from '../server/x-discovery.mjs';
+import { parseIssueOfficialRoots, parseApprovedLinks, extractMunicipalElection } from '../server/issue-election-discovery.mjs';
 
 test('X verification requires an identified candidate site and an explicit official account link',()=>{
   assert.equal(normalizeXUrl('https://twitter.com/TamakiDenny/'),'https://twitter.com/TamakiDenny');
@@ -39,6 +40,66 @@ test('official discovery roots and parser support present and future election ty
   const links=parseOfficialLinks('<a href="/kensei/senkyo/feature.html">特設ページ</a><a href="https://example.com">外部</a>','https://www.pref.okinawa.lg.jp/index.html');
   assert.equal(links.length,1);
   assert.match(links[0].url,/pref.okinawa.lg.jp/);
+});
+
+test('Issue #2 registry accepts only listed municipality URLs and same-host election links',()=>{
+  const body=`## 沖縄県・市町村の公式サイト（選挙情報の確認起点）
+
+### 沖縄県
+- 沖縄県: https://www.pref.okinawa.lg.jp/
+- 沖縄県選挙管理委員会事務局: https://www.pref.okinawa.lg.jp/kensei/kencho/1000011/1024094.html
+
+### 沖縄県の選挙日程・情報ページ
+| 対象 | 用途 | URL |
+|---|---|---|
+| 沖縄県 | 任期満了日と選挙執行予定日 | https://www.pref.okinawa.lg.jp/kensei/senkyo/1023172/1005019.html |
+| 沖縄県 | 選挙に関する情報 | https://www.pref.okinawa.lg.jp/kensei/senkyo/1005009/index.html |
+
+### 市
+| 市名 | 公式HP |
+|---|---|
+| 那覇市 | https://www.city.naha.okinawa.jp/ |
+| 宜野湾市 | https://www.city.ginowan.lg.jp/ |
+| 八重瀬町 | https://www.town.yaese.lg.jp/ |
+
+### 選挙情報ページ
+| 市町村 | 選挙 | URL |
+|---|---|---|
+| 那覇市 | 第24回那覇市長選挙 | https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html |
+
+## 次のセクション
+`;
+  const roots=parseIssueOfficialRoots(body);
+  assert.equal(roots.length,8);
+  assert.ok(roots.some(root=>root.municipality==='那覇市'&&root.type==='root'));
+  assert.ok(roots.some(root=>root.municipality==='那覇市'&&root.type==='election'));
+  assert.ok(roots.some(root=>root.municipality==='沖縄県'&&root.url.endsWith('/1024094.html')));
+  assert.ok(roots.some(root=>root.municipality==='八重瀬町'&&root.hostname==='www.town.yaese.lg.jp'));
+  const links=parseApprovedLinks(
+    '<a href="/admin/senkan/">選挙管理委員会</a><a href="https://evil.example/election">選挙</a>',
+    'https://www.city.naha.okinawa.jp/',
+    new Set(['www.city.naha.okinawa.jp']),
+  );
+  assert.deepEqual(links.map(link=>link.url),['https://www.city.naha.okinawa.jp/admin/senkan/']);
+  assert.throws(()=>parseIssueOfficialRoots('## unrelated'),/issue_registry_section_missing/);
+});
+
+test('municipal election extraction requires an official-title match and a cited election date',()=>{
+  const html='<h1>【特設ページ】第24回那覇市長選挙</h1><h3>告示日</h3><p>令和8年10月18日</p><h2>当日投票</h2><p>令和8年10月25日</p>';
+  const election=extractMunicipalElection(
+    html,
+    'https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html',
+    '那覇市',
+    '2026-10-18',
+  );
+  assert.equal(election.name,'第24回那覇市長選挙');
+  assert.equal(election.kind,'municipal-mayor');
+  assert.equal(election.announcedOn,'2026-10-18');
+  assert.equal(election.votingOn,'2026-10-25');
+  assert.equal(election.status,'告示済み');
+  assert.equal(extractMunicipalElection(html,'https://www.city.naha.okinawa.jp/','浦添市','2026-10-18'),null);
+  assert.equal(extractMunicipalElection('<h1>那覇市長選挙</h1>','https://www.city.naha.okinawa.jp/','那覇市','2026-10-18'),null);
+  assert.equal(extractMunicipalElection('<h1>那覇市長選挙</h1><p>投票日 令和8年2月30日</p>','https://www.city.naha.okinawa.jp/','那覇市','2026-02-01'),null);
 });
 
 async function freePort() {
@@ -95,6 +156,12 @@ test('official Okinawa fixture is idempotent, verified-only, authenticated, and 
     }
     const elections=await (await fetch(`${api.base}/api/elections?kind=governor`)).json();
     assert.equal(elections.data.length,1);
+    const nahaElections=await (await fetch(`${api.base}/api/elections?municipality=${encodeURIComponent('那覇市')}`)).json();
+    assert.deepEqual(nahaElections.data.map(election=>election.municipality).sort(),['沖縄県','那覇市']);
+    assert.equal(nahaElections.collectionStatus,'completed');
+    const nahaElection=nahaElections.data.find(election=>election.municipality==='那覇市');
+    assert.equal(nahaElection.sources[0].url,'https://www.city.naha.okinawa.jp/admin/senkan/1008237/1012245.html');
+    assert.match(nahaElection.sources[0].checkedAt,/^\d{4}-\d{2}-\d{2}$/);
     const electionId=elections.data[0].id;
     const listing=await (await fetch(`${api.base}/api/elections/${electionId}/candidates`)).json();
     assert.equal(listing.complete,true);

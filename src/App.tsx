@@ -3,7 +3,6 @@ import { PollingSearch } from "./polling/PollingSearch";
 import { PollingAdmin } from "./polling/PollingAdmin";
 import {
   candidates,
-  elections,
   glossary,
   glossaryReadings,
 } from "./election/data";
@@ -17,6 +16,7 @@ import {
   searchGlossary,
   toggleSelection,
   type Candidate,
+  type Election,
 } from "./election/model";
 import {
   electionDayVotingPlacesByMunicipality,
@@ -33,6 +33,33 @@ import {
 } from "./election/components";
 
 type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "polling" | "polling-admin";
+type ApiElection = {
+  id: string;
+  name: string;
+  municipality: string | null;
+  voting_on: string | null;
+  sources: { url: string; publisher: string; checkedAt: string }[];
+};
+type ElectionResponse = {
+  data: ApiElection[];
+  collectionStatus: string;
+};
+function mapApiElection(item: ApiElection): Election {
+  const today = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Tokyo",
+  }).format(new Date());
+  return {
+    id: item.id,
+    name: item.name,
+    prefectureIds: ["沖縄県"],
+    municipality: item.municipality ?? undefined,
+    level: "local",
+    period: item.voting_on && item.voting_on < today ? "past" : "current",
+    date: item.voting_on ?? "未確認",
+    sources: item.sources,
+    turnout: { status: "unrecorded" },
+  };
+}
 const tutorialKey = "election-prototype:tutorial:v1";
 const tabs = [
   "公約",
@@ -68,6 +95,10 @@ function App() {
   const [regionQuery, setRegionQuery] = useState("");
   const [query, setQuery] = useState("");
   const [electionId, setElectionId] = useState<string | null>(null);
+  const [elections, setElections] = useState<Election[]>([]);
+  const [electionLoading, setElectionLoading] = useState(false);
+  const [electionError, setElectionError] = useState<string | null>(null);
+  const [collectionStatus, setCollectionStatus] = useState("idle");
   const [level, setLevel] = useState("all");
   const [period, setPeriod] = useState("current");
   const [votingPlaceType, setVotingPlaceType] = useState<
@@ -97,6 +128,40 @@ function App() {
   const electionCandidates = candidates.filter(
     (item) => item.electionId === electionId,
   );
+  useEffect(() => {
+    if (page !== "region") return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    setElections([]);
+    const loadElections = async () => {
+      setElectionLoading(true);
+      setElectionError(null);
+      try {
+        const params = new URLSearchParams();
+        if (municipality) params.set("municipality", municipality);
+        const response = await fetch(`/api/elections?${params.toString()}`);
+        if (!response.ok) throw new Error(`API request failed (${response.status})`);
+        const result = (await response.json()) as ElectionResponse;
+        if (cancelled) return;
+        setElections(result.data.map(mapApiElection));
+        setCollectionStatus(result.collectionStatus);
+        setElectionLoading(false);
+        if (result.collectionStatus === "running")
+          timer = setTimeout(loadElections, 3000);
+      } catch (error) {
+        if (cancelled) return;
+        setElectionError(
+          error instanceof Error ? error.message : "選挙情報を取得できませんでした。",
+        );
+        setElectionLoading(false);
+      }
+    };
+    void loadElections();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [page, region, municipality]);
   const comparisonCandidates = compared.length ? compared : electionCandidates;
   const visibleGlossary = searchGlossary(
     glossary,
@@ -107,7 +172,8 @@ function App() {
     item.prefectureIds.includes(region) &&
     (!municipality ||
       !item.municipality ||
-      item.municipality === municipality),
+      item.municipality === municipality ||
+      item.municipality === "沖縄県"),
   );
   const visibleElections = regionalElections.filter(
     (item) =>
@@ -643,7 +709,9 @@ function App() {
                     : "関連する選挙"}
                 </h2>
                 <span className="badge">
-                  {regionalElections.length
+                  {electionLoading || collectionStatus === "running"
+                    ? "取得中"
+                    : regionalElections.length
                     ? `${regionalElections.length}件収録`
                     : "未収録"}
                 </span>
@@ -676,36 +744,73 @@ function App() {
                 </label>
               </div>
               <div className="election-list">
-                {visibleElections.map((item) => (
-                  <article className="election-card" key={item.id}>
-                    <span className="badge">
-                      {item.level === "national" ? "国政選挙" : "地方選挙"}
-                    </span>
-                    <h3>{item.name}</h3>
-                    <p>
-                      {item.municipality || region} · 投票日 {item.date}
-                    </p>
-                    <Sources sources={item.sources} />
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        setElectionId(item.id);
-                        setSelected([]);
-                        setCandidateId(null);
-                        setQuery("");
-                        navigate("compare");
-                      }}
-                    >
-                      この選挙の公約を比較する →
-                    </button>
-                  </article>
-                ))}
+                {visibleElections.map((item) => {
+                  const hasCandidateData = candidates.some(
+                    (candidate) => candidate.electionId === item.id,
+                  );
+                  return (
+                    <article className="election-card" key={item.id}>
+                      <span className="badge">
+                        {item.level === "national" ? "国政選挙" : "地方選挙"}
+                      </span>
+                      <h3>{item.name}</h3>
+                      <p>
+                        {item.municipality || region} · 投票日 {item.date}
+                      </p>
+                      <Sources sources={item.sources} />
+                      {hasCandidateData ? (
+                        <button
+                          className="text-button"
+                          onClick={() => {
+                            setElectionId(item.id);
+                            setSelected([]);
+                            setCandidateId(null);
+                            setQuery("");
+                            navigate("compare");
+                          }}
+                        >
+                          この選挙の公約を比較する →
+                        </button>
+                      ) : (
+                        <p className="small">
+                          候補者・公約情報は、公式資料を確認後に掲載します。
+                        </p>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
               {!visibleElections.length && (
-                <Empty title="選挙情報は未収録です">
-                  {municipality || region}の{period === "past" ? "過去" : "現在"}
-                  の選挙情報は、公式資料の確認・登録後に掲載します。
+                <Empty
+                  title={
+                    electionError
+                      ? "選挙情報を取得できません"
+                      : electionLoading
+                        ? "公式情報を読み込んでいます"
+                        : collectionStatus === "running"
+                          ? "公式情報を収集中です"
+                            : collectionStatus === "partial"
+                              ? "一部の公式情報を取得できませんでした"
+                            : collectionStatus === "failed"
+                              ? "前回の公式情報収集に失敗しました"
+                              : "選挙情報は未収録です"
+                  }
+                >
+                  {electionError
+                    ? electionError
+                    : collectionStatus === "running"
+                      ? "収集が完了すると、この地域で確認できた選挙が表示されます。"
+                      : collectionStatus === "partial"
+                        ? "一部の公式ページを取得できなかったため、確認できた情報だけを表示しています。"
+                        : collectionStatus === "failed"
+                          ? "APIの収集ジョブが失敗しました。管理者が収集ログを確認する必要があります。"
+                          : `${municipality || region}の${period === "past" ? "過去" : "現在"}の選挙情報は、公式資料の確認・登録後に掲載します。`}
                 </Empty>
+              )}
+              {collectionStatus === "partial" && !!visibleElections.length && (
+                <p className="small" role="status">
+                  一部の公式ページを取得できませんでした。表示中の選挙は確認済みの出典に基づきます。
+                </p>
               )}
             </section>
           </>
