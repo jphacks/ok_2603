@@ -10,6 +10,7 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: origin });
   await waitFor('document.querySelector(".navigation")');
+  await evaluate('document.querySelector(".home-menu-toggle").click()');
   await click('投票所を探す');
   await waitFor('document.querySelectorAll(".polling-filters select option").length > 5');
   await field('.polling-filters label:nth-child(1) select', 'test-election');

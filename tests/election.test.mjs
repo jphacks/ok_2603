@@ -48,10 +48,50 @@ const election = {
 test("対象地域は沖縄県のみ", () => {
   assert.deepEqual(model.prefectures, ["沖縄県"]);
 });
+test("知事選挙は種別で判別し、既存の名称のみのデータにも対応する", () => {
+  assert.equal(model.isGovernorElection({...election, kind:"governor"}), true);
+  assert.equal(model.isGovernorElection({...election, name:"テスト専用知事選挙"}), true);
+  assert.equal(model.isGovernorElection({...election, kind:"municipal-mayor"}), false);
+  assert.equal(model.isGovernorElection(election), false);
+});
+test("41市町村は公式の県議13選挙区に重複なく対応する", () => {
+  assert.equal(model.prefecturalDistricts.length, 13);
+  const districtCities = model.prefecturalDistricts.flatMap(d => d.municipalities);
+  assert.deepEqual([...districtCities].sort(), [...model.municipalities].sort());
+  assert.equal(new Set(districtCities).size, 41);
+  assert.equal(model.prefecturalDistrictFor("那覇市").name, "那覇市・南部離島選挙区");
+  assert.equal(model.prefecturalDistrictFor("南風原町").name, "島尻・南城市選挙区");
+  assert.equal(model.prefecturalDistrictFor("伊是名村").name, "国頭郡選挙区");
+  const assembly = {...election, kind:"prefectural-assembly", district:"那覇市・南部離島選挙区"};
+  assert.equal(model.electionAppliesToMunicipality(assembly,"渡嘉敷村"), true);
+  assert.equal(model.electionAppliesToMunicipality(assembly,"名護市"), false);
+  assert.equal(model.electionAppliesToMunicipality({...assembly, district:undefined, name:"処理検証 県議会議員選挙（那覇市・南部離島選挙区）"},"久米島町"), true);
+  assert.equal(model.electionAppliesToMunicipality({...election, municipality:"名護市"},"那覇市"), false);
+});
 test("沖縄県内の41市町村を重複なく選択できる", () => {
   assert.equal(model.municipalities.length, 41);
   assert.equal(new Set(model.municipalities).size, 41);
   assert.ok(model.municipalities.includes("那覇市"));
+  assert.deepEqual(Object.keys(model.municipalityReadings).sort(), [...model.municipalities].sort());
+  assert.ok(Object.values(model.municipalityReadings).every(reading => /^[ぁ-ゖー]+$/.test(reading)));
+});
+test("市町村は1文字・読み仮名・カタカナ・部分一致で検索できる", () => {
+  for (const query of ["な", "ナ", "ﾅ"]) {
+    const results = model.searchMunicipalities(query);
+    assert.ok(results.includes("那覇市"));
+    assert.ok(results.includes("名護市"));
+    assert.ok(results.indexOf("名護市") < results.indexOf("与那国町"));
+  }
+  for (const query of ["なは", "ナハ", "ﾅﾊ", " なは ", "はし"]) {
+    assert.deepEqual(model.searchMunicipalities(query), ["那覇市"]);
+  }
+  assert.deepEqual(model.searchMunicipalities("那"), ["那覇市", "与那原町", "与那国町"]);
+  assert.deepEqual(model.searchMunicipalities("なご"), ["名護市"]);
+  assert.deepEqual(model.searchMunicipalities("沖縄"), ["沖縄市"]);
+  assert.deepEqual(model.searchMunicipalities("はえばる"), ["南風原町"]);
+  assert.deepEqual(model.searchMunicipalities("ぐすく"), ["豊見城市", "北中城村", "中城村"]);
+  for (const name of model.municipalities) assert.ok(model.searchMunicipalities(model.municipalityReadings[name]).includes(name));
+  for (const query of ["", "  ", "東京都", "市町村なし"]) assert.deepEqual(model.searchMunicipalities(query), []);
 });
 test("過去の期日前投票所資料を全市町村分だけ掲載し、地図検索URLを安全に組み立てる", () => {
   const places = earlyVotingPlaces.earlyVotingPlacesByMunicipality;
@@ -102,6 +142,18 @@ test("氏名・政党・公約を検索し、全角と半角を正規化する",
     ),
     [],
   );
+});
+test("現職県議の氏名・選挙区検索と出典検証を候補者と分けて扱う", () => {
+  const member = {id:"test-member",name:"テスト専用氏名ＡＢＣ",faction:null,district:"テスト専用選挙区",sources:[source]};
+  for (const query of ["氏名", "abc", "選挙区", "氏名 選挙区", ""]) {
+    assert.deepEqual(model.searchCouncilMembers([member], query), [member]);
+  }
+  assert.deepEqual(model.searchCouncilMembers([member], "未収録"), []);
+  assert.deepEqual(model.searchCouncilMembers([{...member,district:null}], "選挙区"), []);
+  const input={elections:[],candidates:[],glossary:[],councilMembers:[member]};
+  assert.deepEqual(validateData(input,model), []);
+  assert.ok(validateData({...input,councilMembers:[{...member,sources:[]}]},model).some(error=>error.includes("確認日が必要")));
+  assert.equal(data.councilMembers.length,0);
 });
 test("比較に人数制限がなく、重複せず追加・解除できる", () => {
   let ids = [];

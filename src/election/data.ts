@@ -1,4 +1,4 @@
-import type { Candidate, Election, GlossaryTerm } from "./model";
+import type { Candidate, CouncilMember, Election, GlossaryTerm } from "./model";
 
 // 人が公式資料を確認した後に登録する。未収録は選挙・候補者が存在しないという意味ではない。
 export const elections: Election[] = [];
@@ -770,3 +770,6 @@ export const glossary: GlossaryTerm[] = [
     sources: [constitutionSource],
   },
 ];
+
+// 現職・会派・選挙区を公式資料で確認してから登録する。
+export const councilMembers: CouncilMember[] = [];
