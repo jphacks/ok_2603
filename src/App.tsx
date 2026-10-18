@@ -7,6 +7,7 @@ import {
   normalize,
   prefectures,
   searchCandidates,
+  searchGlossary,
   toggleSelection,
   type Candidate,
 } from "./election/model";
@@ -15,7 +16,6 @@ import {
   Icon,
   Photo,
   RecordText,
-  RichText,
   Sources,
 } from "./election/components";
 
@@ -58,6 +58,7 @@ function App() {
   const [selected, setSelected] = useState<string[]>([]);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
+  const [glossaryQuery, setGlossaryQuery] = useState("");
   const [preview, setPreview] = useState(false);
   const [slots, setSlots] = useState([1, 2]);
   const [tour, setTour] = useState<number | null>(() => {
@@ -75,6 +76,7 @@ function App() {
   const compared = selected
     .map((id) => candidates.find((item) => item.id === id))
     .filter((item): item is Candidate => !!item);
+  const visibleGlossary = searchGlossary(glossary, glossaryQuery);
   const regionalElections = elections.filter((item) =>
     item.prefectureIds.includes(region) &&
     (!municipality ||
@@ -216,7 +218,9 @@ function App() {
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
             ? "公約を比較する"
-            : "データについて";
+            : page === "guide"
+              ? "政治・選挙の用語"
+              : "用語";
 
   return (
     <>
@@ -239,7 +243,7 @@ function App() {
                 ["home", "home", "ホーム"],
                 ["region", "region", "地域を探す"],
                 ["compare", "compare", "公約比較"],
-                ["guide", "book", "データについて"],
+                ["guide", "book", "用語"],
               ] as const
             )
               .filter(([target]) => target !== "compare" || !!electionId)
@@ -301,7 +305,9 @@ function App() {
                     ? "REGIONAL DASHBOARD"
                     : page === "compare"
                       ? "PLEDGE COMPARISON"
-                      : "ELECTION INFORMATION"}
+                      : page === "guide"
+                        ? "POLITICAL & ELECTION TERMS"
+                        : "ELECTION INFORMATION"}
                 </p>
                 <h1 ref={heading} tabIndex={-1}>
                   {title}
@@ -309,11 +315,13 @@ function App() {
                 <p>
                   {page === "compare"
                     ? "同じ項目を横並びに。自分の視点で、読み比べる。"
-                    : ["candidates", "detail"].includes(page)
-                      ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
-                      : page === "region" && municipality
-                        ? `${municipality}に関係する選挙と公式情報を確認できます。`
-                      : "公式資料を確かめながら、必要な情報を。"}
+                    : page === "guide"
+                      ? "政治や選挙の基本用語を、公式情報をもとに解説します。"
+                      : ["candidates", "detail"].includes(page)
+                        ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
+                        : page === "region" && municipality
+                          ? `${municipality}に関係する選挙と公式情報を確認できます。`
+                          : "公式資料を確かめながら、必要な情報を。"}
                 </p>
               </div>
               {page === "region" && (
@@ -1013,79 +1021,47 @@ function App() {
           </>
         )}
         {page === "guide" && (
-          <>
-            <section className="panel">
-              <h2>公式資料を、人が確認して登録</h2>
-              <p>
-                公約・経歴・議会記録・投票率には、公式リンク、発行元、最終確認日を表示します。現在、選挙・候補者・投票率の確認済みデータは未収録です。
-              </p>
-              <div className="status-guide">
-                {[
-                  [
-                    "未収録",
-                    "まだ情報を登録していません。存在しないという意味ではありません。",
-                  ],
-                  [
-                    "確認できず",
-                    "確認した資料では内容を確認できませんでした。確認に使った資料を表示します。",
-                  ],
-                  [
-                    "該当記録なし",
-                    "確認した公式資料の対象範囲に、該当記録がないと確認しています。対象範囲と資料を表示します。",
-                  ],
-                ].map(([label, text]) => (
-                  <div key={label}>
-                    <span className="badge">{label}</span>
-                    <p>{text}</p>
-                  </div>
+          <section className="glossary-page" aria-labelledby="glossary-heading">
+            <h2 id="glossary-heading">用語一覧</h2>
+            <p className="glossary-intro">
+              制度や選挙のしくみを、簡潔に説明します。各項目から公式資料と確認日を確認できます。
+            </p>
+            <label className="glossary-search-label" htmlFor="glossary-search">
+              用語を検索
+            </label>
+            <input
+              id="glossary-search"
+              className="glossary-search"
+              type="search"
+              value={glossaryQuery}
+              onChange={(event) => setGlossaryQuery(event.target.value)}
+              placeholder="用語や説明で検索"
+            />
+            <p className="glossary-results" role="status">
+              {visibleGlossary.length}件の用語
+            </p>
+            {visibleGlossary.length ? (
+              <div className="glossary-list">
+                {visibleGlossary.map((item) => (
+                  <article className="glossary-entry" key={item.term}>
+                    <h3>{item.term}</h3>
+                    <p>{item.definition}</p>
+                    <Sources sources={item.sources} />
+                  </article>
                 ))}
               </div>
-            </section>
-            <section className="panel">
-              <h2>公約の具体性チェック</h2>
-              <p>
-                5項目の記載状況と根拠文章を確認できます。記載の有無を能力や実現可能性の採点に変換しません。
+            ) : (
+              <p className="glossary-no-results">
+                該当する用語はありません。別の言葉で検索してください。
               </p>
-            </section>
-            <section className="panel">
-              <h2>政治用語の解説</h2>
-              <p>
-                公約内で下線が付いた用語を押すと、短い解説と出典が開きます。
-              </p>
-              {glossary.length ? (
-                glossary.map((item) => (
-                  <p key={item.term}>
-                    <RichText text={item.term} />
-                  </p>
-                ))
-              ) : (
-                <p className="small">
-                  解説文と出典は未収録です。人が確認した用語が登録されると、公約内でも利用できます。
-                </p>
-              )}
-            </section>
-            <section className="panel">
-              <h2>この試作品について</h2>
-              <p>
-                管理者画面・認証・公開承認フロー・データベース・デプロイ先は未決定のため未実装です。チュートリアルの完了状態のみブラウザー内に保存します。比較の選択状態は再読み込みでリセットされます。
-              </p>
-              <button
-                className="button secondary"
-                onClick={() => {
-                  navigate("home");
-                  setTour(0);
-                }}
-              >
-                操作ガイドをもう一度見る
-              </button>
-            </section>
-          </>
+            )}
+          </section>
         )}
         <footer className="footer">
           <span>選挙情報（仮称）</span>
           <p>情報を知る。根拠を読む。自分で考える。</p>
           <button className="text-button" onClick={() => navigate("guide")}>
-            データと収録方針 →
+            用語解説 →
           </button>
         </footer>
       </main>

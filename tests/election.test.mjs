@@ -75,6 +75,20 @@ test("公開データの整合性と、空状態を有効な未収録として�
   assert.deepEqual(validateData({ elections: [], candidates: [], glossary: [] }, model), []);
   assert.ok(!data.candidates.some(item => item.id === 'test-only'));
   assert.deepEqual(validateData(data, model), []);
+  assert.ok(data.glossary.length >= 25);
+  assert.ok(
+    data.glossary.every((item) =>
+      item.sources.some((itemSource) =>
+        new URL(itemSource.url).hostname.endsWith(".soumu.go.jp"),
+      ),
+    ),
+  );
+  assert.ok(
+    model
+      .searchGlossary(data.glossary, "比例代表")
+      .some((item) => item.term === "比例代表選挙"),
+  );
+  assert.deepEqual(model.searchGlossary(data.glossary, "該当しない語"), []);
   const outOfScope = {
     elections: [{ ...election, prefectureIds: ["沖縄県", "東京都"] }],
     candidates: [],
