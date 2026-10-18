@@ -12,6 +12,12 @@ import {
   type Candidate,
 } from "./election/model";
 import {
+  electionDayVotingPlacesByMunicipality,
+  earlyVotingPlacesByMunicipality,
+  earlyVotingPlacesSource,
+  mapSearchUrl,
+} from "./election/earlyVotingPlaces";
+import {
   Empty,
   Icon,
   Photo,
@@ -55,6 +61,9 @@ function App() {
   const [electionId, setElectionId] = useState<string | null>(null);
   const [level, setLevel] = useState("all");
   const [period, setPeriod] = useState("current");
+  const [votingPlaceType, setVotingPlaceType] = useState<
+    "early" | "election-day"
+  >("early");
   const [selected, setSelected] = useState<string[]>([]);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
@@ -83,9 +92,6 @@ function App() {
       !item.municipality ||
       item.municipality === municipality),
   );
-  const latestElection = [...regionalElections].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  )[0];
   const visibleElections = regionalElections.filter(
     (item) =>
       (level === "all" || item.level === level) && item.period === period,
@@ -500,30 +506,108 @@ function App() {
         {page === "region" && (
           <>
             {municipality && (
-              <section className="panel" aria-labelledby="latest-election-title">
-                <h2 id="latest-election-title">直近の選挙</h2>
-                {latestElection ? (
-                  <article className="election-card">
-                    <span className="badge">
-                      {latestElection.level === "national"
-                        ? "国政選挙"
-                        : "地方選挙"}
-                    </span>
-                    <h3>{latestElection.name}</h3>
-                    <p>
-                      {latestElection.municipality || municipality} · 投票日{" "}
-                      {latestElection.date}
-                    </p>
-                    <Sources sources={latestElection.sources} />
+              <section className="panel" aria-labelledby="map-search-title">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">VOTING PLACES</p>
+                    <h2 id="map-search-title">投票場所</h2>
+                  </div>
+                </div>
+                <div className="segmented" role="group" aria-label="投票場所の種類">
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "early"}
+                    onClick={() => setVotingPlaceType("early")}
+                  >
+                    期日前投票
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={votingPlaceType === "election-day"}
+                    onClick={() => setVotingPlaceType("election-day")}
+                  >
+                    当日投票
+                  </button>
+                </div>
+                {votingPlaceType === "early" ? (
+                  <>
                     <p className="small">
-                      選挙情報を確認したうえで要約を掲載します。AIによる要約はまだ未実装です。
+                      {earlyVotingPlacesSource.title}（{earlyVotingPlacesSource.publisher}、
+                      {earlyVotingPlacesSource.asOf}時点）に掲載された場所です。
+                      {earlyVotingPlacesSource.electionDate}執行の選挙は終了しており、
+                      現在の投票所や施設の営業状況を示すものではありません。
                     </p>
-                  </article>
+                    <p className="small">
+                      市町村内の掲載場所を表示しています。距離順ではなく、地図リンクを開くと施設名でGoogle
+                      Mapsを検索します。
+                    </p>
+                    {earlyVotingPlacesByMunicipality[municipality]?.length ? (
+                      <ul className="place-list">
+                        {earlyVotingPlacesByMunicipality[municipality].map(
+                          (place) => (
+                            <li key={place}>
+                              <span>{place}</span>
+                              <a
+                                className="button secondary"
+                                href={mapSearchUrl(municipality, place)}
+                                aria-label={`${municipality}の${place}をGoogle Mapsで検索（新しいタブで開く）`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                地図で検索
+                              </a>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    ) : (
+                      <Empty title="掲載場所はありません">
+                        この市町村の期日前投票所は添付資料に記載されていません。
+                      </Empty>
+                    )}
+                    <p className="small place-source">
+                      出典: {earlyVotingPlacesSource.fileName} · 地図検索を選ぶと
+                      Google Mapsに検索語が送信されます。
+                    </p>
+                  </>
                 ) : (
-                  <Empty title="選挙情報は未収録です">
-                    {municipality}に関係する直近の選挙情報はまだ登録されていません。
-                    AI要約機能は未実装です。公式資料の登録後、出典を示して概要を掲載します。
-                  </Empty>
+                  electionDayVotingPlacesByMunicipality[municipality]?.length ? (
+                    <>
+                      <p className="small">
+                        以下は提供された情報です。対象となる選挙・年度と最新性は未確認のため、投票前に市町村選挙管理委員会の公式情報をご確認ください。
+                      </p>
+                      <ul className="place-list">
+                        {electionDayVotingPlacesByMunicipality[
+                          municipality
+                        ].map((place) => (
+                          <li key={place.name}>
+                            <span>
+                              <strong>{place.name}</strong>
+                              <span className="place-address">
+                                所在地：{place.address}
+                              </span>
+                            </span>
+                            <a
+                              className="button secondary"
+                              href={mapSearchUrl(
+                                municipality,
+                                `${place.name} ${place.address}`,
+                              )}
+                              aria-label={`${municipality}の${place.name}（${place.address}）をGoogle Mapsで検索（新しいタブで開く）`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              地図で検索
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <Empty title="当日投票所は未収録です">
+                      当日投票所は、公式情報を確認後に掲載します。
+                    </Empty>
+                  )
                 )}
               </section>
             )}
@@ -598,59 +682,6 @@ function App() {
                   {municipality || region}の{period === "past" ? "過去" : "現在"}
                   の選挙情報は、公式資料の確認・登録後に掲載します。
                 </Empty>
-              )}
-            </section>
-            <section className="panel">
-              <h2>年代別投票率</h2>
-              <p className="small">
-                選挙ごとの公式集計を数値で表示します。推計や他の地域の数値による補完はしません。
-              </p>
-              {regionalElections.length ? (
-                regionalElections.map((item) => (
-                  <article key={item.id}>
-                    <h3>{item.name}</h3>
-                    {item.turnout.status === "recorded" ? (
-                      <>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>年代</th>
-                              <th>投票率</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.turnout.value.map((row) => (
-                              <tr key={row.age}>
-                                <td>{row.age}</td>
-                                <td>{row.rate}%</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <Sources sources={item.turnout.sources} />
-                      </>
-                    ) : (
-                      <RecordText entry={item.turnout} />
-                    )}
-                  </article>
-                ))
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>対象選挙</th>
-                      <th>年代</th>
-                      <th>投票率</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                      <td>未収録</td>
-                    </tr>
-                  </tbody>
-                </table>
               )}
             </section>
           </>
