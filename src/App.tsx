@@ -1674,7 +1674,6 @@ function App() {
                               : "未収録"}
                           </p>
                           <RecordText entry={item.profile} />
-                          {compareButton(item)}
                         </article>
                       ))}
                     </div>
@@ -1811,10 +1810,9 @@ function App() {
                                 )?.name
                               }
                             </p>
-                            {compareButton(item)}
                           </header>
                           <div className="comparison-mobile-fields">
-                            <section>
+                            <section className="party-row">
                               <h3>所属政党</h3>
                               {item.party.status === "recorded" ? (
                                 <p>{item.party.value}</p>
@@ -1900,7 +1898,6 @@ function App() {
                                   ? item.party.value
                                   : "未収録"}
                               </div>
-                              {compareButton(item)}
                             </th>
                           ))}
                       </tr>
