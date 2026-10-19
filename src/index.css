@@ -812,7 +812,7 @@ tbody tr:last-child > * {
   margin-bottom: 24px;
 }
 .candidate-intro h2 {
-  font-size: 25px;
+  font-size: 30px;
   margin: 0;
 }
 .candidate-name {
@@ -830,16 +830,16 @@ tbody tr:last-child > * {
   background: #eaf0f6;
   color: #7a8ca1;
   border-radius: 7px;
-  min-width: 88px;
-  width: 88px;
-  height: 105px;
+  min-width: 104px;
+  width: 104px;
+  height: 125px;
   font-size: 20px;
   text-align: center;
 }
 .candidate-intro img,
 .detail-profile img {
-  width: 88px;
-  height: 105px;
+  width: 104px;
+  height: 125px;
   object-fit: cover;
   border-radius: 6px;
 }
@@ -1007,6 +1007,27 @@ tbody tr:last-child > * {
 }
 .comparison-candidate h3 {
   margin: 0;
+  font-size: 28px;
+}
+.comparison-candidate .picker-intro {
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+.comparison-candidate .picker-intro img,
+.comparison-candidate .picker-intro .photo-missing {
+  width: 132px;
+  min-width: 132px;
+  height: 158px;
+}
+.comparison-candidate .picker-intro h3 {
+  font-size: 34px;
+  line-height: 1.5;
+}
+.picker-intro rt {
+  font-size: 17px;
+  font-weight: 600;
+  color: #526782;
 }
 .comparison-candidate .record {
   margin: 8px 0 12px;
@@ -1847,17 +1868,18 @@ tbody tr:last-child > * {
     margin-bottom: 18px;
   }
 
-  .candidate-intro h2 {
-    font-size: 26px;
+  .candidate-intro h2,
+  .candidate-intro h3 {
+    font-size: 30px;
   }
 
   .candidate-intro img,
   .candidate-intro .photo-missing,
   .detail-profile img,
   .detail-profile .photo-missing {
-    width: 72px;
-    min-width: 72px;
-    height: 88px;
+    width: 96px;
+    min-width: 96px;
+    height: 116px;
   }
 
   .card-actions,
@@ -2042,6 +2064,29 @@ tbody tr:last-child > * {
     overflow-wrap: anywhere;
   }
 
+  .comparison-mobile-card .picker-intro {
+    align-items: center;
+    gap: 16px;
+  }
+
+  .comparison-mobile-card .picker-intro img,
+  .comparison-mobile-card .picker-intro .photo-missing {
+    width: 120px;
+    min-width: 120px;
+    height: 144px;
+  }
+
+  .comparison-mobile-card .picker-intro h2 {
+    font-size: 32px;
+    line-height: 1.6;
+  }
+
+  .comparison-mobile-card .picker-intro rt {
+    font-size: 16px;
+    font-weight: 600;
+    color: #526782;
+  }
+
   .comparison-mobile-card > header .small {
     margin: 6px 0 12px;
     line-height: 1.5;
@@ -2147,4 +2192,89 @@ tbody tr:last-child > * {
     font-size: 31px;
   }
 
+}
+
+.theme-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.theme-item {
+  border: 1px solid #d9e2ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.theme-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: #18345c;
+}
+.theme-name {
+  font-size: 21px;
+  font-weight: 800;
+}
+.theme-badge {
+  grid-column: 1;
+  justify-self: start;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.theme-badge-all { background: #dff3e6; color: #1b6b3a; }
+.theme-badge-some { background: #e6eefb; color: #2a4f86; }
+.theme-badge-one { background: #fff0d6; color: #8a5a00; }
+.theme-who {
+  grid-column: 1;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #526782;
+}
+.theme-arrow {
+  grid-row: 1 / span 3;
+  grid-column: 2;
+  color: #748194;
+}
+.theme-body {
+  padding: 0 14px 12px;
+  border-top: 1px solid #e3e9f0;
+}
+.theme-candidate {
+  padding: 10px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+.theme-candidate:last-child { border-bottom: 0; }
+.theme-candidate h3 {
+  margin: 0 0 4px;
+  font-size: 19px;
+}
+.compare-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.compare-top-row .back {
+  margin: 0;
+}
+.theme-link {
+  flex: none;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid #1f5fbf;
+  border-radius: 10px;
+  background: #e8f0fd;
+  color: #174a99;
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
 }
