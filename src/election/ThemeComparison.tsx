@@ -3,6 +3,11 @@ import { RubyName, Sources } from "./components";
 import type { Candidate, Source } from "./model";
 import { buildThemeRows } from "./themes";
 
+function uniqueSources(sources: Source[]) {
+  const seen = new Set<string>();
+  return sources.filter((source) => !seen.has(source.url) && seen.add(source.url));
+}
+
 export function ThemeComparison({
   candidates,
   sourcesFor,
@@ -102,40 +107,36 @@ export function ThemeComparison({
               </button>
               {open && (
                 <div className="theme-body" id={`theme-${theme.id}`}>
-                  {shown.map((candidate) => {
-                    const items = byCandidate.get(candidate.id);
-                    return (
-                      <section
-                        className={`theme-candidate${items ? "" : " is-empty"}`}
-                        key={candidate.id}
-                      >
+                  {shown
+                    .filter((candidate) => byCandidate.has(candidate.id))
+                    .map((candidate) => (
+                      <section className="theme-candidate" key={candidate.id}>
                         <h3>
                           <RubyName name={candidate.name} />
                         </h3>
-                        {items ? (
-                          <>
-                            <ul className="pledge-bullets">
-                              {items.map((text, index) => (
-                                <li className="comparison-pledge" key={index}>
-                                  {text}
-                                </li>
-                              ))}
-                            </ul>
-                            <Sources sources={sourcesFor(candidate)} />
-                          </>
-                        ) : (
-                          <p className="theme-none">
-                            このテーマは公報に記載がありません
-                          </p>
-                        )}
+                        <ul className="pledge-bullets">
+                          {byCandidate.get(candidate.id)!.map((text, index) => (
+                            <li className="comparison-pledge" key={index}>
+                              {text}
+                            </li>
+                          ))}
+                        </ul>
                       </section>
-                    );
-                  })}
+                    ))}
                   {shown.some((candidate) => !byCandidate.has(candidate.id)) && (
-                    <p className="small theme-note">
-                      記載がないことは、反対や賛成の意思表示ではありません。
+                    <p className="theme-note">
+                      ※ 公約が載っていない候補者は、公報にこのテーマが書かれていないだけで、賛成・反対とは関係ありません。
                     </p>
                   )}
+                  <div className="theme-sources">
+                    <Sources
+                      sources={uniqueSources(
+                        shown
+                          .filter((candidate) => byCandidate.has(candidate.id))
+                          .flatMap((candidate) => sourcesFor(candidate)),
+                      )}
+                    />
+                  </div>
                 </div>
               )}
             </li>

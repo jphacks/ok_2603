@@ -2455,3 +2455,51 @@ tbody tr:last-child > * {
   align-self: stretch;
   align-content: center;
 }
+
+.detail-profile .detail-name {
+  font-size: 36px;
+  line-height: 1.4;
+}
+.detail-profile .detail-party {
+  font-size: 24px;
+}
+.detail-profile-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.theme-empty-group {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f4f6f9;
+  border-radius: 8px;
+}
+.theme-empty-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #526782;
+}
+.theme-empty-names {
+  margin: 2px 0 0;
+  font-size: 16px;
+  color: #6b7a8e;
+}
+.theme-empty-group .theme-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7a8e;
+}
+.theme-sources {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e3e9f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.theme-body > .theme-note {
+  margin: 10px 0 0;
+  font-size: 17px;
+  color: #6b7a8e;
+}
