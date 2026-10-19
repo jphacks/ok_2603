@@ -237,6 +237,68 @@ export function extractMunicipalElection(html, url, municipality, checkedAt) {
   };
 }
 
+export function findMunicipalPdfLinks(html, baseUrl, hostname) {
+  const links = [];
+  for (const match of html.matchAll(
+    /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/giu,
+  )) {
+    let url;
+    try {
+      url = new URL(match[1].replaceAll("&amp;", "&"), baseUrl);
+    } catch {
+      continue;
+    }
+    if (url.protocol !== "https:" || url.hostname !== hostname) continue;
+    if (!/\.pdf(?:$|\?)/iu.test(url.pathname)) continue;
+    links.push({ url: url.href, label: plainText(match[2]).normalize("NFKC") });
+  }
+  const candidateList = links.find((link) => /立候補者一覧/u.test(link.label));
+  const bulletin = links.find((link) => /選挙公報/u.test(link.label));
+  return { candidateList: candidateList ?? null, bulletin: bulletin ?? null };
+}
+
+// 市選管の「立候補者一覧」PDFの文字列（届出番号、姓、ふりがな、年齢、党派、職業…、名）を解析する
+export function parseMunicipalRoster(text) {
+  const lines = text
+    .normalize("NFKC")
+    .split(/\r?\n/u)
+    .map((line) => line.replace(/[\s\u3000]+/gu, " ").trim())
+    .filter(Boolean);
+  const start = lines.findIndex((line) => /^最終$/u.test(line));
+  if (start < 0) return [];
+  const body = lines.slice(start + 1);
+  const roster = [];
+  let expected = 1;
+  let block = null;
+  const flush = () => {
+    if (!block) return;
+    // ふりがなが氏名と同じカタカナ表記の場合は省略される
+    const ageIndex = block.lines.slice(0, 3).findIndex((line) => /^\d{2}$/u.test(line));
+    if (ageIndex < 1 || block.lines.length < ageIndex + 3) return;
+    const surname = block.lines[0];
+    const age = block.lines[ageIndex];
+    const party = block.lines[ageIndex + 1];
+    const given = block.lines.at(-1);
+    roster.push({
+      number: block.number,
+      name: `${surname}${given}`.replace(/\s/gu, ""),
+      age: Number(age),
+      party,
+    });
+  };
+  for (const line of body) {
+    if (line === String(expected)) {
+      flush();
+      block = { number: expected, lines: [] };
+      expected++;
+    } else if (block) {
+      block.lines.push(line);
+    }
+  }
+  flush();
+  return roster;
+}
+
 export function electionLinksForRoot(html, baseUrl, allowedHosts) {
   return parseApprovedLinks(html, baseUrl, allowedHosts).slice(0, 12);
 }

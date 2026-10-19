@@ -16,7 +16,7 @@ import { candidateWebsitesFromPdf, candidateSiteIdentity, normalizeXUrl, relevan
 import { verifiedPortraitBox } from './portrait-layout.mjs';
 import { createPollingHandler, createSupabaseStore } from './polling-api.mjs';
 import { requireAdmin } from './admin-auth.mjs';
-import { fetchIssueOfficialRoots, electionLinksForRoot, extractMunicipalElection } from './issue-election-discovery.mjs';
+import { fetchIssueOfficialRoots, electionLinksForRoot, extractMunicipalElection, findMunicipalPdfLinks, parseMunicipalRoster } from './issue-election-discovery.mjs';
 
 const PORT = Number(process.env.API_PORT || 8787);
 const HOST = process.env.API_HOST || '127.0.0.1';
@@ -242,6 +242,67 @@ async function collectIssueMunicipalElections(jobId, registered) {
     }
   }
   return processed;
+}
+async function collectMunicipalBulletins(jobId, ai, budget) {
+  let tokens=0,processed=0;
+  const today=now().slice(0,10);
+  const targets=rows("SELECT id,name,official_url,municipality FROM elections WHERE kind='municipal-mayor' AND voting_on>=?",[today]);
+  for(const election of targets) {
+    const hostname=new URL(election.official_url).hostname;
+    const allowedHosts=new Set([hostname]);
+    try {
+      const page=await fetchIssueOfficialHtml(election.official_url,allowedHosts);
+      const {candidateList,bulletin}=findMunicipalPdfLinks(page.html,page.url,hostname);
+      if(!candidateList) continue;
+      if(!await robotsAllowed(candidateList.url,allowedHosts,12000)) throw Object.assign(Error('blocked_by_robots_txt'),{type:'robots_disallowed'});
+      const listDoc=await safeFetch(candidateList.url,allowedHosts,30000);
+      const roster=parseMunicipalRoster((await pdfParse(listDoc.bytes)).text||'');
+      if(!roster.length) { errorRecord(jobId,'municipal_candidate_list','roster_parse_error','Could not read the candidate list PDF.',candidateList.url); continue; }
+      const listHash=listDoc.hash||createHash('sha256').update(listDoc.bytes).digest('hex');
+      const listSource=addSource({url:listDoc.url,title:candidateList.label,type:'official_candidate_list_pdf',excerpt:roster.map(c=>`${c.number} ${c.name} ${c.age}歳 ${c.party}`).join('\n'),page:1,hash:listHash});
+      let pledgeResult=null,bulletinDoc=null,bulletinHash=null;
+      const hasPledges=rows("SELECT 1 FROM pledges WHERE candidacy_id IN (SELECT id FROM candidacies WHERE election_id=?) LIMIT 1",[election.id]).length>0;
+      if(bulletin&&!hasPledges) {
+        if(!ai) errorRecord(jobId,'pledge_extraction',process.env.GEMINI_API_KEY?'free_tier_not_confirmed':'gemini_api_key_missing','The bulletin is published, but Gemini extraction is not enabled.',bulletin.url);
+        else if(budget.remaining<=0) errorRecord(jobId,'pledge_extraction','daily_token_limit_reached','Daily Gemini token budget reached; no request was made.',bulletin.url);
+        else if(await robotsAllowed(bulletin.url,allowedHosts,12000)) {
+          try {
+            bulletinDoc=await safeFetch(bulletin.url,allowedHosts,60000);
+            bulletinHash=bulletinDoc.hash||createHash('sha256').update(bulletinDoc.bytes).digest('hex');
+            const pageCount=(await pdfParse(bulletinDoc.bytes)).numpages||1;
+            pledgeResult=await extractPledges(ai,roster,bulletinDoc.bytes,pageCount,budget.remaining);
+            const used=pledgeResult?.usage?.totalTokenCount||0;
+            tokens+=used; budget.remaining-=used;
+          } catch(error) { errorRecord(jobId,'pledge_extraction',error.type||'gemini_error',error.message,bulletin.url); }
+        }
+      }
+      transact(()=>{
+        db.run("UPDATE elections SET complete_candidates=1,last_updated=? WHERE id=?",[now(),election.id]);
+        db.run("UPDATE candidacies SET status='not_on_current_list' WHERE election_id=?",[election.id]);
+        for(const candidate of roster) {
+          const candidateId=createHash('sha256').update(`${election.id}:${candidate.name}`).digest('hex').slice(0,32);
+          const partyId=createHash('sha256').update(`party:${candidate.party}`).digest('hex').slice(0,32);
+          const candidacyId=`${election.id}:${candidateId}`;
+          db.run('INSERT OR IGNORE INTO parties(id,name) VALUES(?,?)',[partyId,candidate.party]);
+          db.run('INSERT OR IGNORE INTO candidates(id,name) VALUES(?,?)',[candidateId,candidate.name]);
+          db.run('UPDATE candidates SET age=?,affiliation=COALESCE(affiliation,?) WHERE id=?',[candidate.age,candidate.party,candidateId]);
+          db.run("INSERT INTO candidacies(id,election_id,candidate_id,party_id,status,ballot_number) VALUES(?,?,?,?,'official',?) ON CONFLICT(election_id,candidate_id) DO UPDATE SET party_id=excluded.party_id,status='official',ballot_number=excluded.ballot_number",[candidacyId,election.id,candidateId,partyId,candidate.number]);
+          db.run('INSERT OR IGNORE INTO candidacy_sources(candidacy_id,source_id) VALUES(?,?)',[candidacyId,listSource]);
+          const extracted=pledgeResult?.data?.get(candidate.name);
+          for(const p of extracted?.pledges||[]) {
+            const excerptHash=createHash('sha256').update(`${candidate.name}:${p.originalText}`).digest('hex');
+            const source=addSource({url:bulletinDoc.url,title:bulletin.label,type:'official_election_bulletin_pdf',excerpt:p.originalText,page:p.page,hash:`${bulletinHash}:p${p.page}:${excerptHash}`});
+            const pledgeId=`${candidacyId}:pledge:${createHash('sha256').update(`${p.page}:${normalizeOfficialText(p.title)}`).digest('hex').slice(0,16)}`;
+            const category=ALLOWED_CATEGORIES.has(p.category)?p.category:null;
+            db.run('INSERT INTO pledges(id,candidacy_id,title,body,category,source_id,source_excerpt,source_page,evidence_scope) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(candidacy_id,source_page,title) DO UPDATE SET body=excluded.body,category=excluded.category,source_id=excluded.source_id,source_excerpt=excluded.source_excerpt,evidence_scope=excluded.evidence_scope',[pledgeId,candidacyId,p.title,p.summary,category,source,p.originalText,p.page,'election_bulletin_policy']);
+            db.run('INSERT OR IGNORE INTO pledge_sources(pledge_id,source_id) VALUES(?,?)',[pledgeId,source]);
+          }
+          processed++;
+        }
+      });
+    } catch(error) { errorRecord(jobId,'municipal_bulletin',error.type||'municipal_bulletin_error',error.message,election.official_url); }
+  }
+  return {tokens,processed};
 }
 async function fetchCandidateHtml(url, allowedHosts) {
   if (!await robotsAllowed(url,allowedHosts)) throw Object.assign(Error('blocked_by_robots_txt'),{type:'robots_disallowed'});
@@ -609,11 +670,15 @@ async function collect(jobId) {
     }
     const registeredRoots=await fetchIssueOfficialRoots();
     processed+=await collectIssueMunicipalElections(jobId,registeredRoots);
+    const municipalAi=process.env.GEMINI_FREE_TIER_CONFIRMED==='true'&&process.env.GEMINI_API_KEY?new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY,httpOptions:{timeout:60000,retryOptions:{attempts:1}}}):null;
+    const municipalBudget={remaining:Number(process.env.DAILY_TOKEN_LIMIT||50000)-(rows("SELECT COALESCE(SUM(tokens),0) t FROM collection_jobs WHERE started_at>=?",[now().slice(0,10)])[0]?.t||0)};
+    const municipal=await collectMunicipalBulletins(jobId,municipalAi,municipalBudget);
+    tokens+=municipal.tokens; processed+=municipal.processed;
     const registeredPrefectureUrls=new Set(registeredRoots
       .filter(item=>item.municipality==='沖縄県')
       .map(item=>item.url));
     const result=await collectOfficialSites(jobId,registeredPrefectureUrls);
-    tokens=result.tokens; processed+=result.processed;
+    tokens+=result.tokens; processed+=result.processed;
     run("UPDATE collection_jobs SET status=?,finished_at=?,search_queries=0,tokens=?,processed=?,estimated_cost_usd=0 WHERE id=?",['completed',now(),tokens,processed,jobId]);
   } catch (e) {
     errorRecord(jobId,'collection',e.type||'collection_error',e.message);
@@ -666,6 +731,8 @@ const server=createServer(async (req,res)=>{
     if(req.method==='GET'&&m){const e=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];return send(res,e?200:404,e?{data:e}:{error:'not_found'});}
     m=url.pathname.match(/^\/api\/elections\/([^/]+)\/candidates$/);
     if(req.method==='GET'&&m){
+      const alias=m[1]==='naha-mayor-2026'?rows("SELECT id FROM elections WHERE municipality='那覇市' AND kind='municipal-mayor' AND voting_on='2026-10-25' AND id LIKE 'municipal-%'")[0]?.id:null;
+      if(alias) m[1]=alias;
       const election=rows("SELECT * FROM elections WHERE id=? AND EXISTS(SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified')",[m[1]])[0];
       if(!election)return send(res,404,{error:'not_found'});
       const data=rows(`SELECT DISTINCT c.id,c.name,c.kana,c.age,c.affiliation,c.x_url,c.x_source_url,c.photo_path,c.photo_page,c.photo_match_status,c.photo_reuse_status,c.profile_missing_json,c.profile_extraction_status,p.name party,ca.status candidacy_status,ca.id candidacy_id,ca.ballot_number FROM candidates c JOIN candidacies ca ON ca.candidate_id=c.id LEFT JOIN parties p ON p.id=ca.party_id JOIN candidacy_sources cs ON cs.candidacy_id=ca.id JOIN sources src ON src.id=cs.source_id WHERE ca.election_id=? AND ca.status='official' AND src.verification_status='verified' ORDER BY ca.ballot_number IS NULL,ca.ballot_number,c.name`,[m[1]]);

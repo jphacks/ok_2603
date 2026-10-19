@@ -316,6 +316,9 @@ function App() {
   });
   const [storageWarning, setStorageWarning] = useState(false);
   const [remoteElections, setRemoteElections] = useState<Election[]>([]);
+  const [nahaPublishedPledges, setNahaPublishedPledges] = useState<
+    Record<string, Candidate["pledges"]>
+  >({});
   const heading = useRef<HTMLHeadingElement>(null);
   const tourRef = useRef<HTMLDivElement>(null);
   const allElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id))];
@@ -324,7 +327,15 @@ function App() {
     apiElectionCandidatesElectionId === electionId && electionId
       ? apiElectionCandidates.map((item) => mapApiCandidate(item, electionId))
       : [];
-  const allCandidates = [...candidates, ...loadedApiCandidates];
+  const allCandidates = [
+    ...candidates.map((item) => {
+      const published = nahaPublishedPledges[item.name.replace(/\s/gu, "")];
+      return item.electionId === "naha-mayor-2026" && published?.length
+        ? { ...item, pledges: published }
+        : item;
+    }),
+    ...loadedApiCandidates,
+  ];
   const candidate = allCandidates.find((item) => item.id === candidateId);
   const compared = selected
     .map((id) => allCandidates.find((item) => item.id === id))
@@ -442,6 +453,34 @@ function App() {
       }
     };
     void loadCandidates();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, electionId]);
+  useEffect(() => {
+    if (electionId !== "naha-mayor-2026") return;
+    if (page !== "candidates" && page !== "compare") return;
+    let cancelled = false;
+    const loadPublishedPledges = async () => {
+      try {
+        const response = await fetch(
+          "/api/elections/naha-mayor-2026/candidates",
+        );
+        if (!response.ok) return;
+        const result: unknown = await response.json();
+        if (!isApiElectionCandidatesResponse(result) || cancelled) return;
+        const byName: Record<string, Candidate["pledges"]> = {};
+        for (const item of result.data) {
+          const mapped = mapApiCandidate(item, "naha-mayor-2026");
+          if (mapped.pledges.length)
+            byName[item.name.replace(/\s/gu, "")] = mapped.pledges;
+        }
+        setNahaPublishedPledges(byName);
+      } catch {
+        // 取得できない場合は公約公開前の表示のままにする
+      }
+    };
+    void loadPublishedPledges();
     return () => {
       cancelled = true;
     };
