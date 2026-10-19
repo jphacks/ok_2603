@@ -842,6 +842,19 @@ tbody tr:last-child > * {
   object-fit: cover;
   border-radius: 6px;
 }
+.comparison-table th img,
+.comparison-table th .photo-missing {
+  display: block;
+  width: 72px;
+  min-width: 72px;
+  height: 88px;
+  margin-bottom: 8px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.comparison-mobile-card .candidate-intro {
+  margin-bottom: 8px;
+}
 .detail-profile p {
   font-size: 14px;
   margin: 0;
