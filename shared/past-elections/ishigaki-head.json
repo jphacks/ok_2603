@@ -1,0 +1,45 @@
+[
+  {
+    "id": "past-municipal-mayor-石垣市-2025-08-17",
+    "name": "石垣市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "石垣市",
+    "date": "2025-08-17",
+    "sources": [
+      {
+        "url": "https://www.city.ishigaki.okinawa.jp/material/files/group/34/20250922_kiroku_sityou.pdf",
+        "publisher": "石垣市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "中山 義隆",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 12923,
+        "elected": true
+      },
+      {
+        "name": "砥板 芳行",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 11124,
+        "elected": false
+      },
+      {
+        "name": "砂川 利勝",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 4872,
+        "elected": false
+      }
+    ]
+  }
+]

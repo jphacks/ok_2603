@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-渡名喜村-2025-09-28",
+    "name": "渡名喜村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "渡名喜村",
+    "date": "2025-09-28",
+    "sources": [
+      {
+        "url": "http://www.vill.tonaki.okinawa.jp/detail.jsp?id=104619&type=TopicsTopPage&funcid=2",
+        "publisher": "渡名喜村役場",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "桃原 優",
+        "age": 66,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "農業",
+        "votes": 121,
+        "elected": true
+      },
+      {
+        "name": "比嘉 朗",
+        "age": 69,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "村長",
+        "votes": 105,
+        "elected": false
+      }
+    ]
+  }
+]

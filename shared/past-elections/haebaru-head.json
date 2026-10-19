@@ -1,0 +1,41 @@
+[
+  {
+    "id": "past-municipal-mayor-南風原町-2026-04-19",
+    "name": "南風原町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "南風原町",
+    "date": "2026-04-19",
+    "sources": [
+      {
+        "url": "https://www.town.haebaru.lg.jp/soshiki/21/17020.html",
+        "publisher": "南風原町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.town.haebaru.lg.jp/uploaded/attachment/14363.pdf",
+        "publisher": "南風原町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "赤嶺 リュウト",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 5839,
+        "elected": false
+      },
+      {
+        "name": "金城 ひろたか",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 7289,
+        "elected": true
+      }
+    ]
+  }
+]

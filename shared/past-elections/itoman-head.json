@@ -1,0 +1,54 @@
+[
+  {
+    "id": "past-municipal-mayor-糸満市-2024-06-16",
+    "name": "第17回糸満市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "糸満市",
+    "date": "2024-06-16",
+    "sources": [
+      {
+        "url": "https://www.city.itoman.lg.jp/uploaded/attachment/15328.pdf",
+        "publisher": "糸満市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "當銘 真栄",
+        "age": 58,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "糸満市長",
+        "votes": 9403,
+        "elected": true
+      },
+      {
+        "name": "新垣 勇太",
+        "age": 39,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 9239,
+        "elected": false
+      },
+      {
+        "name": "上原 正次",
+        "age": 68,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 4368,
+        "elected": false
+      },
+      {
+        "name": "賀数 郁美",
+        "age": 40,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "自営業",
+        "votes": 2998,
+        "elected": false
+      }
+    ]
+  }
+]

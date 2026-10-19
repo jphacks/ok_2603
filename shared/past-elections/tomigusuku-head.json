@@ -1,0 +1,50 @@
+[
+  {
+    "id": "past-municipal-mayor-豊見城市-2022-10-09",
+    "name": "豊見城市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "豊見城市",
+    "date": "2022-10-09",
+    "sources": [
+      {
+        "url": "https://www.city.tomigusuku.lg.jp/material/files/group/39/sichousenkyo-kaihyou_20221009_2215.pdf",
+        "publisher": "豊見城市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.city.tomigusuku.lg.jp/material/files/group/39/60841076.pdf",
+        "publisher": "豊見城市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "辻内 たけはる",
+        "age": 42,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "NPO法人沖縄国際人材支援センター理事",
+        "votes": 668,
+        "elected": false
+      },
+      {
+        "name": "山川 ひとし",
+        "age": 48,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "豊見城市長",
+        "votes": 10535,
+        "elected": false
+      },
+      {
+        "name": "徳元 つぐと",
+        "age": 41,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "無職",
+        "votes": 13335,
+        "elected": true
+      }
+    ]
+  }
+]

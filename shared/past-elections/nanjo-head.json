@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-南城市-2025-12-21",
+    "name": "南城市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "南城市",
+    "date": "2025-12-21",
+    "sources": [
+      {
+        "url": "https://www.city.nanjo.okinawa.jp/userfiles/files/1_0625sityousenkyokekka.pdf",
+        "publisher": "南城市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "大城 憲幸",
+        "age": null,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 11690,
+        "elected": true
+      },
+      {
+        "name": "座波 一",
+        "age": null,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 8259,
+        "elected": false
+      }
+    ]
+  }
+]

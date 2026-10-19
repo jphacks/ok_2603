@@ -1,0 +1,44 @@
+[
+  {
+    "id": "past-governor-okinawa-2022-09-11",
+    "name": "第14回沖縄県知事選挙",
+    "kind": "governor",
+    "date": "2022-09-11",
+    "sources": [
+      {
+        "url": "https://www.city.naha.okinawa.jp/admin/senkan/1004625/1004628.html",
+        "publisher": "那覇市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "玉城 康裕",
+        "age": 62,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "沖縄県知事",
+        "votes": 339767,
+        "elected": true
+      },
+      {
+        "name": "佐喜眞 淳",
+        "age": 58,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 274844,
+        "elected": false
+      },
+      {
+        "name": "下地 幹郎",
+        "age": 61,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 53677,
+        "elected": false
+      }
+    ]
+  }
+]

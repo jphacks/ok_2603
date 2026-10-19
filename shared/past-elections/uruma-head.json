@@ -1,0 +1,50 @@
+[
+  {
+    "id": "past-municipal-mayor-うるま市-2025-04-27",
+    "name": "うるま市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "うるま市",
+    "date": "2025-04-27",
+    "sources": [
+      {
+        "url": "https://www.city.uruma.lg.jp/documents/7966/sityousenkyo.pdf",
+        "publisher": "うるま市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.city.uruma.lg.jp/documents/7966/sityoukouhoshaitiran1700.pdf",
+        "publisher": "うるま市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "照屋 守之",
+        "age": 69,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 8070,
+        "elected": false
+      },
+      {
+        "name": "中村 正人",
+        "age": 60,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "うるま市長",
+        "votes": 25699,
+        "elected": true
+      },
+      {
+        "name": "照屋 大河",
+        "age": 53,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 18725,
+        "elected": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-金武町-2026-04-05",
+    "name": "金武町長選挙（令和8年4月5日執行）",
+    "kind": "municipal-mayor",
+    "municipality": "金武町",
+    "date": "2026-04-05",
+    "sources": [
+      {
+        "url": "https://www.town.kin.okinawa.jp/material/files/group/1/kaihyou2200.pdf",
+        "publisher": "金武町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "金城 ツカサ",
+        "age": null,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": null,
+        "votes": 3575,
+        "elected": true
+      },
+      {
+        "name": "山川 むねと",
+        "age": null,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": null,
+        "votes": 1945,
+        "elected": false
+      }
+    ]
+  }
+]

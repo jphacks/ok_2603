@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-沖縄市-2022-04-24",
+    "name": "第13回沖縄市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "沖縄市",
+    "date": "2022-04-24",
+    "sources": [
+      {
+        "url": "https://www.city.okinawa.okinawa.jp/documents/16839/2-3.pdf",
+        "publisher": "沖縄市",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "桑江 朝千夫",
+        "age": null,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "沖縄市長",
+        "votes": 29738,
+        "elected": true
+      },
+      {
+        "name": "森山 政和",
+        "age": null,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "前市議",
+        "votes": 19649,
+        "elected": false
+      }
+    ]
+  }
+]

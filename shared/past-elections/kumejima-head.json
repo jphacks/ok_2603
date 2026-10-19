@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-久米島町-2026-04-19",
+    "name": "久米島町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "久米島町",
+    "date": "2026-04-19",
+    "sources": [
+      {
+        "url": "https://www.town.kumejima.okinawa.jp/docs/2026041300020/file_contents/2026ttyoutyousenkakutei.pdf",
+        "publisher": "久米島町",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "とうばる 秀雄",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 2304,
+        "elected": true
+      },
+      {
+        "name": "大道 あつし",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 1773,
+        "elected": false
+      }
+    ]
+  }
+]
