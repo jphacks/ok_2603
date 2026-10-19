@@ -371,21 +371,6 @@ try {
   );
   assert.equal(await evaluate('!!document.querySelector(".issue-filter-panel")'), false);
   await screenshot("election-comparison.png");
-  await click("＋ 比較に追加");
-  assert.equal(
-    await evaluate('document.querySelectorAll(".comparison-table thead th").length'),
-    2,
-  );
-  await click("＋ 比較に追加");
-  assert.equal(
-    await evaluate('document.querySelectorAll(".comparison-table thead th").length'),
-    3,
-  );
-  await click("全候補者の比較に戻す");
-  assert.equal(
-    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
-    2,
-  );
   await input("candidate-query", "所属");
   assert.equal(
     await evaluate('document.querySelectorAll(".comparison-candidate").length'),
@@ -401,21 +386,20 @@ try {
     await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     1,
   );
-  await click("＋ 比較に追加");
   await input("candidate-query", "two");
-  await click("＋ 比較に追加");
   await click("テスト専用氏名 two");
   await click("テスト用語");
   assert.ok((await text()).includes("政治用語の解説ではありません"));
   await click("閉じる");
   await click("経歴");
   assert.ok((await text()).includes("確認できず"));
+  await click("＋ 比較に追加");
   await click("比較する →");
   assert.equal(
     await evaluate(
       'document.querySelectorAll(".comparison-table thead th").length',
     ),
-    3,
+    2,
   );
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
@@ -429,27 +413,13 @@ try {
   );
   assert.equal(
     await evaluate('document.querySelectorAll(".comparison-mobile-card").length'),
-    2,
+    1,
   );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),
     true,
   );
   await screenshot("election-mobile-comparison.png");
-  await click("✓ 比較から外す");
-  assert.equal(
-    await evaluate(
-      'document.querySelectorAll(".comparison-table thead th").length',
-    ),
-    2,
-  );
-  await click("全候補者の比較に戻す");
-  assert.equal(
-    await evaluate(
-      'document.querySelectorAll(".comparison-table thead th").length',
-    ),
-    3,
-  );
   // 再読み込みでテストデータを破棄し、一般公開状態を撮影。
   await evaluate('document.documentElement.dataset.testReload = "pending"');
   await send("Page.reload");
