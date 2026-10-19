@@ -162,9 +162,9 @@
   bottom: 0;
   left: 50%;
   right: auto;
-  width: min(100%, 430px);
+  width: min(100%, 520px);
   transform: translateX(-50%);
-  height: calc(82px + env(safe-area-inset-bottom));
+  height: calc(96px + env(safe-area-inset-bottom));
   padding: 0 16px env(safe-area-inset-bottom);
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -186,24 +186,24 @@
   .home-shell .governor-entry-arrow { width: 40px; height: 40px; right: 17px; bottom: 13px; font-size: 27px; }
   .governor-flower { width: 130px; height: 190px; right: -12px; bottom: -34px; }
   .home-island { width: 108px; height: 125px; top: 4px; right: 68px; }
-  .home-shell .home-search { padding: 19px 13px 14px; border-radius: 16px; }
-  .home-shell .home-search h2 { font-size: clamp(18px, 4.8cqw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
-  .home-search-heading p { font-size: 18px; margin-bottom: 15px; line-height: 1.6; }
-  .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
-  .home-shell .search-input input { font-size: 21px; line-height: 1.5; }
-  .home-shell .home-search-icon { width: 22px; height: 22px; }
-  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 19px; }
-  .home-city-shortcuts { gap: 6px; margin-top: 11px; }
-  .home-city-shortcuts button { font-size: 18px; min-height: 44px; padding: 6px 7px; }
-  .home-shell .home-search > .small { font-size: 17px; margin-top: 11px; line-height: 1.7; }
+  .home-shell .home-search { padding: 26px 16px 20px; border-radius: 18px; }
+  .home-shell .home-search h2 { font-size: clamp(20px, 5.4cqw, 30px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
+  .home-search-heading p { font-size: 19px; margin-bottom: 20px; line-height: 1.6; }
+  .home-shell .search-input { flex-wrap: nowrap; padding: 10px 14px; gap: 12px; min-height: 62px; border-radius: 16px; }
+  .home-shell .search-input input { font-size: 22px; line-height: 1.5; }
+  .home-shell .home-search-icon { width: 26px; height: 26px; }
+  .home-shell .search-input .button { width: auto; min-height: 42px; padding: 6px 12px; font-size: 20px; }
+  .home-city-shortcuts { gap: 8px; margin-top: 16px; }
+  .home-city-shortcuts button { font-size: 19px; min-height: 52px; padding: 8px 12px; }
+  .home-shell .home-search > .small { font-size: 18px; margin-top: 16px; line-height: 1.7; }
   .home-flower-outline { width: 130px; height: 120px; }
   .home-image-note { font-size: 15px; margin-top: 8px; }
 }
 @media (max-width: 600px) {
-  .home-shell { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+  .home-shell { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .home-shell .header-inner { height: 74px; padding: 0 19px; gap: 8px; }
-  .home-shell .brand { font-size: 26px; gap: 12px; }
-  .home-shell .brand-mark { width: 43px; height: 46px; font-size: 31px; border-radius: 10px; }
+  .home-shell .brand { font-size: 31px; gap: 12px; }
+  .home-shell .brand-mark { width: 54px; height: 56px; font-size: 31px; border-radius: 12px; }
   .home-menu-toggle { width: 43px; height: 44px; padding: 10px; }
   .home-visual { min-height: 230px; padding: 28px 25px; background-position: 56% center; }
   .home-shell .home-catchphrase { font-size: clamp(29px, 8.7vw, 52px); line-height: 1.42; margin-bottom: 10px; letter-spacing: 0.035em; }
@@ -216,22 +216,22 @@
   .home-shell .governor-entry-arrow { width: 40px; height: 40px; right: 17px; bottom: 13px; font-size: 27px; }
   .governor-flower { width: 130px; height: 190px; right: -12px; bottom: -34px; }
   .home-island { width: 108px; height: 125px; top: 4px; right: 68px; opacity: 0.9; }
-  .home-shell .home-search { padding: 19px 13px 14px; border-radius: 16px; }
-  .home-search-heading { gap: 10px; }
-  .home-pin { width: 35px; height: 35px; }
-  .home-pin svg { width: 22px; height: 22px; }
-  .home-shell .home-search h2 { font-size: clamp(18px, 4.8vw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
-  .home-search-heading p { font-size: 18px; margin-bottom: 15px; line-height: 1.6; }
-  .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
-  .home-shell .search-input input { font-size: 21px; line-height: 1.5; }
-  .home-shell .home-search-icon { width: 22px; height: 22px; }
-  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 19px; }
-  .home-city-shortcuts { gap: 6px; margin-top: 11px; }
-  .home-city-shortcuts button { font-size: 18px; min-height: 44px; padding: 6px 7px; }
-  .home-shell .home-search > .small { font-size: 17px; margin-top: 11px; line-height: 1.7; }
+  .home-shell .home-search { padding: 26px 16px 20px; border-radius: 18px; }
+  .home-search-heading { gap: 12px; }
+  .home-pin { width: 42px; height: 42px; }
+  .home-pin svg { width: 26px; height: 26px; }
+  .home-shell .home-search h2 { font-size: clamp(20px, 5.4vw, 30px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
+  .home-search-heading p { font-size: 19px; margin-bottom: 20px; line-height: 1.6; }
+  .home-shell .search-input { flex-wrap: nowrap; padding: 10px 14px; gap: 12px; min-height: 62px; border-radius: 16px; }
+  .home-shell .search-input input { font-size: 22px; line-height: 1.5; }
+  .home-shell .home-search-icon { width: 26px; height: 26px; }
+  .home-shell .search-input .button { width: auto; min-height: 42px; padding: 6px 12px; font-size: 20px; }
+  .home-city-shortcuts { gap: 8px; margin-top: 16px; }
+  .home-city-shortcuts button { font-size: 19px; min-height: 52px; padding: 8px 12px; }
+  .home-shell .home-search > .small { font-size: 18px; margin-top: 16px; line-height: 1.7; }
   .home-flower-outline { width: 130px; height: 120px; }
   .home-image-note { font-size: 15px; margin-top: 8px; }
-  .home-shell .navigation { height: calc(70px + env(safe-area-inset-bottom)); padding-left: 14px; padding-right: 14px; }
-  .home-shell .navigation button { font-size: 20px; gap: 2px; padding: 6px 0; }
-  .home-shell .navigation svg { width: 25px; height: 25px; }
+  .home-shell .navigation { height: calc(88px + env(safe-area-inset-bottom)); padding-left: 14px; padding-right: 14px; }
+  .home-shell .navigation button { font-size: 20px; gap: 4px; padding: 8px 0; }
+  .home-shell .navigation svg { width: 28px; height: 28px; }
 }

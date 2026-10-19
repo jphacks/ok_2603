@@ -770,11 +770,9 @@ function App() {
         <div className="header-inner">
           <button className="brand" onClick={() => navigate("home")}>
             <span className="brand-mark" aria-hidden="true">
-              {page === "home" ? <img className="home-brand-logo" src="/images/logo.png" alt="" width="54" height="54" /> : "選"}
+              <img className="home-brand-logo" src="/images/logo.png" alt="" width="54" height="54" />
             </span>
-            <span>
-              選挙情報{page !== "home" && <span className="brand-sub">アプリ名称未定 · 試作品</span>}
-            </span>
+            <span>選挙情報</span>
           </button>
           <nav className="navigation" aria-label="メインナビゲーション">
             {(
@@ -1976,7 +1974,7 @@ function App() {
           </section>
         )}
         <footer className="footer">
-          <span>選挙情報（仮称）</span>
+          <span>選挙情報</span>
           <p>情報を知る。根拠を読む。自分で考える。</p>
           <button className="version-trigger" onClick={handleVersionTap} aria-label="バージョン 0.1.0">
             v0.1.0
