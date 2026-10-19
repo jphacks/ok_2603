@@ -262,7 +262,14 @@ async function collectMunicipalBulletins(jobId, ai, budget) {
       const listSource=addSource({url:listDoc.url,title:candidateList.label,type:'official_candidate_list_pdf',excerpt:roster.map(c=>`${c.number} ${c.name} ${c.age}歳 ${c.party}`).join('\n'),page:1,hash:listHash});
       let pledgeResult=null,bulletinDoc=null,bulletinHash=null;
       const hasPledges=rows("SELECT 1 FROM pledges WHERE candidacy_id IN (SELECT id FROM candidacies WHERE election_id=?) LIMIT 1",[election.id]).length>0;
-      if(bulletin&&!hasPledges) {
+      const hasPhotos=rows("SELECT 1 FROM candidates c JOIN candidacies ca ON ca.candidate_id=c.id WHERE ca.election_id=? AND c.photo_path IS NOT NULL LIMIT 1",[election.id]).length>0;
+      if(bulletin&&hasPledges&&!hasPhotos&&await robotsAllowed(bulletin.url,allowedHosts,12000)) {
+        try {
+          bulletinDoc=await safeFetch(bulletin.url,allowedHosts,60000);
+          bulletinHash=bulletinDoc.hash||createHash('sha256').update(bulletinDoc.bytes).digest('hex');
+          if(verifiedPortraitBox(bulletinHash,roster[0].name)) pledgeResult={data:new Map(),pages:await renderPdfPages(bulletinDoc.bytes,2.5)};
+        } catch(error) { errorRecord(jobId,'photo_crop',error.type||'photo_crop_error',error.message,bulletin.url); }
+      } else if(bulletin&&(!hasPledges||!hasPhotos)) {
         if(!ai) errorRecord(jobId,'pledge_extraction',process.env.GEMINI_API_KEY?'free_tier_not_confirmed':'gemini_api_key_missing','The bulletin is published, but Gemini extraction is not enabled.',bulletin.url);
         else if(budget.remaining<=0) errorRecord(jobId,'pledge_extraction','daily_token_limit_reached','Daily Gemini token budget reached; no request was made.',bulletin.url);
         else if(await robotsAllowed(bulletin.url,allowedHosts,12000)) {
@@ -276,6 +283,23 @@ async function collectMunicipalBulletins(jobId, ai, budget) {
           } catch(error) { errorRecord(jobId,'pledge_extraction',error.type||'gemini_error',error.message,bulletin.url); }
         }
       }
+      const photos=new Map();
+      for(const candidate of roster) {
+        const box=verifiedPortraitBox(bulletinHash,candidate.name)||pledgeResult?.data?.get(candidate.name)?.photo;
+        const verified=!!verifiedPortraitBox(bulletinHash,candidate.name);
+        const page=box&&pledgeResult.pages?.[box.page-1];
+        if(!page) continue;
+        try {
+          const x=Math.max(0,Math.floor(box.x*page.canvas.width)),y=Math.max(0,Math.floor(box.y*page.canvas.height));
+          const w=Math.min(page.canvas.width-x,Math.ceil(box.width*page.canvas.width)),h=Math.min(page.canvas.height-y,Math.ceil(box.height*page.canvas.height));
+          if(w<=80||h<=80) continue;
+          const crop=createCanvas(w,h); crop.getContext('2d').drawImage(page.canvas,x,y,w,h,0,0,w,h);
+          await mkdir(PHOTO_DIR,{recursive:true});
+          const photoPath=resolve(PHOTO_DIR,`${createHash('sha256').update(`${election.id}:${candidate.name}`).digest('hex').slice(0,32)}.png`);
+          await writeFile(photoPath,await crop.encode('png'));
+          photos.set(candidate.name,{path:photoPath,page:box.page,verified});
+        } catch(error) { errorRecord(jobId,'photo_crop','photo_crop_error',error.message,bulletin?.url); }
+      }
       transact(()=>{
         db.run("UPDATE elections SET complete_candidates=1,last_updated=? WHERE id=?",[now(),election.id]);
         db.run("UPDATE candidacies SET status='not_on_current_list' WHERE election_id=?",[election.id]);
@@ -288,7 +312,9 @@ async function collectMunicipalBulletins(jobId, ai, budget) {
           db.run('UPDATE candidates SET age=?,affiliation=COALESCE(affiliation,?) WHERE id=?',[candidate.age,candidate.party,candidateId]);
           db.run("INSERT INTO candidacies(id,election_id,candidate_id,party_id,status,ballot_number) VALUES(?,?,?,?,'official',?) ON CONFLICT(election_id,candidate_id) DO UPDATE SET party_id=excluded.party_id,status='official',ballot_number=excluded.ballot_number",[candidacyId,election.id,candidateId,partyId,candidate.number]);
           db.run('INSERT OR IGNORE INTO candidacy_sources(candidacy_id,source_id) VALUES(?,?)',[candidacyId,listSource]);
-          const extracted=pledgeResult?.data?.get(candidate.name);
+          const photo=photos.get(candidate.name);
+          if(photo) db.run("UPDATE candidates SET photo_path=?,photo_page=?,photo_match_status=? WHERE id=?",[photo.path,photo.page,photo.verified?'verified':'ai_matched_pending_review',candidateId]);
+          const extracted=hasPledges?null:pledgeResult?.data?.get(candidate.name);
           for(const p of extracted?.pledges||[]) {
             const excerptHash=createHash('sha256').update(`${candidate.name}:${p.originalText}`).digest('hex');
             const source=addSource({url:bulletinDoc.url,title:bulletin.label,type:'official_election_bulletin_pdf',excerpt:p.originalText,page:p.page,hash:`${bulletinHash}:p${p.page}:${excerptHash}`});
