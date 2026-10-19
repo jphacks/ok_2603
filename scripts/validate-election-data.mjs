@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { loadTypescript } from "./load-typescript.mjs";
 
@@ -132,6 +133,43 @@ export function validateData(
   return errors;
 }
 
+export function validatePastElections(dir = new URL("../shared/past-elections/", import.meta.url)) {
+  const errors = [];
+  const ids = new Set();
+  const today = new Date().toISOString().slice(0, 10);
+  const text = (value) => typeof value === "string" && value.trim().length > 0;
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".json"))) {
+    let list;
+    try {
+      list = JSON.parse(readFileSync(new URL(file, dir), "utf8"));
+    } catch {
+      errors.push(`past-elections/${file}: JSONを読み込めない`);
+      continue;
+    }
+    for (const item of Array.isArray(list) ? list : [list]) {
+      const path = `past-elections/${file}:${item?.id}`;
+      const expect = (condition, label) => condition || errors.push(`${path}: ${label}`);
+      expect(text(item?.id) && !ids.has(item.id), "IDが必要・重複不可");
+      ids.add(item?.id);
+      expect(text(item?.name), "選挙名が必要");
+      expect(["governor", "municipal-mayor"].includes(item?.kind), "kindが不正");
+      expect(/^\d{4}-\d{2}-\d{2}$/.test(item?.date) && item.date < today, "過去の日付(YYYY-MM-DD)が必要");
+      expect(
+        Array.isArray(item?.sources) && item.sources.length > 0 &&
+          item.sources.every((s) => /^https?:\/\//.test(s.url) && text(s.publisher) && text(s.checkedAt)),
+        "公式URL・発行元・確認日が必要",
+      );
+      expect(Array.isArray(item?.candidates) && item.candidates.length > 0, "候補者が必要");
+      for (const c of item?.candidates ?? []) {
+        expect(text(c.name) && text(c.party) && typeof c.elected === "boolean", `候補者の項目が不足: ${c.name}`);
+        expect(c.votes === null || Number.isInteger(c.votes), `得票数が不正: ${c.name}`);
+      }
+      expect((item?.candidates ?? []).filter((c) => c.elected).length >= 1, "当選者が必要");
+    }
+  }
+  return errors;
+}
+
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
@@ -141,6 +179,7 @@ if (
     loadTypescript("../src/election/model.ts"),
   ]);
   const errors = validateData(data, model);
+  errors.push(...validatePastElections());
   if (errors.length) {
     console.error(errors.join("\n"));
     process.exitCode = 1;

@@ -9,6 +9,8 @@ import {
 } from "./election/data";
 import { CouncilPage } from "./election/CouncilPage";
 import { ThemeComparison } from "./election/ThemeComparison";
+import { PastResult } from "./election/PastResult";
+import { pastElections, pastElectionToElection, pastResultFor } from "./election/pastElections";
 import { IslandDecoration, FlowerDecoration } from "./election/HomeDecor";
 import "./home.css";
 import {
@@ -318,8 +320,15 @@ function App() {
   >({});
   const heading = useRef<HTMLHeadingElement>(null);
   const tourRef = useRef<HTMLDivElement>(null);
-  const allElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id || (local.name === remote.name && local.date === remote.date)))];
+  const knownElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id || (local.name === remote.name && local.date === remote.date)))];
+  const allElections = [
+    ...knownElections,
+    ...pastElections
+      .filter((past) => !knownElections.some((known) => known.name === past.name && known.date === past.date && (known.municipality ?? "沖縄県") === (past.municipality ?? "沖縄県")))
+      .map(pastElectionToElection),
+  ];
   const activeElection = allElections.find((item) => item.id === electionId);
+  const activePastResult = pastResultFor(activeElection);
   const loadedApiCandidates =
     apiElectionCandidatesElectionId === electionId && electionId
       ? apiElectionCandidates.map((item) => mapApiCandidate(item, electionId))
@@ -548,7 +557,7 @@ function App() {
   );
   const visibleElections =
     period === "past"
-      ? recentUniqueElections(filteredElections)
+      ? recentUniqueElections(filteredElections, 12)
       : filteredElections;
   const earlyMunicipalVotingPlaces = municipalVotingPlaces.filter(
     (place) => place.voting_type === "early",
@@ -1063,7 +1072,7 @@ function App() {
                   {electionLoading || collectionStatus === "running"
                     ? "取得中"
                     : period === "past" && visibleElections.length > 0
-                      ? `${visibleElections.length}件表示（最新6件）`
+                      ? `${visibleElections.length}件表示（最新12件）`
                       : regionalElections.length > 0
                       ? `${regionalElections.length}件収録`
                       : "未収録"}
@@ -1097,7 +1106,7 @@ function App() {
                 </label>}
               </div>
               {period === "past" && (
-                <p className="small">過去の選挙は新しいものから最大6件を表示します。</p>
+                <p className="small">過去の選挙は新しいものから最大12件を表示します。</p>
               )}
               <div className="election-list">
                 {visibleElections.map((item) => {
@@ -1137,12 +1146,14 @@ function App() {
                         }}
                       >
                         {item.period === "past" && !hasCandidateData
-                          ? "候補者一覧を見る →"
+                          ? pastResultFor(item)
+                            ? "候補者と結果を見る →"
+                            : "候補者一覧を見る →"
                           : hasCandidateData
                           ? "この選挙の候補者と公約を見る →"
                           : "未収録の比較画面を見る →"}
                       </button>
-                      {!hasCandidateData && (
+                      {!hasCandidateData && !pastResultFor(item) && (
                         <p className="small">
                           候補者・公約情報は未収録のため、表示枠の例を確認できます。
                         </p>
@@ -1333,7 +1344,9 @@ function App() {
             {activeElection && <Sources sources={activeElection.sources} />}
             {pledgePublicationNotice}
             {historicalPledgeNotice}
-            {electionCandidates.length === 0 ? (
+            {electionCandidates.length === 0 && activePastResult && !apiElectionCandidates.length ? (
+              <PastResult result={activePastResult} />
+            ) : electionCandidates.length === 0 ? (
               <section className="panel">
                 <div className="section-heading">
                   <h2>公式資料で確認した候補者一覧</h2>
@@ -1938,6 +1951,9 @@ function App() {
                   </table>
                 </div>
               </>
+            )}
+            {activePastResult && activeElection?.period === "past" && (
+              <PastResult result={activePastResult} showPledgeNote={false} />
             )}
           </>
         )}

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "past-municipal-mayor-宜野湾市-2024-09-08",
+    "name": "宜野湾市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "宜野湾市",
+    "date": "2024-09-08",
+    "sources": [
+      {
+        "url": "https://www.city.ginowan.lg.jp/soshiki/sonota/5/2_1/14941.html",
+        "publisher": "宜野湾市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "桃原 イサオ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 16195,
+        "elected": false
+      },
+      {
+        "name": "ヒガ タカシ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 705,
+        "elected": false
+      },
+      {
+        "name": "佐喜真 アツシ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 24173,
+        "elected": true
+      }
+    ]
+  }
+]

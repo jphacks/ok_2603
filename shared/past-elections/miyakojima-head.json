@@ -1,0 +1,77 @@
+[
+  {
+    "id": "past-municipal-mayor-宮古島市-2025-01-19",
+    "name": "宮古島市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "宮古島市",
+    "date": "2025-01-19",
+    "sources": [
+      {
+        "url": "https://www.city.miyakojima.lg.jp/gyosei/senkyo/files/R7.1.19_sityou_senkyokekka.pdf",
+        "publisher": "宮古島市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.city.miyakojima.lg.jp/soshiki/senkyo/oshirase/files/sityoukouhosya.pdf",
+        "publisher": "宮古島市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "嘉数 登",
+        "age": 61,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "無職",
+        "votes": 9345,
+        "elected": true
+      },
+      {
+        "name": "座喜味 一幸",
+        "age": 75,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "宮古島市長",
+        "votes": 7100,
+        "elected": false
+      },
+      {
+        "name": "前里 光健",
+        "age": 42,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "無職",
+        "votes": 6128,
+        "elected": false
+      },
+      {
+        "name": "下地 明和",
+        "age": 67,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "会社役員",
+        "votes": 3213,
+        "elected": false
+      },
+      {
+        "name": "豊見山 徹",
+        "age": 64,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "会社役員",
+        "votes": 162,
+        "elected": false
+      },
+      {
+        "name": "高橋 敏夫",
+        "age": 52,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "代表社員",
+        "votes": 148,
+        "elected": false
+      }
+    ]
+  }
+]

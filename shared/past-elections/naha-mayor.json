@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-那覇市-2022-10-23",
+    "name": "第23回那覇市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "那覇市",
+    "date": "2022-10-23",
+    "sources": [
+      {
+        "url": "https://www.city.naha.okinawa.jp/admin/senkan/1004625/1004626.html",
+        "publisher": "那覇市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "知念 覚",
+        "age": 59,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 64165,
+        "elected": true
+      },
+      {
+        "name": "翁長 雄治",
+        "age": 35,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 54125,
+        "elected": false
+      }
+    ]
+  }
+]

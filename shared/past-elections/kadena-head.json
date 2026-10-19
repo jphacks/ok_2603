@@ -1,0 +1,32 @@
+[
+  {
+    "id": "past-municipal-mayor-嘉手納町-2023-02-05",
+    "name": "嘉手納町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "嘉手納町",
+    "date": "2023-02-05",
+    "sources": [
+      {
+        "url": "https://www.town.kadena.okinawa.jp/info/n7175.html",
+        "publisher": "嘉手納町選挙長",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "當山 宏",
+        "age": 70,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "嘉手納町長",
+        "votes": null,
+        "elected": true
+      }
+    ]
+  }
+]

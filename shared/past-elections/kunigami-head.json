@@ -1,0 +1,27 @@
+[
+  {
+    "id": "past-municipal-mayor-国頭村-2024-03-17",
+    "name": "国頭村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "国頭村",
+    "date": "2024-03-17",
+    "sources": [
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "知花 靖",
+        "age": 64,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "国頭村長",
+        "votes": null,
+        "elected": true
+      }
+    ]
+  }
+]

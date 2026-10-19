@@ -1,0 +1,41 @@
+[
+  {
+    "id": "past-municipal-mayor-恩納村-2023-01-15",
+    "name": "恩納村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "恩納村",
+    "date": "2023-01-15",
+    "sources": [
+      {
+        "url": "https://www.vill.onna.okinawa.jp/userfiles/files/202303_P02.pdf",
+        "publisher": "恩納村",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "長浜 善巳",
+        "age": 57,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "恩納村長",
+        "votes": 2894,
+        "elected": true
+      },
+      {
+        "name": "外間 勝嘉",
+        "age": 64,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "農業",
+        "votes": 2155,
+        "elected": false
+      }
+    ]
+  }
+]

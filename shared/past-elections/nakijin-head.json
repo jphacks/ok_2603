@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-今帰仁村-2024-08-11",
+    "name": "今帰仁村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "今帰仁村",
+    "date": "2024-08-11",
+    "sources": [
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "久田 浩也",
+        "age": 57,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "村長",
+        "votes": 2643,
+        "elected": true
+      },
+      {
+        "name": "座間味 邦昭",
+        "age": 51,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "会社代表",
+        "votes": 2172,
+        "elected": false
+      }
+    ]
+  }
+]

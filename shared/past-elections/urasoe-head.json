@@ -1,0 +1,36 @@
+[
+  {
+    "id": "past-municipal-mayor-浦添市-2025-02-09",
+    "name": "浦添市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "浦添市",
+    "date": "2025-02-09",
+    "sources": [
+      {
+        "url": "https://www.city.urasoe.lg.jp/doc/2024121600114/",
+        "publisher": "浦添市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "まつもと 哲治",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 29607,
+        "elected": true
+      },
+      {
+        "name": "里道 あけみ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 15240,
+        "elected": false
+      }
+    ]
+  }
+]

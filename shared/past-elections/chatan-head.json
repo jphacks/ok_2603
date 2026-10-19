@@ -1,0 +1,46 @@
+[
+  {
+    "id": "past-municipal-mayor-北谷町-2025-11-16",
+    "name": "北谷町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "北谷町",
+    "date": "2025-11-16",
+    "sources": [
+      {
+        "url": "https://www.chatan.jp/choseijoho/senkan/senkyoshiryo/kakonosenkyo/2025osagihotokaikeka.html",
+        "publisher": "北谷町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.chatan.jp/choseijoho/senkan/senkyoshiryo/kakonosenkyo/2025osagihotokaikeka.files/chochokaihyou2155saisyuu.pdf",
+        "publisher": "北谷町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "渡久地 政志",
+        "age": 46,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "無職",
+        "votes": 6151,
+        "elected": true
+      },
+      {
+        "name": "玉城 佐恵子",
+        "age": 41,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "無職",
+        "votes": 1035,
+        "elected": false
+      }
+    ]
+  }
+]

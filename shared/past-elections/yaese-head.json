@@ -1,0 +1,45 @@
+[
+  {
+    "id": "past-municipal-mayor-八重瀬町-2026-01-25",
+    "name": "八重瀬町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "八重瀬町",
+    "date": "2026-01-25",
+    "sources": [
+      {
+        "url": "https://www.town.yaese.lg.jp/docs/2026012400018/file_contents/chouchou.pdf",
+        "publisher": "八重瀬町",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "新垣 ヤスヒロ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 7990,
+        "elected": true
+      },
+      {
+        "name": "神谷 たかこ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 4418,
+        "elected": false
+      },
+      {
+        "name": "神谷 ノブオ",
+        "age": null,
+        "party": "未収録",
+        "standing": null,
+        "occupation": null,
+        "votes": 1156,
+        "elected": false
+      }
+    ]
+  }
+]

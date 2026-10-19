@@ -1,0 +1,41 @@
+[
+  {
+    "id": "past-municipal-mayor-読谷村-2026-02-08",
+    "name": "読谷村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "読谷村",
+    "date": "2026-02-08",
+    "sources": [
+      {
+        "url": "https://www.vill.yomitan.okinawa.jp/soshiki/senkan/gyomu/senkyo/6846.html",
+        "publisher": "読谷村選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.vill.yomitan.okinawa.jp/material/files/group/1/sonntyousennkaihyoukekka0209.pdf",
+        "publisher": "読谷村選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "伊波 あつし",
+        "age": 63,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 10527,
+        "elected": true
+      },
+      {
+        "name": "ナカソネ 朝治",
+        "age": 60,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "ＦＭよみたん 代表取締役",
+        "votes": 8657,
+        "elected": false
+      }
+    ]
+  }
+]

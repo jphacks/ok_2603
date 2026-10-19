@@ -1,0 +1,46 @@
+[
+  {
+    "id": "past-municipal-mayor-北中城村-2024-12-01",
+    "name": "北中城村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "北中城村",
+    "date": "2024-12-01",
+    "sources": [
+      {
+        "url": "https://www.vill.kitanakagusuku.lg.jp/kakuka/soumu/senkyo/4147.html",
+        "publisher": "北中城村選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.vill.kitanakagusuku.lg.jp/material/files/group/5/2024120103.pdf",
+        "publisher": "北中城村選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "比嘉 孝則",
+        "age": 70,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "北中城村長",
+        "votes": null,
+        "elected": true
+      },
+      {
+        "name": "比嘉 義彦",
+        "age": 68,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "（株）大洋土木コンサルタント会社顧問",
+        "votes": null,
+        "elected": false
+      }
+    ]
+  }
+]

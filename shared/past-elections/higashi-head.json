@@ -1,0 +1,41 @@
+[
+  {
+    "id": "past-municipal-mayor-東村-2023-04-23",
+    "name": "東村長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "東村",
+    "date": "2023-04-23",
+    "sources": [
+      {
+        "url": "https://www.vill.higashi.okinawa.jp/soshikikarasagasu/higashisonsenkyokanriiinkai/1/1610.html",
+        "publisher": "東村選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.pref.okinawa.jp/_res/projects/default_project/_page_/001/004/927/r7_nenpou.pdf",
+        "publisher": "沖縄県選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "當山 全伸",
+        "age": 74,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "東村長",
+        "votes": 668,
+        "elected": true
+      },
+      {
+        "name": "港川 實登",
+        "age": 71,
+        "party": "無所属",
+        "standing": null,
+        "occupation": "農業",
+        "votes": 557,
+        "elected": false
+      }
+    ]
+  }
+]

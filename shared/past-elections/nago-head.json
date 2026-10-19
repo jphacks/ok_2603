@@ -1,0 +1,50 @@
+[
+  {
+    "id": "past-municipal-mayor-名護市-2026-01-25",
+    "name": "名護市長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "名護市",
+    "date": "2026-01-25",
+    "sources": [
+      {
+        "url": "https://www.city.nago.okinawa.jp/articles/2026010600038/file_contents/R8kai.pdf",
+        "publisher": "名護市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.city.nago.okinawa.jp/articles/2026010600038/file_contents/20260118sityou.pdf",
+        "publisher": "名護市選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "伊波 勝也",
+        "age": 67,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "学習塾経営",
+        "votes": 228,
+        "elected": false
+      },
+      {
+        "name": "翁長 久美子",
+        "age": 69,
+        "party": "無所属",
+        "standing": "新",
+        "occupation": "無職",
+        "votes": 10543,
+        "elected": false
+      },
+      {
+        "name": "渡具知 武豊",
+        "age": 64,
+        "party": "無所属",
+        "standing": "現",
+        "occupation": "名護市長",
+        "votes": 20009,
+        "elected": true
+      }
+    ]
+  }
+]

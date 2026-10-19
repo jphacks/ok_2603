@@ -1,0 +1,41 @@
+[
+  {
+    "id": "past-municipal-mayor-本部町-2026-09-13",
+    "name": "本部町長選挙",
+    "kind": "municipal-mayor",
+    "municipality": "本部町",
+    "date": "2026-09-13",
+    "sources": [
+      {
+        "url": "https://www.town.motobu.okinawa.jp/doc/2026070900017/file_contents/R08-09-13_.pdf",
+        "publisher": "本部町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.town.motobu.okinawa.jp/doc/2026070900017/file_contents/kouho2.pdf",
+        "publisher": "本部町選挙管理委員会",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "なかそね 章",
+        "age": null,
+        "party": "無所属",
+        "standing": null,
+        "occupation": null,
+        "votes": 4505,
+        "elected": true
+      },
+      {
+        "name": "タイラ 昭一",
+        "age": null,
+        "party": "無所属",
+        "standing": null,
+        "occupation": null,
+        "votes": 2398,
+        "elected": false
+      }
+    ]
+  }
+]

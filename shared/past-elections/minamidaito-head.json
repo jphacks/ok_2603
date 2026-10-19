@@ -1,0 +1,32 @@
+[
+  {
+    "id": "past-municipal-mayor-南大東村-2026-06-21",
+    "name": "2026年南大東村長・村議会議員選挙",
+    "kind": "municipal-mayor",
+    "municipality": "南大東村",
+    "date": "2026-06-21",
+    "sources": [
+      {
+        "url": "https://www.vill.minamidaito.okinawa.jp/site/sennkyo/1405.html",
+        "publisher": "南大東村総務課",
+        "checkedAt": "2026-10-19"
+      },
+      {
+        "url": "https://www.vill.minamidaito.okinawa.jp/uploaded/attachment/301.pdf",
+        "publisher": "南大東村総務課",
+        "checkedAt": "2026-10-19"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "あらかき 利治",
+        "age": null,
+        "party": "未収録",
+        "standing": "現",
+        "occupation": "村長",
+        "votes": null,
+        "elected": true
+      }
+    ]
+  }
+]
