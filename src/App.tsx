@@ -321,7 +321,7 @@ function App() {
   >({});
   const heading = useRef<HTMLHeadingElement>(null);
   const tourRef = useRef<HTMLDivElement>(null);
-  const allElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id))];
+  const allElections = [...elections, ...remoteElections.filter(remote => !elections.some(local => local.id === remote.id || (local.name === remote.name && local.date === remote.date)))];
   const activeElection = allElections.find((item) => item.id === electionId);
   const loadedApiCandidates =
     apiElectionCandidatesElectionId === electionId && electionId
@@ -542,7 +542,7 @@ function App() {
     item.prefectureIds.includes(region) &&
     (governorOnly
       ? isGovernorElection(item)
-      : !!municipality || !isGovernorElection(item)) &&
+      : !isGovernorElection(item)) &&
     (!municipality || electionAppliesToMunicipality(item, municipality)),
   );
   const filteredElections = regionalElections.filter(
@@ -691,24 +691,29 @@ function App() {
   }
   function pledgeSummary(pledge: Pledge) {
     return (
-      <div className="comparison-pledge">
+      <li className="comparison-pledge" key={pledge.id}>
         {pledge.summary ? (
-          <p>{pledge.summary}</p>
+          pledge.summary
         ) : (
           <RecordText entry={pledge.text} />
         )}
-      </div>
+      </li>
+    );
+  }
+  function pledgeList(item: Candidate) {
+    return (
+      <ul className="pledge-bullets">
+        {item.pledges.map((pledge) => pledgeSummary(pledge))}
+      </ul>
     );
   }
   function pledgeText(item?: Candidate, withHeading = true) {
     return item?.pledges.length ? (
       <div>
         {withHeading && item.pledges.some((pledge) => pledge.summary) && (
-          <strong>かんたん要約</strong>
+          <strong>公約のかんたん要約</strong>
         )}
-        {item.pledges.map((pledge) => (
-          <div key={pledge.id}>{pledgeSummary(pledge)}</div>
-        ))}
+        {pledgeList(item)}
       </div>
     ) : (
       <RecordText entry={missing<string>()} />
@@ -1816,16 +1821,9 @@ function App() {
                               )}
                             </section>
                             <section>
-                              <h3>公約の要約</h3>
+                              <h3>公約のかんたん要約</h3>
                               {item.pledges.length ? (
-                                item.pledges.map((pledge) => (
-                                  <article
-                                    className="comparison-mobile-pledge"
-                                    key={pledge.id}
-                                  >
-                                    {pledgeSummary(pledge)}
-                                  </article>
-                                ))
+                                pledgeList(item)
                               ) : pledgesAwaitingOfficialBulletin ? (
                                 <p className="pledge-not-published">
                                   公式の選挙公報が公開される前です。公約はまだ比較できません。

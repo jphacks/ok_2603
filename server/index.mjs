@@ -743,6 +743,9 @@ const server=createServer(async (req,res)=>{
   try {
     if (await handlePolling(req,res,url)) return;
     if (req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true});
+    if (req.method==='GET' && url.pathname==='/api/public/elections') {
+      return send(res,200,{data:await rows("SELECT id,name,municipality,voting_on,official_url FROM elections WHERE voting_on IS NOT NULL AND EXISTS (SELECT 1 FROM sources s WHERE s.url=elections.official_url AND s.verification_status='verified') ORDER BY voting_on DESC,name")});
+    }
     if (req.method==='GET' && url.pathname==='/api/elections') {
       const data=await supabaseStore.listElectionCatalog({
         municipality: url.searchParams.get('municipality') || undefined,
