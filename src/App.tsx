@@ -676,16 +676,24 @@ function App() {
     navigate("compare");
     setPreview(true);
   }
+  function sourcesFor(item: Candidate): Source[] {
+    const pledgeSources = item.pledges.flatMap((pledge) =>
+      pledge.text.status === "recorded" ? pledge.text.sources : [],
+    );
+    return [
+      ...new Map(
+        (pledgeSources.length ? pledgeSources : item.sources).map((source) => [
+          source.url,
+          source,
+        ]),
+      ).values(),
+    ];
+  }
   function pledgeSummary(pledge: Pledge) {
     return (
       <div className="comparison-pledge">
         {pledge.summary ? (
-          <>
-            <p>{pledge.summary}</p>
-            {pledge.text.status === "recorded" && (
-              <Sources sources={pledge.text.sources} />
-            )}
-          </>
+          <p>{pledge.summary}</p>
         ) : (
           <RecordText entry={pledge.text} />
         )}
@@ -709,10 +717,18 @@ function App() {
   function comparisonCell(item: Candidate, label: ComparisonLabel) {
     if (label === "所属政党") return <RecordText entry={item.party} />;
     if (label === "公約") {
-      return pledgeText(item);
+      return (
+        <>
+          {pledgeText(item)}
+          {item.pledges.length > 0 && <Sources sources={sourcesFor(item)} />}
+        </>
+      );
     }
-    return item.pledges.length ? (
-      item.pledges.map((pledge) => (
+    const recordedChecks = item.pledges.filter(
+      (pledge) => pledge.checks[label].status === "recorded",
+    );
+    return recordedChecks.length ? (
+      recordedChecks.map((pledge) => (
         <div className="comparison-pledge" key={pledge.id}>
           <RecordText entry={pledge.text} />
           <RecordText entry={pledge.checks[label]} />
@@ -1409,7 +1425,7 @@ function App() {
                     <RecordText entry={item.profile} />
                     <h3>公約のかんたん要約</h3>
                     {pledgeText(item, false)}
-                    <Sources sources={item.sources} />
+                    <Sources sources={sourcesFor(item)} />
                     <div className="card-actions">
                       <button
                         className="text-button"
@@ -1491,7 +1507,7 @@ function App() {
                 </p>
               </div>
             </div>
-            {candidate && <Sources sources={candidate.sources} />}
+            {candidate && <Sources sources={sourcesFor(candidate)} />}
             <div className="tab-list" role="tablist" aria-label="候補者の情報">
               {tabs.map((label, index) => (
                 <button
@@ -1766,14 +1782,21 @@ function App() {
                     : comparisonCandidates.map((item) => (
                         <article className="comparison-mobile-card" key={item.id}>
                           <header>
-                            <h2>
-                              <button
-                                className="candidate-name"
-                                onClick={() => openCandidate(item.id)}
-                              >
-                                {item.name}
-                              </button>
-                            </h2>
+                            <div className="candidate-intro">
+                              <Photo
+                                key={item.id}
+                                entry={item.photo}
+                                name={item.name}
+                              />
+                              <h2>
+                                <button
+                                  className="candidate-name"
+                                  onClick={() => openCandidate(item.id)}
+                                >
+                                  {item.name}
+                                </button>
+                              </h2>
+                            </div>
                             <p className="small">
                               {
                                 allElections.find(
@@ -1786,7 +1809,11 @@ function App() {
                           <div className="comparison-mobile-fields">
                             <section>
                               <h3>所属政党</h3>
-                              <RecordText entry={item.party} />
+                              {item.party.status === "recorded" ? (
+                                <p>{item.party.value}</p>
+                              ) : (
+                                <RecordText entry={item.party} />
+                              )}
                             </section>
                             <section>
                               <h3>公約の要約</h3>
@@ -1805,6 +1832,9 @@ function App() {
                                 </p>
                               ) : (
                                 <RecordText entry={missing<string>()} />
+                              )}
+                              {item.pledges.length > 0 && (
+                                <Sources sources={sourcesFor(item)} />
                               )}
                             </section>
                           </div>
@@ -1845,6 +1875,11 @@ function App() {
                           ))
                           : comparisonCandidates.map((item) => (
                             <th scope="col" key={item.id}>
+                              <Photo
+                                key={item.id}
+                                entry={item.photo}
+                                name={item.name}
+                              />
                               <button
                                 className="candidate-name"
                                 onClick={() => openCandidate(item.id)}
