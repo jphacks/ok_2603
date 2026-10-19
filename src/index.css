@@ -5,7 +5,7 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  font-size: 16px;
+  font-size: 21px;
   line-height: 1.8;
 }
 * {
@@ -18,7 +18,7 @@ body {
 }
 .app-shell {
   position: relative;
-  width: min(100%, 430px);
+  width: min(100%, 520px);
   min-height: 100dvh;
   margin: 0 auto;
   overflow-x: clip;
@@ -81,7 +81,7 @@ h2 {
   margin-bottom: 12px;
 }
 h3 {
-  font-size: 18px;
+  font-size: 23px;
   margin-bottom: 8px;
 }
 p {
@@ -111,7 +111,7 @@ svg {
   gap: 12px;
   text-align: left;
   font-weight: 800;
-  font-size: 22px;
+  font-size: 26px;
   white-space: nowrap;
   line-height: 1.5;
 }
@@ -127,7 +127,7 @@ svg {
 }
 .brand-sub {
   display: block;
-  font-size: 12px;
+  font-size: 18px;
   color: #748194;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -144,7 +144,7 @@ svg {
   border-bottom: 3px solid transparent;
   padding: 3px 0 0;
   color: #687587;
-  font-size: 15px;
+  font-size: 21px;
   white-space: nowrap;
 }
 .navigation button.nav-active {
@@ -153,7 +153,7 @@ svg {
   font-weight: 700;
 }
 .count {
-  font-size: 12px;
+  font-size: 18px;
   background: #ecf0f6;
   border-radius: 50%;
   min-width: 19px;
@@ -233,7 +233,7 @@ svg {
   margin: 0 0 12px;
 }
 .council-fields dt {
-  font-size: 13px;
+  font-size: 20px;
   color: #687587;
 }
 .council-fields dd {
@@ -241,7 +241,7 @@ svg {
   overflow-wrap: anywhere;
 }
 .eyebrow {
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.18em;
   color: #6c839c;
@@ -255,7 +255,7 @@ svg {
   margin: 0 0 22px;
 }
 .hero-description {
-  font-size: 16px;
+  font-size: 21px;
   line-height: 2.1;
 }
 .hero-tags {
@@ -265,7 +265,7 @@ svg {
   margin-top: 28px;
 }
 .hero-tags span {
-  font-size: 12px;
+  font-size: 18px;
   background: #eaf0f5;
   border: 1px solid #e0e7ee;
   border-radius: 3px;
@@ -298,7 +298,7 @@ svg {
 .art-label {
   position: absolute;
   top: 7px;
-  font-size: 10px;
+  font-size: 17px;
   letter-spacing: 0.17em;
   color: #7891a7;
 }
@@ -339,7 +339,7 @@ svg {
   display: block;
   margin-top: 48px;
   text-align: center;
-  font-size: 15px;
+  font-size: 21px;
   letter-spacing: 0.13em;
   color: #536e8c;
 }
@@ -424,7 +424,7 @@ svg {
   flex: 1;
   background: transparent;
   padding: 9px 0;
-  font-size: 15px;
+  font-size: 21px;
 }
 .search-input:focus-within {
   outline: 2px solid #337aab;
@@ -454,7 +454,7 @@ svg {
   background: transparent;
   color: #18345c;
   text-align: left;
-  font-size: 15px;
+  font-size: 21px;
   min-height: 48px;
   align-items: center;
   gap: 12px;
@@ -466,12 +466,12 @@ svg {
 }
 .region-suggestions button span {
   color: #718094;
-  font-size: 13px;
+  font-size: 20px;
 }
 .search-error {
   margin: 8px 0 0;
   color: #b42318;
-  font-size: 13px;
+  font-size: 20px;
 }
 .search-input .button:disabled {
   cursor: not-allowed;
@@ -479,7 +479,7 @@ svg {
 }
 .search-panel > .small {
   margin: 10px 0 0;
-  font-size: 12px;
+  font-size: 18px;
 }
 .button {
   border: 1px solid transparent;
@@ -489,7 +489,7 @@ svg {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 21px;
   font-weight: 600;
   min-height: 42px;
   white-space: normal;
@@ -518,13 +518,13 @@ svg {
 .text-button {
   color: #315e88;
   padding: 5px 0;
-  font-size: 14px;
+  font-size: 21px;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 .small,
 .muted {
-  font-size: 14px;
+  font-size: 21px;
   color: #718094;
 }
 .section {
@@ -555,16 +555,16 @@ svg {
   padding: 28px 0;
 }
 .principles > div > span {
-  font-size: 12px;
+  font-size: 18px;
   color: #8196af;
   letter-spacing: 0.1em;
 }
 .principles h3 {
   margin-top: 9px;
-  font-size: 16px;
+  font-size: 21px;
 }
 .principles p {
-  font-size: 13px;
+  font-size: 20px;
   margin-bottom: 0;
 }
 .footer {
@@ -575,29 +575,29 @@ svg {
   padding: 30px 0 45px;
 }
 .footer > span {
-  font-size: 14px;
+  font-size: 21px;
   font-weight: 700;
 }
 .footer p {
-  font-size: 12px;
+  font-size: 18px;
   margin: 0;
 }
 .footer button {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 18px;
 }
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 20px;
   color: #8290a1;
   margin: 15px 0 25px;
   flex-wrap: wrap;
 }
 .breadcrumb button {
   padding: 0;
-  font-size: 13px;
+  font-size: 20px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -616,7 +616,7 @@ svg {
   width: 100%;
 }
 .glossary-page-heading p:last-child {
-  font-size: 14px;
+  font-size: 21px;
 }
 .page-heading p:last-child {
   margin-bottom: 0;
@@ -651,7 +651,7 @@ svg {
 .place-address {
   display: block;
   color: #718094;
-  font-size: 12px;
+  font-size: 18px;
 }
 .place-list .button {
   flex: 0 0 auto;
@@ -661,7 +661,7 @@ svg {
 }
 .badge {
   display: inline-block;
-  font-size: 12px;
+  font-size: 18px;
   padding: 3px 9px;
   background: #eef1f5;
   color: #68768a;
@@ -688,12 +688,12 @@ svg {
   margin-bottom: 12px;
 }
 .empty h3 {
-  font-size: 18px;
+  font-size: 23px;
 }
 .empty p {
   max-width: 520px;
   margin: 0 auto;
-  font-size: 14px;
+  font-size: 21px;
 }
 .filters {
   display: flex;
@@ -711,7 +711,7 @@ svg {
   border-radius: 6px;
 }
 .segmented button {
-  font-size: 14px;
+  font-size: 21px;
   padding: 7px 17px;
   border-radius: 3px;
 }
@@ -720,7 +720,7 @@ svg {
   color: white;
 }
 .filters label {
-  font-size: 14px;
+  font-size: 21px;
 }
 .filters select {
   border: 1px solid #d5deea;
@@ -734,7 +734,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 14px;
+  font-size: 21px;
 }
 th,
 td {
@@ -753,13 +753,13 @@ tbody tr:last-child > * {
   background: #edf2f8;
   border-left: 3px solid #8da5c0;
   color: #536984;
-  font-size: 14px;
+  font-size: 21px;
   padding: 14px 18px;
   border-radius: 0 5px 5px 0;
 }
 .input-label {
   display: block;
-  font-size: 15px;
+  font-size: 21px;
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -781,11 +781,11 @@ tbody tr:last-child > * {
   padding: 25px;
 }
 .preview-callout h2 {
-  font-size: 19px;
+  font-size: 25px;
   margin-top: 9px;
 }
 .preview-callout p {
-  font-size: 14px;
+  font-size: 21px;
   margin-bottom: 0;
 }
 .candidate-grid,
@@ -811,7 +811,7 @@ tbody tr:last-child > * {
   margin-bottom: 24px;
 }
 .candidate-intro h2 {
-  font-size: 21px;
+  font-size: 25px;
   margin: 0;
 }
 .candidate-name {
@@ -832,7 +832,7 @@ tbody tr:last-child > * {
   min-width: 88px;
   width: 88px;
   height: 105px;
-  font-size: 13px;
+  font-size: 20px;
   text-align: center;
 }
 .candidate-intro img,
@@ -856,7 +856,7 @@ tbody tr:last-child > * {
   margin-bottom: 8px;
 }
 .detail-profile p {
-  font-size: 14px;
+  font-size: 21px;
   margin: 0;
 }
 .card-actions {
@@ -869,17 +869,17 @@ tbody tr:last-child > * {
 .record > p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 15px;
+  font-size: 21px;
   margin: 9px 0;
 }
 .record > ul {
   padding-left: 20px;
   color: #52657c;
-  font-size: 15px;
+  font-size: 21px;
 }
 .sources {
   display: block;
-  font-size: 12px;
+  font-size: 18px;
   margin: 9px 0;
   line-height: 1.7;
   overflow-wrap: anywhere;
@@ -905,7 +905,7 @@ tbody tr:last-child > * {
 .tab-list button {
   padding: 14px 18px;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 21px;
   border-bottom: 3px solid transparent;
 }
 .tab-list button[aria-selected="true"] {
@@ -933,7 +933,7 @@ tbody tr:last-child > * {
 }
 .checks dt {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 21px;
 }
 .checks dd {
   margin: 0;
@@ -960,7 +960,7 @@ tbody tr:last-child > * {
 }
 .preview-toolbar p {
   flex-basis: 100%;
-  font-size: 14px;
+  font-size: 21px;
   margin: 0;
 }
 .comparison-heading h2 {
@@ -978,7 +978,7 @@ tbody tr:last-child > * {
 .pledge-publication-notice strong {
   display: block;
   color: #654600;
-  font-size: 16px;
+  font-size: 21px;
 }
 .pledge-publication-notice p {
   margin: 6px 0;
@@ -990,7 +990,7 @@ tbody tr:last-child > * {
 .pledge-not-published {
   margin: 0;
   color: #72551d;
-  font-size: 14px;
+  font-size: 21px;
   line-height: 1.6;
 }
 .comparison-candidate-list {
@@ -1022,7 +1022,7 @@ tbody tr:last-child > * {
   align-items: center;
   gap: 8px;
   color: #263c59;
-  font-size: 14px;
+  font-size: 21px;
   font-weight: 600;
 }
 .party-label > span {
@@ -1031,7 +1031,7 @@ tbody tr:last-child > * {
   background: #edf2f8;
   color: #526782;
   padding: 3px 7px;
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 500;
 }
 .comparison-mobile-list {
@@ -1078,9 +1078,17 @@ tbody tr:last-child > * {
   margin-top: 12px;
 }
 .comparison-pledge + .comparison-pledge {
-  border-top: 1px solid #e1e7ee;
-  margin-top: 18px;
-  padding-top: 18px;
+  border-top: 0;
+  margin-top: 6px;
+  padding-top: 0;
+}
+.pledge-bullets {
+  margin: 4px 0 0;
+  padding-left: 1.2em;
+  list-style: disc;
+}
+.pledge-bullets .comparison-pledge {
+  line-height: 1.5;
 }
 .compare-tray {
   position: fixed;
@@ -1097,7 +1105,7 @@ tbody tr:last-child > * {
   align-items: center;
   z-index: 10;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 21px;
 }
 .glossary-page {
   margin-top: 24px;
@@ -1129,11 +1137,11 @@ tbody tr:last-child > * {
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 15px;
+  font-size: 21px;
 }
 .glossary-results {
   color: #66758a;
-  font-size: 13px;
+  font-size: 20px;
   margin: 8px 0 14px;
 }
 .glossary-list {
@@ -1149,7 +1157,7 @@ tbody tr:last-child > * {
 }
 .glossary-entry h3 {
   margin: 0 0 8px;
-  font-size: 18px;
+  font-size: 23px;
 }
 .glossary-entry rt {
   color: #66758a;
@@ -1223,13 +1231,13 @@ tbody tr:last-child > * {
   margin-top: 14px;
 }
 .tour-card p {
-  font-size: 15px;
+  font-size: 21px;
 }
 .tour-progress {
   display: flex;
   justify-content: space-between;
   color: #71839a;
-  font-size: 13px;
+  font-size: 20px;
 }
 .tour-actions {
   display: flex;
@@ -1286,7 +1294,7 @@ tbody tr:last-child > * {
     gap: 15px;
   }
   .navigation button {
-    font-size: 13px;
+    font-size: 20px;
   }
   .navigation svg {
     display: none;
@@ -1299,7 +1307,7 @@ tbody tr:last-child > * {
     transform: scale(0.8);
   }
   .hero-description {
-    font-size: 15px;
+    font-size: 21px;
   }
   .principles {
     gap: 20px;
@@ -1316,22 +1324,22 @@ tbody tr:last-child > * {
 }
 @media (max-width: 600px) {
   :root {
-    font-size: 15px;
+    font-size: 21px;
   }
   .header-inner {
     height: 74px;
     padding: 0 20px;
   }
   .brand {
-    font-size: 20px;
+    font-size: 26px;
   }
   .brand-mark {
     height: 38px;
     width: 36px;
-    font-size: 22px;
+    font-size: 26px;
   }
   .brand-sub {
-    font-size: 11px;
+    font-size: 17px;
   }
   .navigation {
     position: fixed;
@@ -1353,7 +1361,7 @@ tbody tr:last-child > * {
     justify-content: center;
     border-bottom: 0;
     border-top: 3px solid transparent;
-    font-size: 11px;
+    font-size: 17px;
     padding: 4px 0;
     position: relative;
   }
@@ -1371,7 +1379,7 @@ tbody tr:last-child > * {
     position: absolute;
     top: 7px;
     left: calc(50% + 10px);
-    font-size: 10px;
+    font-size: 17px;
     width: 15px;
     min-width: 15px;
     height: 15px;
@@ -1392,7 +1400,7 @@ tbody tr:last-child > * {
     margin-bottom: 18px;
   }
   .hero-description {
-    font-size: 14px;
+    font-size: 21px;
     line-height: 2;
   }
   .hero-art {
@@ -1403,18 +1411,18 @@ tbody tr:last-child > * {
     margin-top: 20px;
   }
   .hero-tags span {
-    font-size: 11px;
+    font-size: 17px;
     padding: 3px 7px;
   }
   .eyebrow {
-    font-size: 11px;
+    font-size: 17px;
     margin-bottom: 9px;
   }
   .search-panel {
     padding: 21px 18px;
   }
   .search-panel h2 {
-    font-size: 20px;
+    font-size: 26px;
     margin-bottom: 17px;
   }
   .search-input {
@@ -1422,27 +1430,27 @@ tbody tr:last-child > * {
     gap: 5px;
   }
   .search-input input {
-    font-size: 13px;
+    font-size: 20px;
   }
   .search-input svg {
     width: 17px;
   }
   .search-input .button {
     padding: 8px 14px;
-    font-size: 13px;
+    font-size: 20px;
     min-height: 37px;
   }
   .search-panel > .small {
-    font-size: 11px;
+    font-size: 17px;
   }
   .section {
     padding: 30px 0;
   }
   .section-heading h2 {
-    font-size: 21px;
+    font-size: 25px;
   }
   .section-heading .muted {
-    font-size: 11px;
+    font-size: 17px;
   }
   .principles {
     grid-template-columns: 1fr;
@@ -1453,19 +1461,19 @@ tbody tr:last-child > * {
     margin-top: 3px;
   }
   .principles p {
-    font-size: 13px;
+    font-size: 20px;
   }
   .footer {
     padding: 24px 0 30px;
   }
   .footer > span {
-    font-size: 13px;
+    font-size: 20px;
   }
   .footer button {
-    font-size: 11px;
+    font-size: 17px;
   }
   .breadcrumb {
-    font-size: 12px;
+    font-size: 18px;
     margin: 10px 0 20px;
   }
   .page-heading {
@@ -1478,10 +1486,10 @@ tbody tr:last-child > * {
     font-size: 31px;
   }
   h2 {
-    font-size: 21px;
+    font-size: 25px;
   }
   .page-heading p {
-    font-size: 14px;
+    font-size: 21px;
   }
   .panel {
     padding: 21px 17px;
@@ -1491,20 +1499,20 @@ tbody tr:last-child > * {
     gap: 15px;
   }
   .filters label {
-    font-size: 13px;
+    font-size: 20px;
   }
   .segmented button {
     padding: 6px 13px;
-    font-size: 13px;
+    font-size: 20px;
   }
   .empty {
     padding: 30px 5px;
   }
   .empty h3 {
-    font-size: 16px;
+    font-size: 21px;
   }
   .empty p {
-    font-size: 13px;
+    font-size: 20px;
   }
   .preview-callout {
     padding: 21px 17px;
@@ -1512,27 +1520,27 @@ tbody tr:last-child > * {
     flex-direction: column;
   }
   .preview-callout h2 {
-    font-size: 18px;
+    font-size: 23px;
   }
   .preview-callout p {
-    font-size: 13px;
+    font-size: 20px;
   }
   .checks > div {
     grid-template-columns: 1fr;
     gap: 9px;
   }
   .checks dt {
-    font-size: 14px;
+    font-size: 21px;
   }
   .detail-profile {
     gap: 15px;
   }
   .detail-profile p {
-    font-size: 13px;
+    font-size: 20px;
   }
   .tab-list button {
     padding: 12px;
-    font-size: 13px;
+    font-size: 20px;
   }
   .status-guide {
     grid-template-columns: 1fr;
@@ -1543,17 +1551,17 @@ tbody tr:last-child > * {
   th,
   td {
     padding: 12px 10px;
-    font-size: 13px;
+    font-size: 20px;
   }
   .compare-tray {
     bottom: 80px;
     max-width: calc(100% - 24px);
     padding: 8px 12px;
     gap: 12px;
-    font-size: 13px;
+    font-size: 20px;
   }
   .compare-tray .button {
-    font-size: 13px;
+    font-size: 20px;
   }
   .tour-shade {
     padding: 14px 14px 82px;
@@ -1562,16 +1570,16 @@ tbody tr:last-child > * {
     padding: 21px;
   }
   .tour-card h2 {
-    font-size: 20px;
+    font-size: 26px;
   }
   .tour-card p {
-    font-size: 14px;
+    font-size: 21px;
   }
   .tour-actions {
     gap: 15px;
   }
   .tour-actions .text-button {
-    font-size: 13px;
+    font-size: 20px;
   }
   .tour-actions .button {
     padding: 9px 16px;
@@ -1604,7 +1612,7 @@ tbody tr:last-child > * {
 
 @media (max-width: 600px) {
   :root {
-    font-size: 17px;
+    font-size: 22px;
     line-height: 1.7;
   }
 
@@ -1619,7 +1627,7 @@ tbody tr:last-child > * {
   }
 
   .brand {
-    font-size: 19px;
+    font-size: 25px;
   }
 
   .brand-mark {
@@ -1643,7 +1651,7 @@ tbody tr:last-child > * {
     min-height: 56px;
     gap: 4px;
     padding: 4px 2px;
-    font-size: 13px;
+    font-size: 20px;
     line-height: 1.2;
   }
 
@@ -1658,7 +1666,7 @@ tbody tr:last-child > * {
     width: 16px;
     height: 16px;
     min-width: 16px;
-    font-size: 11px;
+    font-size: 17px;
   }
 
   .hero {
@@ -1672,7 +1680,7 @@ tbody tr:last-child > * {
   }
 
   .hero-description {
-    font-size: 16px;
+    font-size: 21px;
     line-height: 1.9;
   }
 
@@ -1686,19 +1694,19 @@ tbody tr:last-child > * {
   }
 
   .hero-tags span {
-    font-size: 13px;
+    font-size: 20px;
     padding: 4px 8px;
   }
 
   .breadcrumb {
     gap: 7px;
-    font-size: 14px;
+    font-size: 21px;
     margin: 12px 0 18px;
   }
 
   .breadcrumb button {
     min-height: 40px;
-    font-size: 14px;
+    font-size: 21px;
   }
 
   .page-heading {
@@ -1712,11 +1720,11 @@ tbody tr:last-child > * {
   }
 
   h2 {
-    font-size: 22px;
+    font-size: 26px;
   }
 
   .page-heading p {
-    font-size: 16px;
+    font-size: 21px;
   }
 
   .search-panel,
@@ -1732,7 +1740,7 @@ tbody tr:last-child > * {
 
   .search-panel h2,
   .section-heading h2 {
-    font-size: 21px;
+    font-size: 25px;
   }
 
   .search-input {
@@ -1747,20 +1755,20 @@ tbody tr:last-child > * {
     width: 100%;
     min-height: 44px;
     padding: 8px 2px;
-    font-size: 18px;
+    font-size: 23px;
   }
 
   .search-input .button {
     grid-column: 1 / -1;
     width: 100%;
     min-height: 46px;
-    font-size: 17px;
+    font-size: 22px;
   }
 
   .search-panel > .small,
   .small,
   .muted {
-    font-size: 15px;
+    font-size: 21px;
   }
 
   .section {
@@ -1770,7 +1778,7 @@ tbody tr:last-child > * {
   .button {
     min-height: 46px;
     padding: 10px 14px;
-    font-size: 16px;
+    font-size: 21px;
     border-radius: 7px;
   }
 
@@ -1779,14 +1787,14 @@ tbody tr:last-child > * {
     align-items: center;
     min-height: 44px;
     padding: 7px 4px;
-    font-size: 16px;
+    font-size: 21px;
     text-align: left;
   }
 
   .wide-input,
   .filters select {
     min-height: 46px;
-    font-size: 18px;
+    font-size: 23px;
   }
 
   .filters {
@@ -1802,7 +1810,7 @@ tbody tr:last-child > * {
     flex: 1;
     min-height: 44px;
     padding: 8px 6px;
-    font-size: 15px;
+    font-size: 21px;
   }
 
   .filters label {
@@ -1810,7 +1818,7 @@ tbody tr:last-child > * {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    font-size: 16px;
+    font-size: 21px;
   }
 
   .filters select {
@@ -1839,7 +1847,7 @@ tbody tr:last-child > * {
   }
 
   .candidate-intro h2 {
-    font-size: 20px;
+    font-size: 26px;
   }
 
   .candidate-intro img,
@@ -1881,7 +1889,7 @@ tbody tr:last-child > * {
   .tab-list button {
     min-height: 48px;
     padding: 10px 14px;
-    font-size: 15px;
+    font-size: 21px;
   }
 
   .detail-content {
@@ -1897,7 +1905,7 @@ tbody tr:last-child > * {
   th,
   td {
     padding: 12px 10px;
-    font-size: 15px;
+    font-size: 21px;
   }
 
   .tour-shade {
@@ -1936,7 +1944,7 @@ tbody tr:last-child > * {
   right: auto;
   bottom: 0;
   left: 50%;
-  width: min(100%, 430px);
+  width: min(100%, 520px);
   transform: translateX(-50%);
   height: calc(82px + env(safe-area-inset-bottom));
   padding: 0 16px env(safe-area-inset-bottom);
@@ -1962,7 +1970,7 @@ tbody tr:last-child > * {
   padding: 6px 2px;
   border: 0;
   border-top: 3px solid transparent;
-  font-size: 13px;
+  font-size: 20px;
   line-height: 1.2;
 }
 
@@ -1985,7 +1993,7 @@ tbody tr:last-child > * {
   width: 16px;
   height: 16px;
   min-width: 16px;
-  font-size: 11px;
+  font-size: 17px;
 }
 
 @container (max-width: 600px) {
@@ -2028,7 +2036,7 @@ tbody tr:last-child > * {
 
   .comparison-mobile-card h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 26px;
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
@@ -2054,19 +2062,28 @@ tbody tr:last-child > * {
   .comparison-mobile-fields h3 {
     margin: 0 0 8px;
     color: #526782;
-    font-size: 14px;
+    font-size: 21px;
   }
 
   .comparison-mobile-fields .record,
   .comparison-mobile-fields .comparison-pledge {
-    font-size: 16px;
+    font-size: 21px;
     line-height: 1.7;
     overflow-wrap: anywhere;
   }
 
   .comparison-mobile-fields .comparison-pledge + .comparison-pledge {
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: 6px;
+    padding-top: 0;
+  }
+
+  .comparison-mobile-fields > section {
+    padding: 8px 0;
+  }
+
+  .comparison-mobile-fields .comparison-pledge {
+    font-size: 21px;
+    line-height: 1.55;
   }
 
   .comparison-mobile-pledge {
@@ -2110,7 +2127,7 @@ tbody tr:last-child > * {
     flex: 0 0 auto;
     min-height: 44px;
     padding: 7px 9px;
-    font-size: 12px;
+    font-size: 18px;
     white-space: nowrap;
   }
 
@@ -2122,7 +2139,7 @@ tbody tr:last-child > * {
 
 @media (max-width: 360px) {
   .navigation button {
-    font-size: 12px;
+    font-size: 18px;
   }
 
   .hero h1 {

@@ -89,7 +89,7 @@
 }
 .home-shell .governor-entry:hover { background: linear-gradient(110deg, #123d5d, #285475); }
 .governor-entry-copy { position: relative; z-index: 3; }
-.governor-entry-eyebrow { display: flex; gap: 12px; align-items: center; font-size: 16px; font-weight: 400; margin-bottom: 10px; letter-spacing: 0.03em; }
+.governor-entry-eyebrow { display: flex; gap: 12px; align-items: center; font-size: 21px; font-weight: 400; margin-bottom: 10px; letter-spacing: 0.03em; }
 .governor-entry-eyebrow::before { content: ''; width: 36px; height: 1px; background: #fff; }
 .home-shell .governor-entry-label {
   font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "MS PMincho", serif;
@@ -98,7 +98,7 @@
   letter-spacing: 0.045em;
   line-height: 1.5;
 }
-.governor-entry-caption { display: block; margin-top: 6px; font-size: 21px; font-weight: 400; letter-spacing: 0.04em; }
+.governor-entry-caption { display: block; margin-top: 6px; font-size: 25px; font-weight: 400; letter-spacing: 0.04em; }
 .home-shell .governor-entry-arrow {
   position: absolute;
   z-index: 4;
@@ -129,7 +129,7 @@
 .home-pin { display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 auto; border-radius: 50%; background: #efe5d5; }
 .home-pin svg { width: 29px; height: 29px; fill: #103653; stroke: #fffaf0; stroke-width: 1; }
 .home-shell .home-search h2 { font-size: clamp(20px, 3.3vw, 34px); margin: 0 0 4px; color: #103553; line-height: 1.5; }
-.home-search-heading p { margin: 0 0 24px; font-size: 16px; color: #3d5c79; }
+.home-search-heading p { margin: 0 0 24px; font-size: 21px; color: #3d5c79; }
 .home-shell .home-search form { position: relative; }
 .home-shell .search-input {
   padding: 7px 10px 7px 20px;
@@ -140,20 +140,20 @@
   min-height: 60px;
   box-shadow: 0 0 0 1px #eef0f1;
 }
-.home-shell .search-input input { padding: 6px 0; font-size: 18px; color: #18345c; width: 100%; }
+.home-shell .search-input input { padding: 6px 0; font-size: 23px; color: #18345c; width: 100%; }
 .home-shell .search-input input::placeholder { color: #8996a4; }
 .home-shell .home-search-icon { color: #123858; width: 25px; height: 25px; }
-.home-shell .search-input .button { min-height: 40px; padding: 6px 12px; font-size: 14px; border-radius: 10px; }
+.home-shell .search-input .button { min-height: 40px; padding: 6px 12px; font-size: 21px; border-radius: 10px; }
 .home-shell .search-input .button:disabled { display: none; }
 .home-shell .region-suggestions { border-color: #ded7cb; background: #fffdf9; border-radius: 14px; top: calc(100% + 8px); max-height: min(250px, 35dvh); }
 .home-shell .region-suggestions button { border-radius: 8px; }
 .home-shell .region-suggestions button:hover, .home-shell .region-suggestions button[aria-selected=true] { background: #f2ede4; }
 .home-city-shortcuts { display: flex; flex-wrap: wrap; gap: 9px; position: relative; margin-top: 18px; }
-.home-city-shortcuts button { border: 1px solid #e4dfd6; border-radius: 999px; padding: 7px 16px; min-height: 44px; color: #16375a; font-size: 16px; background: #faf7f1a6; }
+.home-city-shortcuts button { border: 1px solid #e4dfd6; border-radius: 999px; padding: 7px 16px; min-height: 44px; color: #16375a; font-size: 21px; background: #faf7f1a6; }
 .home-city-shortcuts button:hover { background: #ede5d6; border-color: #c9bda7; }
-.home-shell .home-search > .small { position: relative; margin-top: 16px; color: #687d8c; font-size: 12px; }
+.home-shell .home-search > .small { position: relative; margin-top: 16px; color: #687d8c; font-size: 19px; }
 .home-flower-outline { position: absolute; right: -1px; top: 0; width: 240px; height: 190px; color: #e8a98c; opacity: 0.38; pointer-events: none; }
-.home-image-note { margin: 12px 0 0; color: #7b858b; font-size: 11px; text-align: right; }
+.home-image-note { margin: 12px 0 0; color: #7b858b; font-size: 18px; text-align: right; }
 .home-shell .footer { display: none; }
 .home-shell .navigation {
   position: fixed;
@@ -173,7 +173,7 @@
   background: #fffefbed;
   backdrop-filter: blur(12px);
 }
-.home-shell .navigation button { display: flex; flex-direction: column; justify-content: center; gap: 3px; border: 0; border-top: 3px solid transparent; padding: 8px 0; font-size: 15px; color: #7d8a99; }
+.home-shell .navigation button { display: flex; flex-direction: column; justify-content: center; gap: 3px; border: 0; border-top: 3px solid transparent; padding: 8px 0; font-size: 21px; color: #7d8a99; }
 .home-shell .navigation svg { display: block; width: 27px; height: 27px; }
 .home-shell .navigation .nav-active { color: #103555; border-top-color: #103555; font-weight: 700; }
 .home-shell .navigation .nav-active svg { fill: #103555; stroke: #103555; }
@@ -188,31 +188,31 @@
   .home-island { width: 108px; height: 125px; top: 4px; right: 68px; }
   .home-shell .home-search { padding: 19px 13px 14px; border-radius: 16px; }
   .home-shell .home-search h2 { font-size: clamp(18px, 4.8cqw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
-  .home-search-heading p { font-size: 11px; margin-bottom: 15px; line-height: 1.6; }
+  .home-search-heading p { font-size: 18px; margin-bottom: 15px; line-height: 1.6; }
   .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
-  .home-shell .search-input input { font-size: 14px; line-height: 1.5; }
+  .home-shell .search-input input { font-size: 21px; line-height: 1.5; }
   .home-shell .home-search-icon { width: 22px; height: 22px; }
-  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 12px; }
+  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 19px; }
   .home-city-shortcuts { gap: 6px; margin-top: 11px; }
-  .home-city-shortcuts button { font-size: 11px; min-height: 44px; padding: 6px 7px; }
-  .home-shell .home-search > .small { font-size: 10px; margin-top: 11px; line-height: 1.7; }
+  .home-city-shortcuts button { font-size: 18px; min-height: 44px; padding: 6px 7px; }
+  .home-shell .home-search > .small { font-size: 17px; margin-top: 11px; line-height: 1.7; }
   .home-flower-outline { width: 130px; height: 120px; }
-  .home-image-note { font-size: 9px; margin-top: 8px; }
+  .home-image-note { font-size: 15px; margin-top: 8px; }
 }
 @media (max-width: 600px) {
   .home-shell { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
   .home-shell .header-inner { height: 74px; padding: 0 19px; gap: 8px; }
-  .home-shell .brand { font-size: 22px; gap: 12px; }
+  .home-shell .brand { font-size: 26px; gap: 12px; }
   .home-shell .brand-mark { width: 43px; height: 46px; font-size: 31px; border-radius: 10px; }
   .home-menu-toggle { width: 43px; height: 44px; padding: 10px; }
   .home-visual { min-height: 230px; padding: 28px 25px; background-position: 56% center; }
   .home-shell .home-catchphrase { font-size: clamp(29px, 8.7vw, 52px); line-height: 1.42; margin-bottom: 10px; letter-spacing: 0.035em; }
   .home-content { margin-top: -57px; padding: 0 14px; }
   .home-shell .governor-entry { min-height: 132px; padding: 16px 17px; border-radius: 16px; margin-bottom: 16px; }
-  .governor-entry-eyebrow { font-size: 11px; gap: 8px; margin-bottom: 6px; }
+  .governor-entry-eyebrow { font-size: 18px; gap: 8px; margin-bottom: 6px; }
   .governor-entry-eyebrow::before { width: 22px; }
   .home-shell .governor-entry-label { font-size: clamp(26px, 6.9vw, 39px); letter-spacing: 0.025em; }
-  .governor-entry-caption { font-size: 14px; margin-top: 5px; }
+  .governor-entry-caption { font-size: 21px; margin-top: 5px; }
   .home-shell .governor-entry-arrow { width: 40px; height: 40px; right: 17px; bottom: 13px; font-size: 27px; }
   .governor-flower { width: 130px; height: 190px; right: -12px; bottom: -34px; }
   .home-island { width: 108px; height: 125px; top: 4px; right: 68px; opacity: 0.9; }
@@ -221,17 +221,17 @@
   .home-pin { width: 35px; height: 35px; }
   .home-pin svg { width: 22px; height: 22px; }
   .home-shell .home-search h2 { font-size: clamp(18px, 4.8vw, 28px); line-height: 1.5; margin-bottom: 3px; white-space: nowrap; }
-  .home-search-heading p { font-size: 11px; margin-bottom: 15px; line-height: 1.6; }
+  .home-search-heading p { font-size: 18px; margin-bottom: 15px; line-height: 1.6; }
   .home-shell .search-input { flex-wrap: nowrap; padding: 7px 12px; gap: 10px; min-height: 49px; border-radius: 14px; }
-  .home-shell .search-input input { font-size: 14px; line-height: 1.5; }
+  .home-shell .search-input input { font-size: 21px; line-height: 1.5; }
   .home-shell .home-search-icon { width: 22px; height: 22px; }
-  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 12px; }
+  .home-shell .search-input .button { width: auto; min-height: 34px; padding: 4px 8px; font-size: 19px; }
   .home-city-shortcuts { gap: 6px; margin-top: 11px; }
-  .home-city-shortcuts button { font-size: 11px; min-height: 44px; padding: 6px 7px; }
-  .home-shell .home-search > .small { font-size: 10px; margin-top: 11px; line-height: 1.7; }
+  .home-city-shortcuts button { font-size: 18px; min-height: 44px; padding: 6px 7px; }
+  .home-shell .home-search > .small { font-size: 17px; margin-top: 11px; line-height: 1.7; }
   .home-flower-outline { width: 130px; height: 120px; }
-  .home-image-note { font-size: 9px; margin-top: 8px; }
+  .home-image-note { font-size: 15px; margin-top: 8px; }
   .home-shell .navigation { height: calc(70px + env(safe-area-inset-bottom)); padding-left: 14px; padding-right: 14px; }
-  .home-shell .navigation button { font-size: 13px; gap: 2px; padding: 6px 0; }
+  .home-shell .navigation button { font-size: 20px; gap: 2px; padding: 6px 0; }
   .home-shell .navigation svg { width: 25px; height: 25px; }
 }

@@ -12,7 +12,7 @@
 .polling [role=alert] { border-left: 4px solid #a72d32; background: #fff1f1; color: #802025; padding: 1rem; }
 .polling [role=status] { background: #eef5fc; padding: .8rem; }
 .polling-map { height: 400px; width: 100%; isolation: isolate; z-index: 0; border: 1px solid #a8b5c7; border-radius: 12px; }
-.polling-pin { border-radius: 50% 50% 50% 0; transform-origin: center; background: #18345c; color: white; border: 2px solid white; text-align: center; font-weight: 700; font-size: 16px; box-shadow: 0 1px 5px #3338; }
+.polling-pin { border-radius: 50% 50% 50% 0; transform-origin: center; background: #18345c; color: white; border: 2px solid white; text-align: center; font-weight: 700; font-size: 21px; box-shadow: 0 1px 5px #3338; }
 .polling-pin span { display: block; line-height: 28px; }
 .polling-results { padding-left: 1.6rem; }
 .polling .leaflet-popup-content p { margin: .5rem 0; }
