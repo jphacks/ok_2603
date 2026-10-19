@@ -8,6 +8,7 @@ import {
   glossaryReadings,
 } from "./election/data";
 import { CouncilPage } from "./election/CouncilPage";
+import { ThemeComparison } from "./election/ThemeComparison";
 import { IslandDecoration, FlowerDecoration } from "./election/HomeDecor";
 import "./home.css";
 import {
@@ -40,9 +41,10 @@ import {
   Photo,
   RecordText,
   Sources,
+  RubyName,
 } from "./election/components";
 
-type Page = "home" | "region" | "candidates" | "detail" | "compare" | "guide" | "council" | "polling" | "polling-admin";
+type Page = "home" | "region" | "candidates" | "detail" | "compare" | "themes" | "guide" | "council" | "polling" | "polling-admin";
 type ApiElection = {
   id: string;
   name: string;
@@ -223,13 +225,7 @@ function mapApiElection(item: ApiElection): Election {
   };
 }
 const tutorialKey = "election-prototype:tutorial:v1";
-const tabs = [
-  "公約",
-  "経歴",
-  "議会での発言",
-  "議案への賛否",
-  "過去の公約・実施状況",
-];
+const tabs = ["公約", "経歴"];
 const comparisonLabels = ["所属政党", "公約", ...checkLabels] as const;
 type ComparisonLabel = (typeof comparisonLabels)[number];
 const steps = [
@@ -407,7 +403,7 @@ function App() {
     };
   }, [page, region, municipality]);
   useEffect(() => {
-    if (page === "compare") return;
+    if (page === "compare" || page === "themes") return;
     if (
       page !== "candidates" ||
       !electionId ||
@@ -463,7 +459,7 @@ function App() {
   }, [page, electionId]);
   useEffect(() => {
     if (electionId !== "naha-mayor-2026") return;
-    if (page !== "candidates" && page !== "compare") return;
+    if (page !== "candidates" && page !== "compare" && page !== "themes") return;
     let cancelled = false;
     const loadPublishedPledges = async () => {
       try {
@@ -565,6 +561,7 @@ function App() {
       (!electionId || item.electionId === electionId),
   );
   const results = searchCandidates(regionalCandidates, query);
+  const pickerCandidates = searchCandidates(electionCandidates, query);
   const municipalMatches = searchMunicipalities(regionQuery);
   const regionSuggestions = municipalMatches;
   const exactMunicipality = municipalities.find(
@@ -753,8 +750,10 @@ function App() {
         : page === "detail"
           ? candidate?.name || "候補者情報：未収録"
           : page === "compare"
-            ? "公約を比較する"
-            : page === "council" ? "沖縄県議会議員"
+            ? "候補者と公約を見る"
+            : page === "themes"
+              ? "テーマ別に比べる"
+              : page === "council" ? "沖縄県議会議員"
               : page === "polling" ? "投票所を探す"
                 : page === "polling-admin" ? "投票所管理"
                   : page === "guide"
@@ -779,7 +778,7 @@ function App() {
               [
                 ["home", "home", "ホーム"],
                 ["polling", "region", "投票所を探す"],
-                ["compare", "compare", "公約比較"],
+                ["compare", "compare", "候補者・公約"],
                 ["guide", "book", "用語"],
               ] as const
             )
@@ -843,7 +842,7 @@ function App() {
             <div className="breadcrumb">
               <button onClick={() => navigate("home")}>ホーム</button>
               <span>/</span>
-              {!["guide", "council", "compare", "polling", "polling-admin"].includes(page) && (
+              {!["guide", "council", "compare", "themes", "polling", "polling-admin"].includes(page) && (
                 <>
                   <button onClick={() => navigate("region")}>{region}</button>
                   {!(page === "region" && !municipality) && <span>/</span>}
@@ -877,6 +876,8 @@ function App() {
                     ? "現職の県議会議員を、氏名・選挙区から探せます。"
                     : page === "compare"
                       ? "公約と実施方法を、候補者ごとに確認できます。"
+                      : page === "themes"
+                        ? "公約を内容ごとに分けて、候補者どうしの違いを確認できます。"
                       : page === "guide"
                         ? "政治や選挙の基本用語を、公式情報をもとに解説します。"
                         : ["candidates", "detail"].includes(page)
@@ -1114,7 +1115,7 @@ function App() {
                         onClick={() => {
                           setCandidateId(null);
                           setQuery("");
-                          if (item.period === "past") {
+                          if (item.period === "past" && !hasCandidateData) {
                             setElectionId(item.id);
                             setSelected([]);
                             setPreview(false);
@@ -1131,10 +1132,10 @@ function App() {
                           }
                         }}
                       >
-                        {item.period === "past"
+                        {item.period === "past" && !hasCandidateData
                           ? "候補者一覧を見る →"
                           : hasCandidateData
-                          ? "この選挙の公約を比較する →"
+                          ? "この選挙の候補者と公約を見る →"
                           : "未収録の比較画面を見る →"}
                       </button>
                       {!hasCandidateData && (
@@ -1475,7 +1476,7 @@ function App() {
                   setPreview(true);
                 }}
               >
-                詳細・具体性チェックを見る →
+                詳細を見る →
               </button>
             </section>
               </>
@@ -1486,9 +1487,9 @@ function App() {
           <>
             <button
               className="text-button back"
-              onClick={() => navigate("candidates")}
+              onClick={() => navigate(electionCandidates.length ? "compare" : "candidates")}
             >
-              ← 候補者一覧へ
+              ← {electionCandidates.length ? "候補者と公約に戻る" : "候補者一覧へ"}
             </button>
             {preview && (
               <p className="notice">
@@ -1550,51 +1551,28 @@ function App() {
               {tab === 0 ? (
                 <>
                   {pledgeText(candidate)}
-                  <h3>公約の具体性チェック</h3>
-                  <p className="small">
-                    公式資料の記載状況を確認する項目です。能力・実現可能性の採点ではありません。
-                  </p>
                   {candidate?.pledges.length ? (
-                    candidate.pledges.map((pledge) => (
-                      <article className="pledge" key={pledge.id}>
-                        <RecordText entry={pledge.text} />
-                        <dl className="checks">
-                          {checkLabels.map((label) => (
-                            <div key={label}>
-                              <dt>{label}</dt>
-                              <dd>
-                                <RecordText entry={pledge.checks[label]} />
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </article>
-                    ))
-                  ) : (
-                    <dl className="checks">
-                      {checkLabels.map((label) => (
-                        <div key={label}>
-                          <dt>{label}</dt>
-                          <dd>
-                            <RecordText entry={missing<string>()} />
-                            <p className="small">根拠文章・公式資料：未収録</p>
-                          </dd>
-                        </div>
+                    <>
+                      <h3>公約の原文</h3>
+                      {candidate.pledges.map((pledge) => (
+                        <article className="pledge" key={pledge.id}>
+                          <RecordText
+                            entry={
+                              pledge.text.status === "recorded"
+                                ? { ...pledge.text, sources: [] }
+                                : pledge.text
+                            }
+                          />
+                        </article>
                       ))}
-                    </dl>
-                  )}
+                      <Sources sources={sourcesFor(candidate)} />
+                    </>
+                  ) : null}
                 </>
               ) : (
                 <RecordText
                   entry={
-                    candidate
-                      ? [
-                        candidate.profile,
-                        candidate.speeches,
-                        candidate.votes,
-                        candidate.history,
-                      ][tab - 1]
-                      : missing<string[]>()
+                    candidate ? candidate.profile : missing<string[]>()
                   }
                 />
               )}
@@ -1605,12 +1583,22 @@ function App() {
           <>
             {activeElection && (
               <>
-                <button
-                  className="text-button back"
-                  onClick={() => navigate("region")}
-                >
-                  ← 選挙一覧に戻る
-                </button>
+                <div className="compare-top-row">
+                  <button
+                    className="text-button back"
+                    onClick={() => navigate("region")}
+                  >
+                    ← 選挙一覧に戻る
+                  </button>
+                  {electionCandidates.length > 0 && !preview && (
+                    <button
+                      className="theme-link"
+                      onClick={() => navigate("themes")}
+                    >
+                      テーマ別に比べる →
+                    </button>
+                  )}
+                </div>
                 <section className="comparison-heading panel">
                   <span className="badge">
                     {activeElection.level === "national"
@@ -1647,20 +1635,38 @@ function App() {
                       </span>
                     </div>
                     <Sources sources={electionCandidates[0]?.sources ?? []} />
+                    <label className="input-label" htmlFor="candidate-query">
+                      公約・候補者名・政党名で検索
+                    </label>
+                    <input
+                      className="wide-input"
+                      id="candidate-query"
+                      type="search"
+                      value={query}
+                      placeholder="キーワードを入力"
+                      onChange={(event) => setQuery(event.target.value)}
+                    />
+                    <p className="small" role="status">
+                      {pickerCandidates.length}人の候補者
+                      {query && ` · 「${query}」の検索結果`}
+                    </p>
                     <div className="comparison-candidate-list">
-                      {electionCandidates.map((item) => (
+                      {pickerCandidates.map((item) => (
                         <article
                           className="comparison-candidate"
                           key={item.id}
                         >
-                          <h3>
-                            <button
-                              className="candidate-name"
-                              onClick={() => openCandidate(item.id)}
-                            >
-                              {item.name}
-                            </button>
-                          </h3>
+                          <div className="candidate-intro picker-intro">
+                            <Photo key={item.id} entry={item.photo} name={item.name} />
+                            <h3>
+                              <button
+                                className="candidate-name"
+                                onClick={() => openCandidate(item.id)}
+                              >
+                                <RubyName name={item.name} />
+                              </button>
+                            </h3>
+                          </div>
                           <p className="party-label">
                             <span>所属</span>
                             {item.party.status === "recorded"
@@ -1672,13 +1678,17 @@ function App() {
                         </article>
                       ))}
                     </div>
+                    {query && !pickerCandidates.length && (
+                      <Empty title="条件に一致する候補者がいません">
+                        キーワードを変更して検索してください。
+                      </Empty>
+                    )}
                     <div className="comparison-actions">
-                      <button
-                        className="text-button"
-                        onClick={() => navigate("candidates")}
-                      >
-                        候補者一覧・検索を見る →
-                      </button>
+                      {query && (
+                        <button className="text-button" onClick={() => setQuery("")}>
+                          検索をクリア
+                        </button>
+                      )}
                       {selected.length > 0 && (
                         <button
                           className="text-button"
@@ -1741,12 +1751,6 @@ function App() {
               <>
                 {!preview && (
                   <div className="comparison-mobile-actions">
-                    <button
-                      className="text-button"
-                      onClick={() => navigate("candidates")}
-                    >
-                      候補者一覧・検索を見る →
-                    </button>
                     {selected.length > 0 && (
                       <button
                         className="text-button"
@@ -1785,7 +1789,7 @@ function App() {
                     : comparisonCandidates.map((item) => (
                         <article className="comparison-mobile-card" key={item.id}>
                           <header>
-                            <div className="candidate-intro">
+                            <div className="candidate-intro picker-intro">
                               <Photo
                                 key={item.id}
                                 entry={item.photo}
@@ -1796,7 +1800,7 @@ function App() {
                                   className="candidate-name"
                                   onClick={() => openCandidate(item.id)}
                                 >
-                                  {item.name}
+                                  <RubyName name={item.name} />
                                 </button>
                               </h2>
                             </div>
@@ -1923,6 +1927,33 @@ function App() {
                 </div>
               </>
             )}
+          </>
+        )}
+        {page === "themes" && (
+          <>
+            <button
+              className="text-button back"
+              onClick={() => navigate("compare")}
+            >
+              ← 候補者一覧に戻る
+            </button>
+            {activeElection && (
+              <section className="comparison-heading panel">
+                <span className="badge">
+                  {activeElection.level === "national" ? "国政選挙" : "地方選挙"}
+                </span>
+                <h2>{activeElection.name}</h2>
+                <p>
+                  {activeElection.municipality || region} · 投票日{" "}
+                  {activeElection.date}
+                </p>
+                {pledgePublicationNotice}
+              </section>
+            )}
+            <ThemeComparison
+              candidates={comparisonCandidates}
+              sourcesFor={sourcesFor}
+            />
           </>
         )}
         {page === "guide" && (

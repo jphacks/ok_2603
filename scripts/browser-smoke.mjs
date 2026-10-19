@@ -338,7 +338,7 @@ try {
   assert.equal((await text()).includes("年代別投票率"), false);
   assert.ok(!(await text()).includes("UIテスト専用知事選挙"));
   assert.equal(await evaluate('!!document.querySelector("#comparison-link")'), false);
-  assert.ok(!(await text()).includes("この選挙の公約を比較する →"));
+  assert.ok(!(await text()).includes("この選挙の候補者と公約を見る →"));
   assert.ok((await text()).includes("候補者・公約情報は未収録のため、表示枠の例を確認できます。"));
   await evaluate(`(async () => {
     const appSource = await (await fetch('/src/App.tsx')).text();
@@ -352,7 +352,7 @@ try {
   await click("ホーム");
   await input("region-query", "沖縄");
   await click("沖縄市 おきなわし");
-  await click("この選挙の公約を比較する →");
+  await click("この選挙の候補者と公約を見る →");
   assert.equal(
     await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     2,
@@ -382,37 +382,34 @@ try {
     3,
   );
   await click("全候補者の比較に戻す");
-  await click("候補者一覧・検索を見る →");
   assert.equal(
-    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     2,
   );
   await input("candidate-query", "所属");
   assert.equal(
-    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     2,
   );
   await input("candidate-query", "abc");
   assert.equal(
-    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     2,
   );
   await input("candidate-query", "one");
   assert.equal(
-    await evaluate('document.querySelectorAll(".candidate-card").length'),
+    await evaluate('document.querySelectorAll(".comparison-candidate").length'),
     1,
   );
   await click("＋ 比較に追加");
   await input("candidate-query", "two");
   await click("＋ 比較に追加");
-  await click("詳細を見る →");
+  await click("テスト専用氏名 two");
   await click("テスト用語");
   assert.ok((await text()).includes("政治用語の解説ではありません"));
   await click("閉じる");
   await click("経歴");
   assert.ok((await text()).includes("確認できず"));
-  await click("議会での発言");
-  assert.ok((await text()).includes("該当記録なし"));
   await click("比較する →");
   assert.equal(
     await evaluate(

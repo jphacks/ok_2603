@@ -1,5 +1,6 @@
 import { Fragment, useId, useState } from "react";
 import { glossary } from "./data";
+import readings from "../../shared/candidate-readings.json";
 import { statusLabels, type Entry, type Source } from "./model";
 
 export function Photo({ entry, name }: { entry: Entry<string>; name: string }) {
@@ -12,6 +13,19 @@ export function Photo({ entry, name }: { entry: Entry<string>; name: string }) {
       alt={`${name}の顔写真`}
       onError={() => setFailed(true)}
     />
+  );
+}
+
+export function RubyName({ name }: { name: string }) {
+  const reading = (readings as Record<string, string>)[name.replace(/\s+/g, "")];
+  if (!reading) return <>{name}</>;
+  return (
+    <ruby>
+      {name}
+      <rp>（</rp>
+      <rt>{reading}</rt>
+      <rp>）</rp>
+    </ruby>
   );
 }
 
@@ -96,11 +110,9 @@ export function RichText({ text }: { text: string }) {
 export function RecordText({ entry }: { entry: Entry<string | string[]> }) {
   return (
     <div className="record">
-      <span
-        className={`badge ${entry.status === "recorded" ? "recorded" : ""}`}
-      >
-        {statusLabels[entry.status]}
-      </span>
+      {entry.status !== "recorded" && (
+        <span className="badge">{statusLabels[entry.status]}</span>
+      )}
       {entry.status === "recorded" &&
         (Array.isArray(entry.value) ? (
           <ul>
