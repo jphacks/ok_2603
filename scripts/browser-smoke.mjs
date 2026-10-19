@@ -393,14 +393,7 @@ try {
   await click("閉じる");
   await click("経歴");
   assert.ok((await text()).includes("確認できず"));
-  await click("＋ 比較に追加");
-  await click("比較する →");
-  assert.equal(
-    await evaluate(
-      'document.querySelectorAll(".comparison-table thead th").length',
-    ),
-    2,
-  );
+  await click("← 候補者と公約に戻る");
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 844,
@@ -413,7 +406,7 @@ try {
   );
   assert.equal(
     await evaluate('document.querySelectorAll(".comparison-mobile-card").length'),
-    1,
+    2,
   );
   assert.equal(
     await evaluate("document.documentElement.scrollWidth <= window.innerWidth"),

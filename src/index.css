@@ -2368,3 +2368,90 @@ tbody tr:last-child > * {
 .party-row .record {
   margin: 0;
 }
+
+.pledge-original {
+  padding-top: 0;
+}
+.pledge-original .record {
+  margin: 0;
+}
+.pledge-original .record > p {
+  position: relative;
+  margin: 2px 0;
+  padding-left: 1.2em;
+  line-height: 1.35;
+}
+.pledge-original .record > p::before {
+  content: "■";
+  position: absolute;
+  left: 0.1em;
+  top: 0.05em;
+  color: #1f5fbf;
+  font-size: 0.7em;
+}
+
+.detail-content .pledge-bullets,
+.detail-content .pledge-bullets .comparison-pledge {
+  font-size: 24px;
+}
+.detail-content .pledge-original .record > p {
+  font-size: 19px;
+}
+
+.detail-profile img,
+.detail-profile .photo-missing {
+  width: 150px;
+  min-width: 150px;
+  height: 180px;
+}
+@media (max-width: 760px) {
+  .detail-profile img,
+  .detail-profile .photo-missing {
+    width: 140px;
+    min-width: 140px;
+    height: 168px;
+  }
+}
+
+.detail-note {
+  margin: -8px 0 16px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #6b7a8e;
+}
+.pledge-original-sources {
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid #e3e9f0;
+}
+
+.detail-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.detail-profile-text {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+.detail-name {
+  font-size: 30px;
+  line-height: 1.5;
+  color: #14233a;
+}
+.detail-profile .detail-party {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.detail-profile {
+  align-items: center;
+}
+.detail-profile-text {
+  align-self: stretch;
+  align-content: center;
+}

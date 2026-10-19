@@ -107,7 +107,13 @@ export function RichText({ text }: { text: string }) {
   );
 }
 
-export function RecordText({ entry }: { entry: Entry<string | string[]> }) {
+export function RecordText({
+  entry,
+  hideSources = false,
+}: {
+  entry: Entry<string | string[]>;
+  hideSources?: boolean;
+}) {
   return (
     <div className="record">
       {entry.status !== "recorded" && (
@@ -130,7 +136,9 @@ export function RecordText({ entry }: { entry: Entry<string | string[]> }) {
       {(entry.status === "not-confirmed" || entry.status === "no-record") && (
         <p>{entry.note}</p>
       )}
-      {entry.status !== "unrecorded" && <Sources sources={entry.sources} />}
+      {!hideSources && entry.status !== "unrecorded" && (
+        <Sources sources={entry.sources} />
+      )}
     </div>
   );
 }

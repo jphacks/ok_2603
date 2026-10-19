@@ -26,6 +26,7 @@ import {
   searchCandidates,
   searchMunicipalities,
   searchGlossary,
+  statusLabels,
   toggleSelection,
   type Candidate,
   type Election,
@@ -851,9 +852,10 @@ function App() {
               <span>{title}</span>
             </div>
             <div
-              className={`page-heading${page === "guide" ? " glossary-page-heading" : ""}${page === "region" ? " region-page-heading" : ""}`}
+              className={`page-heading${page === "detail" ? " detail-heading" : ""}${page === "guide" ? " glossary-page-heading" : ""}${page === "region" ? " region-page-heading" : ""}`}
             >
               <div>
+                {!["candidates", "detail", "themes", "polling", "polling-admin"].includes(page) && (
                 <p className="eyebrow">
                   {page === "region"
                     ? "REGIONAL DASHBOARD"
@@ -862,8 +864,9 @@ function App() {
                         ? "PLEDGE COMPARISON"
                         : page === "guide"
                           ? "POLITICAL & ELECTION TERMS"
-                          : "ELECTION INFORMATION"}
+                          : ""}
                 </p>
+                )}
                 <h1
                   id={page === "guide" ? "glossary-title" : undefined}
                   ref={heading}
@@ -880,7 +883,9 @@ function App() {
                         ? "見たいテーマを押すと、候補者ごとの公約が開きます。"
                       : page === "guide"
                         ? "政治や選挙の基本用語を、公式情報をもとに解説します。"
-                        : ["candidates", "detail"].includes(page)
+                        : page === "detail"
+                          ? ""
+                        : page === "candidates"
                           ? `${municipality ? `${municipality} · ` : ""}${activeElection?.name || "選挙情報は未収録"}`
                           : page === "region" && municipality
                             ? `${municipality}に関係する選挙と公式情報を確認できます。`
@@ -895,7 +900,6 @@ function App() {
                   地域を変更する
                 </button>
               )}
-              {page === "detail" && candidate && compareButton(candidate)}
             </div>
           </>
         )}
@@ -1502,16 +1506,25 @@ function App() {
                 entry={candidate?.photo || missing<string>()}
                 name={candidate?.name || ""}
               />
-              <div>
-                {candidate && <RecordText entry={candidate.party} />}
-                <p>
-                  公式資料で確認した内容を掲載します。
-                  <br />
-                  未収録の情報は推測で補いません。
-                </p>
+              <div className="detail-profile-text">
+                {candidate && (
+                  <>
+                    <strong className="detail-name">
+                      <RubyName name={candidate.name} />
+                    </strong>
+                    <p className="detail-party">
+                      政党：
+                      {candidate.party.status === "recorded"
+                        ? [candidate.party.value].flat().join("、")
+                        : statusLabels[candidate.party.status]}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
-            {candidate && <Sources sources={sourcesFor(candidate)} />}
+            <p className="detail-note">
+              公式資料で確認した内容を掲載します。<br />未収録の情報は推測で補いません。
+            </p>
             <div className="tab-list" role="tablist" aria-label="候補者の情報">
               {tabs.map((label, index) => (
                 <button
@@ -1555,7 +1568,7 @@ function App() {
                     <>
                       <h3>公約の原文</h3>
                       {candidate.pledges.map((pledge) => (
-                        <article className="pledge" key={pledge.id}>
+                        <article className="pledge pledge-original" key={pledge.id}>
                           <RecordText
                             entry={
                               pledge.text.status === "recorded"
@@ -1565,7 +1578,9 @@ function App() {
                           />
                         </article>
                       ))}
-                      <Sources sources={sourcesFor(candidate)} />
+                      <div className="pledge-original-sources">
+                        <Sources sources={sourcesFor(candidate)} />
+                      </div>
                     </>
                   ) : null}
                 </>
