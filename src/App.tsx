@@ -316,8 +316,8 @@ function App() {
   });
   const [storageWarning, setStorageWarning] = useState(false);
   const [remoteElections, setRemoteElections] = useState<Election[]>([]);
-  const [nahaPublishedPledges, setNahaPublishedPledges] = useState<
-    Record<string, Candidate["pledges"]>
+  const [nahaPublished, setNahaPublished] = useState<
+    Record<string, Pick<Candidate, "pledges" | "photo">>
   >({});
   const heading = useRef<HTMLHeadingElement>(null);
   const tourRef = useRef<HTMLDivElement>(null);
@@ -329,10 +329,14 @@ function App() {
       : [];
   const allCandidates = [
     ...candidates.map((item) => {
-      const published = nahaPublishedPledges[item.name.replace(/\s/gu, "")];
-      return item.electionId === "naha-mayor-2026" && published?.length
-        ? { ...item, pledges: published }
-        : item;
+      const published = nahaPublished[item.name.replace(/\s/gu, "")];
+      if (item.electionId !== "naha-mayor-2026" || !published) return item;
+      return {
+        ...item,
+        pledges: published.pledges.length ? published.pledges : item.pledges,
+        photo:
+          published.photo.status === "recorded" ? published.photo : item.photo,
+      };
     }),
     ...loadedApiCandidates,
   ];
@@ -469,13 +473,15 @@ function App() {
         if (!response.ok) return;
         const result: unknown = await response.json();
         if (!isApiElectionCandidatesResponse(result) || cancelled) return;
-        const byName: Record<string, Candidate["pledges"]> = {};
+        const byName: Record<string, Pick<Candidate, "pledges" | "photo">> = {};
         for (const item of result.data) {
           const mapped = mapApiCandidate(item, "naha-mayor-2026");
-          if (mapped.pledges.length)
-            byName[item.name.replace(/\s/gu, "")] = mapped.pledges;
+          byName[item.name.replace(/\s/gu, "")] = {
+            pledges: mapped.pledges,
+            photo: mapped.photo,
+          };
         }
-        setNahaPublishedPledges(byName);
+        setNahaPublished(byName);
       } catch {
         // 取得できない場合は公約公開前の表示のままにする
       }
@@ -675,7 +681,6 @@ function App() {
       <div className="comparison-pledge">
         {pledge.summary ? (
           <>
-            <strong>かんたん要約</strong>
             <p>{pledge.summary}</p>
             {pledge.text.status === "recorded" && (
               <Sources sources={pledge.text.sources} />
@@ -687,11 +692,16 @@ function App() {
       </div>
     );
   }
-  function pledgeText(item?: Candidate) {
+  function pledgeText(item?: Candidate, withHeading = true) {
     return item?.pledges.length ? (
-      item.pledges.map((pledge) => (
-        <div key={pledge.id}>{pledgeSummary(pledge)}</div>
-      ))
+      <div>
+        {withHeading && item.pledges.some((pledge) => pledge.summary) && (
+          <strong>かんたん要約</strong>
+        )}
+        {item.pledges.map((pledge) => (
+          <div key={pledge.id}>{pledgeSummary(pledge)}</div>
+        ))}
+      </div>
     ) : (
       <RecordText entry={missing<string>()} />
     );
@@ -699,13 +709,7 @@ function App() {
   function comparisonCell(item: Candidate, label: ComparisonLabel) {
     if (label === "所属政党") return <RecordText entry={item.party} />;
     if (label === "公約") {
-      return item.pledges.length ? (
-        item.pledges.map((pledge) => (
-          <div key={pledge.id}>{pledgeSummary(pledge)}</div>
-        ))
-      ) : (
-        <RecordText entry={missing<string>()} />
-      );
+      return pledgeText(item);
     }
     return item.pledges.length ? (
       item.pledges.map((pledge) => (
@@ -1404,7 +1408,7 @@ function App() {
                     </div>
                     <RecordText entry={item.profile} />
                     <h3>公約のかんたん要約</h3>
-                    {pledgeText(item)}
+                    {pledgeText(item, false)}
                     <Sources sources={item.sources} />
                     <div className="card-actions">
                       <button

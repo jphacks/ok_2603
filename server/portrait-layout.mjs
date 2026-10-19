@@ -12,7 +12,23 @@ const boxes=new Map([
   ['ヒガ タカシ',[2,1140,1231,155,204]],
 ]);
 
+// Naha mayoral election bulletin (2026), checked on the 1151 x 1548 render of each page.
+const NAHA_2026_BULLETIN_HASH='3f608ab475a685b57b8b91b9ee47cdcaf200b5c4f9e724f939ea381f2ab51777';
+const NAHA_WIDTH=1151, NAHA_HEIGHT=1548;
+const nahaBoxes=new Map([
+  ['知念さとる',[1,955,165,112,175]],
+  ['ヨシミネリョウ',[1,940,607,126,178]],
+  ['久手堅さちこ',[1,945,1060,122,175]],
+  ['矢島ケント',[2,940,58,127,179]],
+]);
+
 export function verifiedPortraitBox(pdfHash,candidateName) {
+  if(pdfHash===NAHA_2026_BULLETIN_HASH) {
+    const box=nahaBoxes.get(candidateName.replace(/\s/gu,''));
+    if(!box) return null;
+    const [page,x,y,width,height]=box;
+    return {page,x:x/NAHA_WIDTH,y:y/NAHA_HEIGHT,width:width/NAHA_WIDTH,height:height/NAHA_HEIGHT};
+  }
   if(pdfHash!==GOVERNOR_2026_BULLETIN_HASH) return null;
   const box=boxes.get(candidateName);
   if(!box) return null;
