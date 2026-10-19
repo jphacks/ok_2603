@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sources } from "./components";
+import { RubyName, Sources } from "./components";
 import type { Candidate, Source } from "./model";
 import { buildThemeRows } from "./themes";
 
@@ -10,78 +10,132 @@ export function ThemeComparison({
   candidates: Candidate[];
   sourcesFor: (item: Candidate) => Source[];
 }) {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<string[]>([]);
+  const [focusIds, setFocusIds] = useState<string[]>([]);
   const rows = buildThemeRows(candidates);
-  const total = candidates.length;
 
   if (!rows.length) {
     return <p className="small">テーマ別に比べられる公約はまだありません。</p>;
   }
 
+  const shown = focusIds.length
+    ? candidates.filter((candidate) => focusIds.includes(candidate.id))
+    : candidates;
+  const allOpen = openIds.length === rows.length;
+  const toggleOpen = (id: string) =>
+    setOpenIds((ids) =>
+      ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
+    );
+  const toggleFocus = (id: string) =>
+    setFocusIds((ids) =>
+      ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
+    );
+
   return (
     <div className="theme-compare">
-      <p className="small">
-        公約を内容ごとに分けて、誰が何を掲げているかを比べられます。文章は公報の要約のままです。
-      </p>
+      <div className="theme-toolbar">
+        <div className="theme-focus" role="group" aria-label="表示する候補者">
+          <span className="theme-focus-label">表示する候補者</span>
+          <div className="theme-focus-chips">
+            <button
+              type="button"
+              className="theme-chip"
+              aria-pressed={focusIds.length === 0}
+              onClick={() => setFocusIds([])}
+            >
+              全員
+            </button>
+            {candidates.map((candidate) => (
+              <button
+                type="button"
+                className="theme-chip"
+                key={candidate.id}
+                aria-pressed={focusIds.includes(candidate.id)}
+                onClick={() => toggleFocus(candidate.id)}
+              >
+                {candidate.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="theme-expand"
+          onClick={() => setOpenIds(allOpen ? [] : rows.map((row) => row.theme.id))}
+        >
+          {allOpen ? "すべて閉じる" : "すべて開く"}
+        </button>
+      </div>
       <ul className="theme-list">
         {rows.map(({ theme, byCandidate }) => {
-          const count = byCandidate.size;
-          const open = openId === theme.id;
-          const level =
-            total > 1 && count === total ? "all" : count === 1 && total > 1 ? "one" : "some";
-          const label =
-            total <= 1
-              ? "掲載あり"
-              : level === "all"
-                ? "全員が掲載"
-                : level === "one"
-                  ? "1人だけが掲載"
-                  : `${count}人が掲載`;
+          const open = openIds.includes(theme.id);
           return (
-            <li key={theme.id} className="theme-item">
+            <li key={theme.id} className={`theme-item${open ? " is-open" : ""}`}>
               <button
                 type="button"
                 className="theme-head"
                 aria-expanded={open}
                 aria-controls={`theme-${theme.id}`}
-                onClick={() => setOpenId(open ? null : theme.id)}
+                onClick={() => toggleOpen(theme.id)}
               >
                 <span className="theme-name">{theme.name}</span>
-                <span className={`theme-badge theme-badge-${level}`}>{label}</span>
-                <span className="theme-who">
-                  {candidates
-                    .filter((candidate) => byCandidate.has(candidate.id))
-                    .map((candidate) => candidate.name)
-                    .join("・")}
-                </span>
                 <span className="theme-arrow" aria-hidden="true">
                   {open ? "▲" : "▼"}
+                </span>
+                <span className="theme-marks">
+                  {shown.map((candidate) => {
+                    const has = byCandidate.has(candidate.id);
+                    return (
+                      <span
+                        key={candidate.id}
+                        className={`theme-mark ${has ? "has" : "none"}`}
+                      >
+                        <span aria-hidden="true">{has ? "●" : "○"}</span>
+                        {candidate.name}
+                        <span className="sr-only">
+                          {has ? "：記載あり" : "：記載なし"}
+                        </span>
+                      </span>
+                    );
+                  })}
                 </span>
               </button>
               {open && (
                 <div className="theme-body" id={`theme-${theme.id}`}>
-                  {candidates.map((candidate) => {
+                  {shown.map((candidate) => {
                     const items = byCandidate.get(candidate.id);
                     return (
-                      <section className="theme-candidate" key={candidate.id}>
-                        <h3>{candidate.name}</h3>
+                      <section
+                        className={`theme-candidate${items ? "" : " is-empty"}`}
+                        key={candidate.id}
+                      >
+                        <h3>
+                          <RubyName name={candidate.name} />
+                        </h3>
                         {items ? (
-                          <ul className="pledge-bullets">
-                            {items.map((text, index) => (
-                              <li className="comparison-pledge" key={index}>
-                                {text}
-                              </li>
-                            ))}
-                          </ul>
+                          <>
+                            <ul className="pledge-bullets">
+                              {items.map((text, index) => (
+                                <li className="comparison-pledge" key={index}>
+                                  {text}
+                                </li>
+                              ))}
+                            </ul>
+                            <Sources sources={sourcesFor(candidate)} />
+                          </>
                         ) : (
-                          <p className="small">
-                            公報には記載がありません。反対や賛成の意思表示ではありません。
+                          <p className="theme-none">
+                            このテーマは公報に記載がありません
                           </p>
                         )}
-                        {items && <Sources sources={sourcesFor(candidate)} />}
                       </section>
                     );
                   })}
+                  {shown.some((candidate) => !byCandidate.has(candidate.id)) && (
+                    <p className="small theme-note">
+                      記載がないことは、反対や賛成の意思表示ではありません。
+                    </p>
+                  )}
                 </div>
               )}
             </li>
